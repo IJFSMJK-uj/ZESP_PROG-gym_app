@@ -8,7 +8,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'jwt_x';
 
 // register
 router.post('/register', async (req, res) => {
-  const { email, password, name } = req.body;
+  const { email, password } = req.body;
 
   try {
     // hash
@@ -18,7 +18,6 @@ router.post('/register', async (req, res) => {
     const user = await prisma.user.create({
       data: {
         email,
-        name,
         password: hashedPassword,
       },
     });

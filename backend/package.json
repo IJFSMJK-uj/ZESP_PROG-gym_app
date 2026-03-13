@@ -20,6 +20,7 @@
   "scripts": {
     "dev": "tsx watch server.ts",
     "build": "tsc",
+    "postinstall": "npx prisma generate",
     "start": "node dist/server.js"
   }
 }

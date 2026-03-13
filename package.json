@@ -1,0 +1,28 @@
+{
+  "name": "zesp_prog-gym_app",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/IJFSMJK-uj/ZESP_PROG-gym_app.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/IJFSMJK-uj/ZESP_PROG-gym_app/issues"
+  },
+  "homepage": "https://github.com/IJFSMJK-uj/ZESP_PROG-gym_app#readme",
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  },
+  "scripts": {
+    "install-all": "concurrently \"npm install --prefix backend\" \"npm install --prefix frontend\"",
+    "dev": "concurrently \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\""
+  }
+}

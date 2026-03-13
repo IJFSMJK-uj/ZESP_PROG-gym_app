@@ -3,7 +3,7 @@ import HomePage from './pages/HomePage.tsx';
 import TrainersPage from './pages/TrainersPage.tsx';
 import AuthPage from './pages/AuthPage.tsx';
 import { Button } from '@/components/ui/button';
-import { Footer } from '@/components/ui/footer';
+import { Footer } from './components/footer';
 import { AuthProvider } from './context/AuthContext';
 
 function App() {

@@ -13,6 +13,7 @@ export const Navbar = () => {
         </Link>
 
         <div className="hidden md:flex items-center gap-8">
+          <Link to="/profile" className="text-sm font-semibold text-zinc-400 hover:text-white transition-colors">Profil</Link>
           <Link to="/dashboard" className="text-sm font-semibold text-zinc-400 hover:text-white transition-colors">Panel</Link>
           <Link to="/gyms" className="text-sm font-semibold text-zinc-400 hover:text-white transition-colors">Mapa siłowni</Link>
           <Link to="/trainers" className="text-sm font-semibold text-zinc-400 hover:text-white transition-colors">Trenerzy</Link>

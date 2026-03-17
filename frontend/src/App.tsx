@@ -5,6 +5,7 @@ import { Footer } from './components/footer';
 import { HomePage } from './pages/HomePage';
 import { AuthPage } from './pages/AuthPage';
 // import { TrainersPage } from './pages/TrainersPage';
+import { ProfilePage } from './pages/ProfilePage';
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
               <Route path="/" element={<HomePage />} />
               <Route path="/auth" element={<AuthPage />} />
               {/* <Route path="/trainers" element={<TrainersPage />} /> */}
+              <Route path="/profile" element={<ProfilePage />} />
             </Routes>
           </main>
 

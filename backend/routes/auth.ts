@@ -6,6 +6,18 @@ import prisma from '../lib/prisma';
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'jwt_x';
 
+const requireAuth = (req: any, res: any, next: any) => {
+  const token = req.headers.authorization?.split(' ')[1];
+  if (!token) return res.status(401).json({ error: 'Brak tokenu' });
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET) as { userId: number };
+    req.userId = decoded.userId;
+    next();
+  } catch {
+    return res.status(401).json({ error: 'Nieprawidlowy token' });
+  }
+};
+
 // register
 router.post('/register', async (req, res) => {
   const { email, password } = req.body;
@@ -35,20 +47,49 @@ router.post('/login', async (req, res) => {
   const user = await prisma.user.findUnique({ where: { email } });
 
   if (!user) {
-    return res.status(401).json({ error: 'Nieprawidłowy e-mail lub hasło' });
+    return res.status(401).json({ error: 'Nieprawidłowy e-mail lub haslo' });
   }
 
   // check passwort
   const isPasswordValid = await bcrypt.compare(password, user.password);
 
   if (!isPasswordValid) {
-    return res.status(401).json({ error: 'Nieprawidłowy e-mail lub hasło' });
+    return res.status(401).json({ error: 'Nieprawidlowy e-mail lub haslo' });
   }
 
   // generate token
   const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '1h' });
 
-  res.json({ message: 'Zalogowano pomyślnie', token });
+  res.json({ message: 'Zalogowano pomyslnie', token });
+});
+
+router.get('/profile', requireAuth, async (req: any, res) => {
+  const user = await prisma.user.findUnique({ where: { id: req.userId } });
+  if (!user) return res.status(404).json({ error: 'Uzytkownik nie znaleziony' });
+  res.json({ email: user.email, username: user.username });
+});
+
+router.put('/profile', requireAuth, async (req: any, res) => {
+  const { email, username } = req.body;
+  const dataToUpdate: { email?: string; username?: string } = {};
+
+  if (email !== undefined) {
+    dataToUpdate.email = email;
+  }
+
+  if (username !== undefined) {
+    dataToUpdate.username = username;
+  }
+
+  try {
+    const updated = await prisma.user.update({
+      where: { id: req.userId },
+      data: { email, username },
+    });
+    res.json({ email: updated.email, username: updated.username });
+  } catch {
+    res.status(400).json({ error: 'E-mail lub nazwa uzytkownika już zajęte.' });
+  }
 });
 
 export default router;

@@ -1,9 +1,14 @@
 const API_URL = 'http://localhost:5174/api/gyms';
 
 export const gymsService = {
-  
+
   async getGyms() {
-    const response = await fetch(`${API_URL}`);
+    const token = localStorage.getItem('token');
+    const response = await fetch(`${API_URL}`, {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  });
     if (!response.ok) {
       const text = await response.text();
       console.error('Błąd backendu getGyms:', text);
@@ -13,7 +18,12 @@ export const gymsService = {
   },
 
   async getGymById(id: string | number) {
-    const response = await fetch(`${API_URL}/${id}`);
+    const token = localStorage.getItem('token');
+    const response = await fetch(`${API_URL}/${id}`, {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  });
     if (!response.ok) {
       const text = await response.text();
       console.error('Błąd backendu getGymById:', text);

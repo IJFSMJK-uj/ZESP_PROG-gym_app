@@ -2,6 +2,7 @@ import express from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import prisma from '../lib/prisma';
+import { Role } from '@prisma/client';
 
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'jwt_x';
@@ -64,14 +65,17 @@ router.post('/login', async (req, res) => {
 });
 
 router.get('/profile', requireAuth, async (req: any, res) => {
-  const user = await prisma.user.findUnique({ where: { id: req.userId } });
+  const user = await prisma.user.findUnique({
+    where: { id: req.userId },
+    include: { gym: true },
+  });
   if (!user) return res.status(404).json({ error: 'Uzytkownik nie znaleziony' });
-  res.json({ email: user.email, username: user.username });
+  res.json({ email: user.email, username: user.username, role: user.role, gym: user.gym });
 });
 
 router.put('/profile', requireAuth, async (req: any, res) => {
-  const { email, username } = req.body;
-  const dataToUpdate: { email?: string; username?: string } = {};
+  const { email, username, role } = req.body;
+  const dataToUpdate: { email?: string; username?: string; role?: Role } = {};
 
   if (email !== undefined) {
     dataToUpdate.email = email;
@@ -81,12 +85,16 @@ router.put('/profile', requireAuth, async (req: any, res) => {
     dataToUpdate.username = username;
   }
 
+  if (role !== undefined) {
+    dataToUpdate.role = role as Role;
+  }
+
   try {
     const updated = await prisma.user.update({
       where: { id: req.userId },
-      data: { email, username },
+      data: dataToUpdate,
     });
-    res.json({ email: updated.email, username: updated.username });
+    res.json({ email: updated.email, username: updated.username, role: updated.role });
   } catch {
     res.status(400).json({ error: 'E-mail lub nazwa uzytkownika już zajęte.' });
   }

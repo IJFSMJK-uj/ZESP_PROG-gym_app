@@ -8,11 +8,18 @@ datasource db {
   url = env("DATABASE_URL")
 }
 
+enum Role {
+  MEMBER
+  TRAINER
+  GYM
+}
+
 model User {
   id       Int      @id @default(autoincrement())
   email    String   @unique
   username String?  @unique
   password String
+  role     Role     @default(MEMBER)
   gymId    Int?
   gym      Gym?     @relation("UserGym", fields: [gymId], references: [id])
 }

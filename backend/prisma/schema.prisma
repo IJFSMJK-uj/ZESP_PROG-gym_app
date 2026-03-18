@@ -13,4 +13,18 @@ model User {
   email    String   @unique
   username String?  @unique
   password String
+  gymId    Int?
+  gym      Gym?     @relation("UserGym", fields: [gymId], references: [id])
+}
+
+model Gym {
+  id       Int      @id @default(autoincrement())
+  name     String   @unique
+  address  String   @unique
+  openTime String?
+  closeTime String?
+  trainerRecommendation Boolean?
+  area     Int?
+  description String?
+  users User[] @relation("UserGym")
 }

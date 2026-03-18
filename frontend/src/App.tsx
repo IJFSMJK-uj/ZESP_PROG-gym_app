@@ -6,6 +6,8 @@ import { HomePage } from './pages/HomePage';
 import { AuthPage } from './pages/AuthPage';
 // import { TrainersPage } from './pages/TrainersPage';
 import { ProfilePage } from './pages/ProfilePage';
+import { SelectGymPage } from './pages/SelectGymPage';
+import { GymDetailPage } from './pages/GymDetailPage';
 
 function App() {
   return (
@@ -20,6 +22,8 @@ function App() {
               <Route path="/auth" element={<AuthPage />} />
               {/* <Route path="/trainers" element={<TrainersPage />} /> */}
               <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/gyms" element={<SelectGymPage />} />
+              <Route path="/gyms/:gymId" element={<GymDetailPage />} />
             </Routes>
           </main>
 

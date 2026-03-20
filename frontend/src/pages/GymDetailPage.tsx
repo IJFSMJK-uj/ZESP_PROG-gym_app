@@ -83,7 +83,7 @@ export const GymDetailPage = () => {
           {success && <div className="text-sm text-emerald-300 p-2 bg-emerald-500/10 rounded-md mt-2 text-center">{success}</div>}
         </CardContent>
         <div className="flex justify-center p-4">
-          <Button onClick={() => navigate(-1)} variant="outline" className="cursor-pointer text-xs hover:bg-zinc-800">Wróć do listy siłowni</Button>
+          <Button onClick={() => navigate(-1)} variant="outline" className="cursor-pointer text-xs hover:bg-zinc-800">Wróć do listy</Button>
           <Button onClick={handleSave} variant="outline" className="cursor-pointer text-xs hover:bg-zinc-800 ml-2">Wybierz</Button>
         </div>
       </Card>

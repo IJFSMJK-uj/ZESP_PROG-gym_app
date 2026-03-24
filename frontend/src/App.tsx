@@ -8,6 +8,8 @@ import { AuthPage } from './pages/AuthPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { SelectGymPage } from './pages/SelectGymPage';
 import { GymDetailPage } from './pages/GymDetailPage';
+import { GymInviteTrainerPage } from './pages/GymInviteTrainerPage';
+import { GymCreateTrainerInvitePage } from "./pages/GymCreateTrainerInvitePage";
 
 function App() {
   return (
@@ -24,6 +26,8 @@ function App() {
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/gyms" element={<SelectGymPage />} />
               <Route path="/gyms/:gymId" element={<GymDetailPage />} />
+              <Route path="/gym/invites/trainers" element={<GymCreateTrainerInvitePage />} />
+              <Route path="/trainer-invite/:hash" element={<GymInviteTrainerPage />} />
             </Routes>
           </main>
 

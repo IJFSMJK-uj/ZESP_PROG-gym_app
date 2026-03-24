@@ -179,25 +179,43 @@ export const ProfilePage = () => {
           <div className="space-y-2">
             <label className="text-xs uppercase text-zinc-400">Twoja siłownia</label>
             {gym ? (
-              <Link
-                to={`/gyms/${gym.id}`}
-                className="flex items-center justify-between w-full p-3 rounded-xl bg-zinc-900 border border-zinc-700 hover:border-sky-500 transition-colors cursor-pointer"
-              >
-                <div>
-                  <p className="text-white font-medium">{gym.name}</p>
-                  <p className="text-zinc-400 text-xs">{gym.address}</p>
-                </div>
-                <span className="text-sky-400 text-xs">Zobacz</span>
-              </Link>
+                <Link
+                    to={`/gyms/${gym.id}`}
+                    className="flex items-center justify-between w-full p-3 rounded-xl bg-zinc-900 border border-zinc-700 hover:border-sky-500 transition-colors cursor-pointer"
+                >
+                  <div>
+                    <p className="text-white font-medium">{gym.name}</p>
+                    <p className="text-zinc-400 text-xs">{gym.address}</p>
+                  </div>
+                  <span className="text-sky-400 text-xs">Zobacz</span>
+                </Link>
             ) : (
-              <Link
-                to="/gyms"
-                className="flex items-center justify-center w-full p-3 rounded-xl bg-zinc-900 border border-dashed border-zinc-700 hover:border-sky-500 transition-colors cursor-pointer"
-              >
-                <span className="text-zinc-400 text-sm">+ Wybierz siłownię</span>
-              </Link>
+                <Link
+                    to="/gyms"
+                    className="flex items-center justify-center w-full p-3 rounded-xl bg-zinc-900 border border-dashed border-zinc-700 hover:border-sky-500 transition-colors cursor-pointer"
+                >
+                  <span className="text-zinc-400 text-sm">+ Wybierz siłownię</span>
+                </Link>
             )}
           </div>
+
+
+          {role === 'GYM' && (
+              <div className="space-y-2">
+                <label className="text-xs uppercase text-zinc-400">Zaproszenia dla trenerów</label>
+                <Link
+                    to="/gym/invites/trainers"
+                    className="flex items-center justify-between w-full p-3 rounded-xl bg-zinc-900 border border-zinc-700 hover:border-sky-500 transition-colors cursor-pointer"
+                >
+                  <div>
+                    <p className="text-white font-medium">Stwórz link zaproszenia dla trenera</p>
+                    <p className="text-zinc-400 text-xs">Generuj i zarządzaj aktywnymi linkami</p>
+                  </div>
+                  <span className="text-sky-400 text-xs">Przejdź</span>
+                </Link>
+              </div>
+          )}
+
 
           <div className="flex gap-2 mt-2">
             <Button onClick={handleSave} className="w-1/2 cursor-pointer">Zapisz</Button>

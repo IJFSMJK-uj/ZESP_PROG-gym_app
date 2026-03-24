@@ -1,6 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import authRoutes from './routes/auth';
+import gymsRoutes from './routes/gyms';
+import inviteRoutes from './routes/invite';
 
 const app = express();
 const BACKEND_PORT = 5174;
@@ -14,8 +16,10 @@ app.get('/', (req, res) => {
   res.send('Backend działa!');
 });
 
-// Podpinamy logowanie i rejestrację pod prefix /api/auth
+// MOUNT
 app.use('/api/auth', authRoutes);
+app.use('/api/gyms', gymsRoutes);
+app.use('/api/invite', inviteRoutes);
 
 // START SERWERA
 app.listen(BACKEND_PORT, () => {

@@ -8,9 +8,60 @@ datasource db {
   url = env("DATABASE_URL")
 }
 
+enum Role {
+  MEMBER
+  TRAINER
+  GYM
+}
+
 model User {
   id       Int      @id @default(autoincrement())
   email    String   @unique
   username String?  @unique
   password String
+  role     Role     @default(MEMBER)
+  gymId    Int?
+  gym      Gym?     @relation("UserGym", fields: [gymId], references: [id])
+
+  trainerGyms TrainerAssignment[]
+}
+
+model Gym {
+  id       Int      @id @default(autoincrement())
+  name     String   @unique
+  address  String   @unique
+  openTime String?
+  closeTime String?
+  trainerRecommendation Boolean?
+  area     Int?
+  description String?
+  users User[] @relation("UserGym")
+
+  inviteTrainers  GymInviteTrainer[]
+  trainers        TrainerAssignment[]
+}
+
+model TrainerAssignment {
+  id        Int      @id @default(autoincrement())
+  trainerId Int
+  gymId     Int
+  createdAt DateTime @default(now())
+
+  trainer   User     @relation(fields: [trainerId], references: [id], onDelete: Cascade)
+  gym       Gym      @relation(fields: [gymId], references: [id], onDelete: Cascade)
+
+  @@unique([trainerId, gymId])
+  @@index([trainerId])
+  @@index([gymId])
+}
+
+model GymInviteTrainer {
+  id             Int      @id @default(autoincrement())
+  gymId          Int
+  gym            Gym      @relation(fields: [gymId], references: [id], onDelete: Cascade)
+  hash           String   @unique @db.VarChar(128)
+  expirationDate DateTime
+  alreadyUsed    Boolean  @default(false)
+
+  @@index([gymId])
 }

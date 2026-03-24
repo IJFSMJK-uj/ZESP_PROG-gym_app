@@ -1,37 +1,41 @@
-import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
-import HomePage from './pages/HomePage.tsx';
-import TrainersPage from './pages/TrainersPage.tsx';
-import AuthPage from './pages/AuthPage.tsx';
-import { Button } from '@/components/ui/button';
-import { Footer } from '@/components/ui/footer';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { Navbar } from './components/navbar';
+import { Footer } from './components/footer';
+import { HomePage } from './pages/HomePage';
+import { AuthPage } from './pages/AuthPage';
+// import { TrainersPage } from './pages/TrainersPage';
+import { ProfilePage } from './pages/ProfilePage';
+import { SelectGymPage } from './pages/SelectGymPage';
+import { GymDetailPage } from './pages/GymDetailPage';
+import { GymInviteTrainerPage } from './pages/GymInviteTrainerPage';
+import { GymCreateTrainerInvitePage } from "./pages/GymCreateTrainerInvitePage";
 
 function App() {
-	return (
-		<AuthProvider>
-			<BrowserRouter>
-				<nav>
-					<Button variant="default" asChild>
-						<Link to="/">Strona główna</Link>
-					</Button>
-					<Button variant="default" asChild>
-						<Link to="/trainers">Trenerzy</Link>
-					</Button>
-					<Button variant="default" asChild>
-						<Link to="/auth">Zaloguj/Zarejestruj</Link>
-					</Button>
-				</nav>
-				<main>
-					<Routes>
-						<Route path="/" element={<HomePage />} />
-						<Route path="/trainers" element={<TrainersPage />} />
-						<Route path="/auth" element={<AuthPage />} />
-					</Routes>
-					<Footer />
-				</main>
-			</BrowserRouter>
-		</AuthProvider>
-	);
+  return (
+    <AuthProvider>
+      <BrowserRouter>
+        <div className="min-h-screen bg-black text-zinc-50 flex flex-col font-sans selection:bg-sky-500/30">
+          <Navbar />
+          
+          <main className="flex-grow flex flex-col pt-8 pb-24">
+            <Routes>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/auth" element={<AuthPage />} />
+              {/* <Route path="/trainers" element={<TrainersPage />} /> */}
+              <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/gyms" element={<SelectGymPage />} />
+              <Route path="/gyms/:gymId" element={<GymDetailPage />} />
+              <Route path="/gym/invites/trainers" element={<GymCreateTrainerInvitePage />} />
+              <Route path="/trainer-invite/:hash" element={<GymInviteTrainerPage />} />
+            </Routes>
+          </main>
+
+          <Footer />
+        </div>
+      </BrowserRouter>
+    </AuthProvider>
+  );
 }
 
-export default App
+export default App;

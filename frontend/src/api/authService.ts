@@ -29,5 +29,24 @@ export const authService = {
 
   getToken() {
     return localStorage.getItem('token');
-  }
+  },
+
+  async getProfile() {
+    const response = await fetch(`${API_URL}/profile`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+    });
+    return response.json();
+  },
+
+  async updateProfile(data: { email?: string; username?: string; role?: string }) {
+    const response = await fetch(`${API_URL}/profile`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+      },
+      body: JSON.stringify(data),
+    });
+    return response.json();
+  },
 };

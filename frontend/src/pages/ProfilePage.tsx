@@ -274,6 +274,22 @@ export const ProfilePage = () => {
               </Link>
             </div>
           )}
+          
+          {role === 'TRAINER' && (
+              <div className="space-y-2">
+                <label className="text-xs uppercase text-zinc-400">Dostępność trenera</label>
+                <Link
+                  to="/trainer/availability"
+                  className="flex items-center justify-between w-full p-3 rounded-xl bg-zinc-900 border border-zinc-700 hover:border-sky-500 transition-colors cursor-pointer"
+                >
+                  <div>
+                    <p className="text-white font-medium">Ustaw godziny dostępności</p>
+                    <p className="text-zinc-400 text-xs">Dodaj dni i godziny pracy</p>
+                  </div>
+                  <span className="text-sky-400 text-xs">Przejdź</span>
+                </Link>
+              </div>
+          )}
 
           <div className="flex gap-2 mt-2">
             <Button onClick={handleSave} className="w-1/2 cursor-pointer">

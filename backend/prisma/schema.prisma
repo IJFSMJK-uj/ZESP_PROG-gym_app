@@ -24,6 +24,8 @@ model User {
   gym      Gym?     @relation("UserGym", fields: [gymId], references: [id])
 
   trainerGyms TrainerAssignment[]
+
+  trainerAvailability TrainerAvailability[]
 }
 
 model Gym {
@@ -39,6 +41,7 @@ model Gym {
 
   inviteTrainers  GymInviteTrainer[]
   trainers        TrainerAssignment[]
+  availability TrainerAvailability[]
 }
 
 model TrainerAssignment {
@@ -64,4 +67,20 @@ model GymInviteTrainer {
   alreadyUsed    Boolean  @default(false)
 
   @@index([gymId])
+}
+
+model TrainerAvailability {
+  id        Int @id @default(autoincrement())
+  trainerId Int
+  gymId     Int?
+
+  dayOfWeek Int  // 0=Sunday, 1=Monday ... 6=Saturday
+  startHour Int
+  endHour   Int
+
+  trainer User @relation(fields: [trainerId], references: [id], onDelete: Cascade)
+  gym     Gym?  @relation(fields: [gymId], references: [id], onDelete: Cascade)
+
+  @@index([trainerId, gymId])
+  @@index([dayOfWeek])
 }

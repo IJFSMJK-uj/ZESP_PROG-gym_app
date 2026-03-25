@@ -10,6 +10,7 @@ import { SelectGymPage } from './pages/SelectGymPage';
 import { GymDetailPage } from './pages/GymDetailPage';
 import { GymInviteTrainerPage } from './pages/GymInviteTrainerPage';
 import { GymCreateTrainerInvitePage } from "./pages/GymCreateTrainerInvitePage";
+import TrainerAvailabilityPage from './pages/TrainerAvailabilityPage';
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
               <Route path="/" element={<HomePage />} />
               <Route path="/auth" element={<AuthPage />} />
               {/* <Route path="/trainers" element={<TrainersPage />} /> */}
+              <Route path="/trainer/availability" element={<TrainerAvailabilityPage />} />
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/gyms" element={<SelectGymPage />} />
               <Route path="/gyms/:gymId" element={<GymDetailPage />} />

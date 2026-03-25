@@ -7,7 +7,7 @@ import { Role } from '@prisma/client';
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'jwt_x';
 
-const requireAuth = (req: any, res: any, next: any) => {
+export const requireAuth = (req: any, res: any, next: any) => {
   const token = req.headers.authorization?.split(' ')[1];
   if (!token) return res.status(401).json({ error: 'Brak tokenu' });
   try {
@@ -67,10 +67,24 @@ router.post('/login', async (req, res) => {
 router.get('/profile', requireAuth, async (req: any, res) => {
   const user = await prisma.user.findUnique({
     where: { id: req.userId },
-    include: { gym: true },
+    include: {
+      gym: true,
+      trainerGyms: {
+        include: {
+          gym: true
+        }
+      }
+    },
   });
+
   if (!user) return res.status(404).json({ error: 'Uzytkownik nie znaleziony' });
-  res.json({ email: user.email, username: user.username, role: user.role, gym: user.gym });
+  res.json({
+    email: user.email,
+    username: user.username,
+    role: user.role,
+    gym: user.gym,
+    trainerGyms: user.trainerGyms
+  });
 });
 
 router.put('/profile', requireAuth, async (req: any, res) => {

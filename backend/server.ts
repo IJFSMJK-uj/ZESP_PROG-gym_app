@@ -3,6 +3,8 @@ import cors from 'cors';
 import authRoutes from './routes/auth';
 import gymsRoutes from './routes/gyms';
 import inviteRoutes from './routes/invite';
+import trainerAvailabilityRoutes from './routes/trainerAvailability'
+
 
 const app = express();
 const BACKEND_PORT = 5174;
@@ -20,6 +22,7 @@ app.get('/', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/gyms', gymsRoutes);
 app.use('/api/invite', inviteRoutes);
+app.use('/api/trainer-availability', trainerAvailabilityRoutes)
 
 // START SERWERA
 app.listen(BACKEND_PORT, () => {

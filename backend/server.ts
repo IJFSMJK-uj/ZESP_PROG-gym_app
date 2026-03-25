@@ -14,8 +14,8 @@ app.use(cors()); // frontend - backend connection
 app.use(express.json()); // json parse
 
 // ROUTES
-app.get('/', (req, res) => {
-  res.send('Backend działa!');
+app.get("/", (req, res) => {
+  res.send("Backend działa!");
 });
 
 // MOUNT

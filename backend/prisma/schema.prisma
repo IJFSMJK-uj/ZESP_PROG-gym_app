@@ -1,44 +1,35 @@
-// prisma/schema.prisma
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
-  url = env("DATABASE_URL")
-}
-
-enum Role {
-  MEMBER
-  TRAINER
-  GYM
+  url      = env("DATABASE_URL")
 }
 
 model User {
-  id       Int      @id @default(autoincrement())
-  email    String   @unique
-  username String?  @unique
-  password String
-  role     Role     @default(MEMBER)
-  gymId    Int?
-  gym      Gym?     @relation("UserGym", fields: [gymId], references: [id])
-
+  id          Int                 @id @default(autoincrement())
+  password    String
+  username    String?             @unique
+  email       String              @unique
+  gymId       Int?
+  role        Role                @default(MEMBER)
   trainerGyms TrainerAssignment[]
+  gym         Gym?                @relation("UserGym", fields: [gymId], references: [id])
 }
 
 model Gym {
-  id       Int      @id @default(autoincrement())
-  name     String   @unique
-  address  String   @unique
-  openTime String?
-  closeTime String?
+  id                    Int                 @id @default(autoincrement())
+  name                  String              @unique
+  address               String              @unique
+  openTime              String?
+  closeTime             String?
   trainerRecommendation Boolean?
-  area     Int?
-  description String?
-  users User[] @relation("UserGym")
-
-  inviteTrainers  GymInviteTrainer[]
-  trainers        TrainerAssignment[]
+  area                  Int?
+  description           String?
+  inviteTrainers        GymInviteTrainer[]
+  trainers              TrainerAssignment[]
+  users                 User[]              @relation("UserGym")
 }
 
 model TrainerAssignment {
@@ -46,9 +37,8 @@ model TrainerAssignment {
   trainerId Int
   gymId     Int
   createdAt DateTime @default(now())
-
-  trainer   User     @relation(fields: [trainerId], references: [id], onDelete: Cascade)
   gym       Gym      @relation(fields: [gymId], references: [id], onDelete: Cascade)
+  trainer   User     @relation(fields: [trainerId], references: [id], onDelete: Cascade)
 
   @@unique([trainerId, gymId])
   @@index([trainerId])
@@ -58,10 +48,16 @@ model TrainerAssignment {
 model GymInviteTrainer {
   id             Int      @id @default(autoincrement())
   gymId          Int
-  gym            Gym      @relation(fields: [gymId], references: [id], onDelete: Cascade)
   hash           String   @unique @db.VarChar(128)
   expirationDate DateTime
   alreadyUsed    Boolean  @default(false)
+  gym            Gym      @relation(fields: [gymId], references: [id], onDelete: Cascade)
 
   @@index([gymId])
+}
+
+enum Role {
+  MEMBER
+  TRAINER
+  GYM
 }

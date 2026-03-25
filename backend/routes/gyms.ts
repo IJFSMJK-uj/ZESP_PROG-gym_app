@@ -82,30 +82,4 @@ router.put("/:id", requireAuth, async (req: any, res: any) => {
   }
 });
 
-router.get("/:id/trainers", requireAuth, async (req: any, res: any) => {
-  const gymId = parseInt(req.params.id);
-  if (isNaN(gymId)) {
-    return res.status(400).json({ error: "Nieprawidłowe ID siłowni" });
-  }
-
-  try {
-    const assignments = await prisma.trainerAssignment.findMany({
-      where: { gymId: gymId },
-      include: {
-        trainer: {
-          select: { id: true, email: true, username: true, role: true },
-        },
-      },
-    });
-
-    const trainers = assignments.map((assignment) => assignment.trainer);
-    res.json(trainers);
-  } catch (error) {
-    console.error(error);
-    res
-      .status(500)
-      .json({ error: "Nie udało się pobrać trenerów dla tej siłowni" });
-  }
-});
-
 export default router;

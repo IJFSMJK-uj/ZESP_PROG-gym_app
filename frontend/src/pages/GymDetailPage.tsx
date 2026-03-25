@@ -13,7 +13,7 @@ import { useAuth } from "../context/AuthContext";
 
 export const GymDetailPage = () => {
   const { gymId } = useParams<{ gymId: string }>();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, updateUser } = useAuth();
   const navigate = useNavigate();
   const [gym, setGym] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -62,6 +62,8 @@ export const GymDetailPage = () => {
         setError(data.error);
         return;
       }
+
+      updateUser({ gymId: gym.id });
       setSuccess(data.message);
     } catch (err) {
       console.error(err);

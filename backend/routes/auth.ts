@@ -1,26 +1,26 @@
-import express from 'express';
-import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
-import prisma from '../lib/prisma';
-import { Role } from '@prisma/client';
+import express from "express";
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+import prisma from "../lib/prisma";
+import { Role } from "@prisma/client";
 
 const router = express.Router();
-const JWT_SECRET = process.env.JWT_SECRET || 'jwt_x';
+const JWT_SECRET = process.env.JWT_SECRET || "jwt_x";
 
 const requireAuth = (req: any, res: any, next: any) => {
-  const token = req.headers.authorization?.split(' ')[1];
-  if (!token) return res.status(401).json({ error: 'Brak tokenu' });
+  const token = req.headers.authorization?.split(" ")[1];
+  if (!token) return res.status(401).json({ error: "Brak tokenu" });
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as { userId: number };
     req.userId = decoded.userId;
     next();
   } catch {
-    return res.status(401).json({ error: 'Nieprawidlowy token' });
+    return res.status(401).json({ error: "Nieprawidlowy token" });
   }
 };
 
 // register
-router.post('/register', async (req, res) => {
+router.post("/register", async (req, res) => {
   const { email, password } = req.body;
 
   try {
@@ -35,45 +35,60 @@ router.post('/register', async (req, res) => {
       },
     });
 
-    res.status(201).json({ message: 'Użytkownik stworzony!', userId: user.id });
+    res.status(201).json({ message: "Użytkownik stworzony!", userId: user.id });
   } catch (error) {
-    res.status(400).json({ error: 'Użytkownik z tym mailem już istnieje.' });
+    res.status(400).json({ error: "Użytkownik z tym mailem już istnieje." });
   }
 });
 
 // login
-router.post('/login', async (req, res) => {
+router.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
   const user = await prisma.user.findUnique({ where: { email } });
 
   if (!user) {
-    return res.status(401).json({ error: 'Nieprawidłowy e-mail lub haslo' });
+    return res.status(401).json({ error: "Nieprawidłowy e-mail lub haslo" });
   }
 
   // check passwort
   const isPasswordValid = await bcrypt.compare(password, user.password);
 
   if (!isPasswordValid) {
-    return res.status(401).json({ error: 'Nieprawidlowy e-mail lub haslo' });
+    return res.status(401).json({ error: "Nieprawidlowy e-mail lub haslo" });
   }
 
   // generate token
-  const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '1h' });
+  const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: "1h" });
 
-  res.json({ message: 'Zalogowano pomyslnie', token });
+  res.json({
+    message: "Zalogowano pomyslnie",
+    token,
+    user: {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      gymId: user.gymId,
+    },
+  });
 });
 
-router.get('/profile', requireAuth, async (req: any, res) => {
+router.get("/profile", requireAuth, async (req: any, res) => {
   const user = await prisma.user.findUnique({
     where: { id: req.userId },
     include: { gym: true },
   });
-  if (!user) return res.status(404).json({ error: 'Uzytkownik nie znaleziony' });
-  res.json({ email: user.email, username: user.username, role: user.role, gym: user.gym });
+  if (!user)
+    return res.status(404).json({ error: "Uzytkownik nie znaleziony" });
+  res.json({
+    email: user.email,
+    username: user.username,
+    role: user.role,
+    gym: user.gym,
+  });
 });
 
-router.put('/profile', requireAuth, async (req: any, res) => {
+router.put("/profile", requireAuth, async (req: any, res) => {
   const { email, username, role } = req.body;
   const dataToUpdate: { email?: string; username?: string; role?: Role } = {};
 
@@ -94,9 +109,13 @@ router.put('/profile', requireAuth, async (req: any, res) => {
       where: { id: req.userId },
       data: dataToUpdate,
     });
-    res.json({ email: updated.email, username: updated.username, role: updated.role });
+    res.json({
+      email: updated.email,
+      username: updated.username,
+      role: updated.role,
+    });
   } catch {
-    res.status(400).json({ error: 'E-mail lub nazwa uzytkownika już zajęte.' });
+    res.status(400).json({ error: "E-mail lub nazwa uzytkownika już zajęte." });
   }
 });
 

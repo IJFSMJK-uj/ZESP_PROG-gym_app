@@ -17,8 +17,9 @@ model User {
   gym         Gym?                @relation("UserGym", fields: [gymId], references: [id])
   
   trainerGyms TrainerAssignment[]
-
   trainerAvailability TrainerAvailability[]
+  trainerReservations TrainerReservation[] @relation("TrainerReservations")
+  userReservations    TrainerReservation[] @relation("UserReservations")
   
 }
 
@@ -36,7 +37,7 @@ model Gym {
   inviteTrainers  GymInviteTrainer[]
   trainers        TrainerAssignment[]
   availability TrainerAvailability[]
-
+  trainerReservations TrainerReservation[]
 }
 
 model TrainerAssignment {
@@ -79,8 +80,39 @@ model TrainerAvailability {
   @@index([dayOfWeek])
 }
 
+model TrainerReservation {
+  id        Int      @id @default(autoincrement())
+
+  trainerId Int
+  userId    Int
+  gymId     Int?
+
+  date      DateTime
+  startHour Int
+  endHour   Int
+
+  status    ReservationStatus @default(CONFIRMED)
+
+  cancelledByUser    Boolean @default(false)
+  cancelledByTrainer Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  trainer User @relation("TrainerReservations", fields: [trainerId], references: [id], onDelete: Cascade)
+  user    User @relation("UserReservations", fields: [userId], references: [id], onDelete: Cascade)
+  gym     Gym? @relation(fields: [gymId], references: [id], onDelete: Cascade)
+
+  @@index([trainerId, date])
+  @@index([userId])
+}
+
 enum Role {
   MEMBER
   TRAINER
   GYM
+}
+
+enum ReservationStatus {
+  CONFIRMED
+  CANCELLED
 }

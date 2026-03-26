@@ -211,11 +211,10 @@ export const TrainersPage = () => {
                 </Button>
                 <Button
                   className="w-1/2 bg-sky-500 hover:bg-sky-400 text-white font-bold cursor-pointer shadow-lg shadow-sky-500/20"
-                  onClick={() =>
-                    alert(
-                      "Funkcja rezerwacji treningów pojawi się w kolejnym sprincie!",
-                    )
-                  }
+                    onClick={() => {
+                      navigate(`/trainer/${selectedTrainer.id}/schedule`)
+                      setSelectedTrainer(null)
+                    }}
                 >
                   Zarezerwuj
                 </Button>

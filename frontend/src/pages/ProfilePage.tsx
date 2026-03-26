@@ -254,6 +254,7 @@ export const ProfilePage = () => {
           </div>
 
           {role === "GYM" && (
+            
             <div className="space-y-2">
               <label className="text-xs uppercase text-zinc-400">
                 Zaproszenia dla trenerów
@@ -273,7 +274,25 @@ export const ProfilePage = () => {
                 <span className="text-sky-400 text-xs">Przejdź</span>
               </Link>
             </div>
+            
           )}
+
+          {role === 'GYM' && (
+            <div className="space-y-2">
+              <label className="text-xs uppercase text-zinc-400">Ustawienia siłowni</label>
+              <Link
+                to="/gym/admin"
+                className="flex items-center justify-between w-full p-3 rounded-xl bg-zinc-900 border border-zinc-700 hover:border-sky-500 transition-colors cursor-pointer"
+              >
+                <div>
+                  <p className="text-white font-medium">Godziny otwarcia i adres</p>
+                  <p className="text-zinc-400 text-xs">Zarządzaj lokalizacją i godzinami pracy siłowni</p>
+                </div>
+                <span className="text-sky-400 text-xs">Edytuj</span>
+              </Link>
+            </div>
+          )}
+
           
           {role === 'TRAINER' && (
               <div className="space-y-2">

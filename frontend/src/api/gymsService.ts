@@ -5,10 +5,10 @@ export const gymsService = {
   async getGyms() {
     const token = localStorage.getItem('token');
     const response = await fetch(`${API_URL}`, {
-    headers: {
-      Authorization: `Bearer ${token}`
-    }
-  });
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
     if (!response.ok) {
       const text = await response.text();
       console.error('Błąd backendu getGyms:', text);
@@ -20,10 +20,10 @@ export const gymsService = {
   async getGymById(id: string | number) {
     const token = localStorage.getItem('token');
     const response = await fetch(`${API_URL}/${id}`, {
-    headers: {
-      Authorization: `Bearer ${token}`
-    }
-  });
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
     if (!response.ok) {
       const text = await response.text();
       console.error('Błąd backendu getGymById:', text);
@@ -50,6 +50,24 @@ export const gymsService = {
 
     return response.json();
   },
+  async updateMyGym(data: { openTime?: string; closeTime?: string; address?: string }) {
+    const token = localStorage.getItem('token');
+    const response = await fetch(`${API_URL}/me`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
 
+    if (!response.ok) {
+      const text = await response.text();
+      console.error('Błąd backendu updateMyGym:', text);
+      return { error: 'Nie udało się zaktualizować danych siłowni' };
+    }
+
+    return response.json();
+  },
 
 };

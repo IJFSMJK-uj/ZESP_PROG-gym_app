@@ -11,6 +11,7 @@ import { GymDetailPage } from "./pages/GymDetailPage";
 import { GymInviteTrainerPage } from "./pages/GymInviteTrainerPage";
 import { GymCreateTrainerInvitePage } from "./pages/GymCreateTrainerInvitePage";
 import TrainerAvailabilityPage from './pages/TrainerAvailabilityPage';
+import { GymAdminPage } from "./pages/GymAdminPage";
 
 function App() {
   return (
@@ -32,6 +33,7 @@ function App() {
                 path="/gym/invites/trainers"
                 element={<GymCreateTrainerInvitePage />}
               />
+              <Route path="/gym/admin" element={<GymAdminPage />} />
               <Route
                 path="/trainer-invite/:hash"
                 element={<GymInviteTrainerPage />}

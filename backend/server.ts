@@ -5,6 +5,8 @@ import gymsRoutes from './routes/gyms';
 import inviteRoutes from './routes/invite';
 import trainersRoutes from './routes/trainers';
 import trainerAvailabilityRoutes from './routes/trainerAvailability'
+import trainerScheduleRoutes from './routes/trainerSchedule'
+
 
 
 const app = express();
@@ -25,6 +27,7 @@ app.use('/api/gyms', gymsRoutes);
 app.use('/api/invite', inviteRoutes);
 app.use('/api/trainers', trainersRoutes);
 app.use('/api/trainer-availability', trainerAvailabilityRoutes)
+app.use('/api/trainer-schedule', trainerScheduleRoutes)
 
 // START SERWERA
 app.listen(BACKEND_PORT, () => {

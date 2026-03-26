@@ -65,17 +65,31 @@ router.post('/', requireAuth, async (req: any, res) => {  try {
       return res.status(400).json({ error: 'Godzina rozpoczęcia musi być mniejsza niż zakończenia' })
 
     // check overlap
-    const overlap = await prisma.trainerAvailability.findFirst({
-      where: {
-        trainerId,
-        dayOfWeek,
-        startHour: { lt: endHour },
-        endHour: { gt: startHour },
-        ...(gymId === null
-          ? { gymId: null }
-          : { gymId: gymId })
-      }
-    })
+    let overlap
+
+    if (gymId === null) {
+      overlap = await prisma.trainerAvailability.findFirst({
+        where: {
+          trainerId,
+          dayOfWeek,
+          startHour: { lt: endHour },
+          endHour: { gt: startHour }
+        }
+      })
+    } else {
+      overlap = await prisma.trainerAvailability.findFirst({
+        where: {
+          trainerId,
+          dayOfWeek,
+          startHour: { lt: endHour },
+          endHour: { gt: startHour },
+          OR: [
+            { gymId },
+            { gymId: null }
+          ]
+        }
+      })
+    }
 
     if (overlap) {
       return res.status(409).json({ error: 'Kolizja czasów dostępności' })

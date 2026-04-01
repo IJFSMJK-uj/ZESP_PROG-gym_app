@@ -10,7 +10,7 @@ import { SelectGymPage } from "./pages/SelectGymPage";
 import { GymDetailPage } from "./pages/GymDetailPage";
 import { GymInviteTrainerPage } from "./pages/GymInviteTrainerPage";
 import { GymCreateTrainerInvitePage } from "./pages/GymCreateTrainerInvitePage";
-import TrainerAvailabilityPage from './pages/TrainerAvailabilityPage';
+import TrainerAvailabilityPage from "./pages/TrainerAvailabilityPage";
 import { GymAdminPage } from "./pages/GymAdminPage";
 import TrainerSchedulePage from "./pages/TrainerSchedulePage";
 
@@ -31,15 +31,9 @@ function App() {
               <Route path="/gyms" element={<SelectGymPage />} />
               <Route path="/gyms/:gymId" element={<GymDetailPage />} />
               <Route path="/trainer/:trainerId/schedule" element={<TrainerSchedulePage />} />
-              <Route
-                path="/gym/invites/trainers"
-                element={<GymCreateTrainerInvitePage />}
-              />
+              <Route path="/gym/invites/trainers" element={<GymCreateTrainerInvitePage />} />
               <Route path="/gym/admin" element={<GymAdminPage />} />
-              <Route
-                path="/trainer-invite/:hash"
-                element={<GymInviteTrainerPage />}
-              />
+              <Route path="/trainer-invite/:hash" element={<GymInviteTrainerPage />} />
             </Routes>
           </main>
 

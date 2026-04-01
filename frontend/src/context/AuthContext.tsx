@@ -4,7 +4,20 @@ export interface User {
   id: number;
   email: string;
   role: string;
+  // gymId to w rzeczywistości homeGymId, ale póki co zostanie tak dla kompatybilności
   gymId: number | null;
+
+  memberProfile?: {
+    firstName: string | null;
+    lastName: string | null;
+    homeGymId: number | null;
+  };
+  trainerProfile?: {
+    firstName: string | null;
+    lastName: string | null;
+    bio: string | null;
+    phoneNumber: string | null;
+  };
 }
 
 interface AuthContextType {
@@ -31,7 +44,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setToken(savedToken);
         setUser(JSON.parse(savedUser));
       } catch (e) {
-        console.error("Błąd odczytu sesji", e);
+        console.error("Błąd odczytu sesji:", e);
       }
     }
   }, []);

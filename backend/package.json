@@ -22,6 +22,13 @@
     "dev": "tsx watch server.ts",
     "build": "tsc",
     "postinstall": "npx prisma generate",
-    "start": "node dist/server.js"
+    "start": "node dist/server.js",
+    "db:setup": "npx prisma migrate dev&& npx prisma db seed",
+    "db:migrate": "npx prisma migrate dev",
+    "db:reset": "npx prisma migrate reset",
+    "db:studio": "npx prisma studio"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
   }
 }

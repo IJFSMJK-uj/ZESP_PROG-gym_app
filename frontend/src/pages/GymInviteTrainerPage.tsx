@@ -1,13 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "../components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "../components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { inviteService } from "../api/inviteService";
 import { useAuth } from "../context/AuthContext";
 
@@ -88,11 +82,7 @@ export const GymInviteTrainerPage = () => {
         <p className="text-lg text-white mb-4">
           Musisz się zalogować, aby zaakceptować zaproszenie trenera
         </p>
-        <Button
-          variant="outline"
-          onClick={() => navigate("/auth")}
-          className="cursor-pointer"
-        >
+        <Button variant="outline" onClick={() => navigate("/auth")} className="cursor-pointer">
           Przejdź do logowania
         </Button>
       </div>
@@ -111,11 +101,7 @@ export const GymInviteTrainerPage = () => {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] p-4">
         <p className="text-red-400 mb-4 text-2xl text-center">{error}</p>
-        <Button
-          variant="outline"
-          onClick={() => navigate("/")}
-          className="cursor-pointer"
-        >
+        <Button variant="outline" onClick={() => navigate("/")} className="cursor-pointer">
           Powrót
         </Button>
       </div>
@@ -127,18 +113,14 @@ export const GymInviteTrainerPage = () => {
       <Card className="w-full max-w-xl bg-black border border-zinc-800 rounded-3xl">
         <CardHeader className="text-center">
           <CardTitle>Zaproszenie na trenera</CardTitle>
-          <CardDescription>
-            To zaproszenie przypisze Twoje konto do roli trenera
-          </CardDescription>
+          <CardDescription>To zaproszenie przypisze Twoje konto do roli trenera</CardDescription>
         </CardHeader>
 
         <CardContent className="flex flex-col items-center gap-4">
           <div className="text-center">
             <p className="text-white text-lg">
               Siłownia:{" "}
-              <span className="font-semibold">
-                {inviteData?.gymName || "Nieznana siłownia"}
-              </span>
+              <span className="font-semibold">{inviteData?.gymName || "Nieznana siłownia"}</span>
             </p>
 
             {inviteData?.expirationDate && (

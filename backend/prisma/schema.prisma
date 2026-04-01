@@ -7,112 +7,149 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id          Int                 @id @default(autoincrement())
-  password    String
-  username    String?             @unique
-  email       String              @unique
-  gymId       Int?
-  role        Role                @default(MEMBER)
-  gym         Gym?                @relation("UserGym", fields: [gymId], references: [id])
-  
-  trainerGyms TrainerAssignment[]
-  trainerAvailability TrainerAvailability[]
-  trainerReservations TrainerReservation[] @relation("TrainerReservations")
-  userReservations    TrainerReservation[] @relation("UserReservations")
-  
-}
-
-model Gym {
-  id                    Int                 @id @default(autoincrement())
-  name                  String              @unique
-  address               String              @unique
-  openTime              String?
-  closeTime             String?
-  trainerRecommendation Boolean?
-  area     Int?
-  description String?
-  users User[] @relation("UserGym")
-
-  inviteTrainers  GymInviteTrainer[]
-  trainers        TrainerAssignment[]
-  availability TrainerAvailability[]
-  trainerReservations TrainerReservation[]
-}
-
-model TrainerAssignment {
-  id        Int      @id @default(autoincrement())
-  trainerId Int
-  gymId     Int
-  createdAt DateTime @default(now())
-  gym       Gym      @relation(fields: [gymId], references: [id], onDelete: Cascade)
-  trainer   User     @relation(fields: [trainerId], references: [id], onDelete: Cascade)
-
-  @@unique([trainerId, gymId])
-  @@index([trainerId])
-  @@index([gymId])
-}
-
-model GymInviteTrainer {
-  id             Int      @id @default(autoincrement())
-  gymId          Int
-  hash           String   @unique @db.VarChar(128)
-  expirationDate DateTime
-  alreadyUsed    Boolean  @default(false)
-  gym            Gym      @relation(fields: [gymId], references: [id], onDelete: Cascade)
-
-  @@index([gymId])
-}
-
-model TrainerAvailability {
-  id        Int @id @default(autoincrement())
-  trainerId Int
-  gymId     Int?
-
-  dayOfWeek Int  // 0=Sunday, 1=Monday ... 6=Saturday
-  startHour Int
-  endHour   Int
-
-  trainer User @relation(fields: [trainerId], references: [id], onDelete: Cascade)
-  gym     Gym?  @relation(fields: [gymId], references: [id], onDelete: Cascade)
-
-  @@index([trainerId, gymId])
-  @@index([dayOfWeek])
-}
-
-model TrainerReservation {
-  id        Int      @id @default(autoincrement())
-
-  trainerId Int
-  userId    Int
-  gymId     Int?
-
-  date      DateTime
-  startHour Int
-  endHour   Int
-
-  status    ReservationStatus @default(CONFIRMED)
-
-  cancelledByUser    Boolean @default(false)
-  cancelledByTrainer Boolean @default(false)
-
-  createdAt DateTime @default(now())
-
-  trainer User @relation("TrainerReservations", fields: [trainerId], references: [id], onDelete: Cascade)
-  user    User @relation("UserReservations", fields: [userId], references: [id], onDelete: Cascade)
-  gym     Gym? @relation(fields: [gymId], references: [id], onDelete: Cascade)
-
-  @@index([trainerId, date])
-  @@index([userId])
-}
-
 enum Role {
   MEMBER
   TRAINER
-  GYM
+  GYM_MANAGER
 }
 
 enum ReservationStatus {
   CONFIRMED
   CANCELLED
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  role      Role     @default(MEMBER)
+  createdAt DateTime @default(now())
+
+  // RELACJE ZWIĄZANE Z ROLAMI
+  memberProfile  MemberProfile?
+  trainerProfile TrainerProfile?
+  managedGyms    Gym[]           @relation("ManagedGyms")
+
+  reservations          TrainerReservation[] @relation("UserReservations")
+  cancelledReservations TrainerReservation[] @relation("CancelledReservations")
+  createdInvites        GymInviteTrainer[]   @relation("CreatedInvites")
+  usedInvites           GymInviteTrainer[]   @relation("UsedInvites")
+}
+
+model MemberProfile {
+  id Int @id @default(autoincrement())
+
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId Int  @unique
+
+  firstName String?
+  lastName  String?
+
+  homeGym   Gym? @relation("MemberHomeGym", fields: [homeGymId], references: [id], onDelete: SetNull)
+  homeGymId Int?
+}
+
+model TrainerProfile {
+  id Int @id @default(autoincrement())
+
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId Int  @unique
+
+  firstName   String?
+  lastName    String?
+  bio         String?
+  phoneNumber String?
+
+  assignments TrainerAssignment[]
+}
+
+model Gym {
+  id      Int    @id @default(autoincrement())
+  name    String @unique
+  address String @unique
+
+  members            MemberProfile[]     @relation("MemberHomeGym")
+  trainerAssignments TrainerAssignment[]
+  managers           User[]              @relation("ManagedGyms")
+  invites            GymInviteTrainer[]
+}
+
+model TrainerAssignment {
+  id Int @id @default(autoincrement())
+
+  trainerProfile   TrainerProfile @relation(fields: [trainerProfileId], references: [id], onDelete: Cascade)
+  trainerProfileId Int
+
+  gym   Gym @relation(fields: [gymId], references: [id], onDelete: Cascade)
+  gymId Int
+
+  createdAt      DateTime              @default(now())
+  // Grafik trenera w ramach konkretnego zatrudnienia (na konkretnej siłowni)
+  availabilities TrainerAvailability[]
+  reservations   TrainerReservation[]
+
+  @@unique([trainerProfileId, gymId])
+  @@index([trainerProfileId])
+  @@index([gymId])
+}
+
+model TrainerAvailability {
+  id Int @id @default(autoincrement())
+
+  assignment   TrainerAssignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  assignmentId Int
+
+  dayOfWeek Int // 0=Sunday, 1=Monday, ..., 6=Saturday
+  startHour Int
+  endHour   Int
+
+  @@index([assignmentId])
+  @@index([dayOfWeek])
+}
+
+model TrainerReservation {
+  id Int @id @default(autoincrement())
+
+  user   User @relation("UserReservations", fields: [userId], references: [id], onDelete: Cascade)
+  userId Int
+
+  // Z kim i gdzie
+  assignment   TrainerAssignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  assignmentId Int
+
+  date      DateTime
+  startHour Int
+  endHour   Int
+  status    ReservationStatus @default(CONFIRMED)
+
+  // Id osoby, która anulowała (trener/member)
+  canceller     User? @relation("CancelledReservations", fields: [cancelledById], references: [id], onDelete: SetNull)
+  cancelledById Int?
+
+  createdAt DateTime @default(now())
+
+  @@index([assignmentId, date])
+  @@index([userId])
+}
+
+model GymInviteTrainer {
+  id Int @id @default(autoincrement())
+
+  gym   Gym @relation(fields: [gymId], references: [id], onDelete: Cascade)
+  gymId Int
+
+  // Kto wygenerował ten link
+  createdBy   User @relation("CreatedInvites", fields: [createdById], references: [id], onDelete: Cascade)
+  createdById Int
+
+  // Kto użył tego linku
+  usedBy   User? @relation("UsedInvites", fields: [usedById], references: [id], onDelete: SetNull)
+  usedById Int?
+
+  expirationDate DateTime
+  createdAt      DateTime @default(now())
+  hash           String   @unique @db.VarChar(128)
+
+  @@index([gymId])
+  @@index([hash])
 }

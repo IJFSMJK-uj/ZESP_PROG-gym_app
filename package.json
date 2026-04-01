@@ -16,10 +16,26 @@
   },
   "homepage": "https://github.com/IJFSMJK-uj/ZESP_PROG-gym_app#readme",
   "devDependencies": {
-    "concurrently": "^9.2.1"
+    "concurrently": "^9.2.1",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
+    "prettier": "^3.8.1",
+    "prettier-plugin-prisma": "^5.0.0"
   },
   "scripts": {
     "install-all": "npm install && npm install --prefix backend && npm install --prefix frontend",
-    "dev": "concurrently \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\""
+    "dev": "concurrently \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\"",
+    "db:setup": "docker compose up -d && npm run db:setup --prefix backend",
+    "db:migrate": "npm run db:migrate --prefix backend",
+    "db:reset": "npm run db:reset --prefix backend",
+    "db:stop": "docker compose down",
+    "db:studio": "npm run db:studio --prefix backend",
+    "format": "prettier --write .",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "**/*.{ts,tsx,js,jsx,json,css,md}": [
+      "prettier --write"
+    ]
   }
 }

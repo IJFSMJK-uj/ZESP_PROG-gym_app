@@ -1,25 +1,25 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { authService } from '../api/authService';
-import { gymsService } from '../api/gymsService';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { authService } from "../api/authService";
+import { gymsService } from "../api/gymsService";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 
 export const GymAdminPage = () => {
   const navigate = useNavigate();
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem("token");
 
-  const [role, setRole] = useState('');
-  const [gymName, setGymName] = useState('');
-  const [address, setAddress] = useState('');
-  const [openTime, setOpenTime] = useState('');
-  const [closeTime, setCloseTime] = useState('');
+  const [role, setRole] = useState("");
+  const [gymName, setGymName] = useState("");
+  const [address, setAddress] = useState("");
+  const [openTime, setOpenTime] = useState("");
+  const [closeTime, setCloseTime] = useState("");
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   useEffect(() => {
     const init = async () => {
@@ -36,15 +36,15 @@ export const GymAdminPage = () => {
           return;
         }
 
-        setRole(profile.role || '');
+        setRole(profile.role || "");
 
-        if (profile.role !== 'GYM') {
+        if (profile.role !== "GYM") {
           setLoading(false);
           return;
         }
 
         if (!profile.gym) {
-          setError('Konto siłowni nie jest powiązane z żadną siłownią.');
+          setError("Konto siłowni nie jest powiązane z żadną siłownią.");
           setLoading(false);
           return;
         }
@@ -56,12 +56,12 @@ export const GymAdminPage = () => {
           return;
         }
 
-        setGymName(gym.name || '');
-        setAddress(gym.address || '');
-        setOpenTime(gym.openTime || '');
-        setCloseTime(gym.closeTime || '');
+        setGymName(gym.name || "");
+        setAddress(gym.address || "");
+        setOpenTime(gym.openTime || "");
+        setCloseTime(gym.closeTime || "");
       } catch {
-        setError('Nie udało się pobrać danych siłowni');
+        setError("Nie udało się pobrać danych siłowni");
       } finally {
         setLoading(false);
       }
@@ -71,20 +71,24 @@ export const GymAdminPage = () => {
   }, [token]);
 
   const handleSave = async () => {
-    setError('');
-    setSuccess('');
+    setError("");
+    setSuccess("");
     setSaving(true);
 
     try {
-      const data = await gymsService.updateMyGym({ address, openTime, closeTime });
+      const data = await gymsService.updateMyGym({
+        address,
+        openTime,
+        closeTime,
+      });
 
       if (data.error) {
         setError(data.error);
       } else {
-        setSuccess('Dane siłowni zostały zaktualizowane pomyślnie.');
+        setSuccess("Dane siłowni zostały zaktualizowane pomyślnie.");
       }
     } catch {
-      setError('Błąd sieci. Spróbuj ponownie.');
+      setError("Błąd sieci. Spróbuj ponownie.");
     } finally {
       setSaving(false);
     }
@@ -94,7 +98,7 @@ export const GymAdminPage = () => {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] p-4">
         <p className="text-lg text-white mb-4">Musisz się zalogować, aby zarządzać siłownią.</p>
-        <Button variant="outline" onClick={() => navigate('/auth')} className="cursor-pointer">
+        <Button variant="outline" onClick={() => navigate("/auth")} className="cursor-pointer">
           Przejdź do logowania
         </Button>
       </div>
@@ -109,13 +113,13 @@ export const GymAdminPage = () => {
     );
   }
 
-  if (role !== 'GYM') {
+  if (role !== "GYM") {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] p-4">
         <p className="text-lg text-red-400 mb-4 text-center">
           Tylko konto siłowni ma dostęp do tej strony.
         </p>
-        <Button variant="outline" onClick={() => navigate('/')} className="cursor-pointer">
+        <Button variant="outline" onClick={() => navigate("/")} className="cursor-pointer">
           Powrót
         </Button>
       </div>
@@ -125,13 +129,13 @@ export const GymAdminPage = () => {
   return (
     <div className="p-8 flex justify-center">
       <div className="w-full max-w-2xl flex flex-col gap-6">
-
         {/* HEADER CARD */}
         <Card className="bg-black border border-zinc-800 rounded-3xl">
           <CardHeader>
             <CardTitle>Ustawienia siłowni</CardTitle>
             <CardDescription>
-              Zarządzaj godzinami otwarcia i lokalizacją siłowni{gymName ? `: ${gymName}` : ''}.
+              Zarządzaj godzinami otwarcia i lokalizacją siłowni
+              {gymName ? `: ${gymName}` : ""}.
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-5">
@@ -139,7 +143,9 @@ export const GymAdminPage = () => {
               <div className="text-sm text-red-300 p-3 bg-red-500/10 rounded-xl">{error}</div>
             )}
             {success && (
-              <div className="text-sm text-emerald-300 p-3 bg-emerald-500/10 rounded-xl">{success}</div>
+              <div className="text-sm text-emerald-300 p-3 bg-emerald-500/10 rounded-xl">
+                {success}
+              </div>
             )}
 
             {/* ADRES */}
@@ -179,22 +185,25 @@ export const GymAdminPage = () => {
             {(openTime || closeTime) && (
               <div className="p-3 rounded-xl bg-zinc-900 border border-zinc-800 text-sm text-zinc-400">
                 <span className="text-zinc-300 font-medium">Aktualny plan: </span>
-                {openTime || '--:--'} – {closeTime || '--:--'}
+                {openTime || "--:--"} – {closeTime || "--:--"}
               </div>
             )}
 
             {/* ZAPISZ */}
             <div className="flex gap-3 pt-2">
               <Button onClick={handleSave} disabled={saving} className="flex-1 cursor-pointer">
-                {saving ? 'Zapisywanie...' : 'Zapisz zmiany'}
+                {saving ? "Zapisywanie..." : "Zapisz zmiany"}
               </Button>
-              <Button variant="outline" onClick={() => navigate('/profile')} className="cursor-pointer">
+              <Button
+                variant="outline"
+                onClick={() => navigate("/profile")}
+                className="cursor-pointer"
+              >
                 Anuluj
               </Button>
             </div>
           </CardContent>
         </Card>
-
       </div>
     </div>
   );

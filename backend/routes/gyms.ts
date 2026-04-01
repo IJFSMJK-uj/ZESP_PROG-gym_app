@@ -1,21 +1,21 @@
-import express from 'express';
-import jwt from 'jsonwebtoken';
-import prisma from '../lib/prisma';
-import bcrypt from 'bcrypt';
-import { Role } from '@prisma/client';
+import express from "express";
+import jwt from "jsonwebtoken";
+import prisma from "../lib/prisma";
+import bcrypt from "bcrypt";
+import { Role } from "@prisma/client";
 
 const router = express.Router();
-const JWT_SECRET = process.env.JWT_SECRET || 'jwt_x';
+const JWT_SECRET = process.env.JWT_SECRET || "jwt_x";
 
 const requireAuth = (req: any, res: any, next: any) => {
-  const token = req.headers.authorization?.split(' ')[1];
-  if (!token) return res.status(401).json({ error: 'Brak tokenu' });
+  const token = req.headers.authorization?.split(" ")[1];
+  if (!token) return res.status(401).json({ error: "Brak tokenu" });
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as { userId: number };
     req.userId = decoded.userId;
     next();
   } catch {
-    return res.status(401).json({ error: 'Nieprawidlowy token' });
+    return res.status(401).json({ error: "Nieprawidlowy token" });
   }
 };
 
@@ -43,7 +43,9 @@ router.patch("/me", requireAuth, async (req: any, res: any) => {
     }
 
     if (user.role !== Role.GYM) {
-      return res.status(403).json({ error: "Brak uprawnień. Tylko konto siłowni może edytować dane siłowni." });
+      return res.status(403).json({
+        error: "Brak uprawnień. Tylko konto siłowni może edytować dane siłowni.",
+      });
     }
 
     if (!user.gymId) {
@@ -51,7 +53,11 @@ router.patch("/me", requireAuth, async (req: any, res: any) => {
     }
 
     const { openTime, closeTime, address } = req.body;
-    const dataToUpdate: { openTime?: string; closeTime?: string; address?: string } = {};
+    const dataToUpdate: {
+      openTime?: string;
+      closeTime?: string;
+      address?: string;
+    } = {};
 
     if (openTime !== undefined) dataToUpdate.openTime = openTime;
     if (closeTime !== undefined) dataToUpdate.closeTime = closeTime;
@@ -66,7 +72,10 @@ router.patch("/me", requireAuth, async (req: any, res: any) => {
       data: dataToUpdate,
     });
 
-    res.json({ message: "Dane siłowni zaktualizowane pomyślnie", gym: updatedGym });
+    res.json({
+      message: "Dane siłowni zaktualizowane pomyślnie",
+      gym: updatedGym,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Nie udało się zaktualizować danych siłowni" });
@@ -86,7 +95,7 @@ router.get("/:id", requireAuth, async (req: any, res: any) => {
     });
 
     if (!gym) {
-      return res.status(404).json({ error: "Nie znaleziono siłowni" })
+      return res.status(404).json({ error: "Nie znaleziono siłowni" });
     }
 
     res.json(gym);
@@ -94,9 +103,7 @@ router.get("/:id", requireAuth, async (req: any, res: any) => {
     console.error(error);
     res.status(500).json({ error: "Nie znaleziono siłowni" });
   }
-
 });
-
 
 router.put("/:id", requireAuth, async (req: any, res: any) => {
   const gymId = parseInt(req.params.id);
@@ -115,13 +122,14 @@ router.put("/:id", requireAuth, async (req: any, res: any) => {
       data: { gymId },
     });
 
-    res.json({ message: `Wybrano siłownię: ${gym.name}`, gym: updatedUser.gymId });
+    res.json({
+      message: `Wybrano siłownię: ${gym.name}`,
+      gym: updatedUser.gymId,
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Nie udało się przypisać siłowni" });
   }
-
 });
-
 
 export default router;

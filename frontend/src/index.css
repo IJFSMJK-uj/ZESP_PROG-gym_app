@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: 'Nunito', sans-serif;
+  --font-sans: "Nunito", sans-serif;
   --color-background: #09090b; /* Bardzo ciemny szary / czarny */
   --color-foreground: #fafafa;
 }

@@ -1,6 +1,6 @@
-import { useState } from "react"
-import { Button } from "../components/ui/button"
-import { availabilityService } from "../api/availabilityService"
+import { useState } from "react";
+import { Button } from "../components/ui/button";
+import { availabilityService } from "../api/availabilityService";
 
 const days = [
   { value: 0, label: "Niedziela" },
@@ -9,66 +9,59 @@ const days = [
   { value: 3, label: "Środa" },
   { value: 4, label: "Czwartek" },
   { value: 5, label: "Piątek" },
-  { value: 6, label: "Sobota" }
-]
+  { value: 6, label: "Sobota" },
+];
 
 export default function AvailabilityForm({ gyms, onAdd }: any) {
-  const [gymId, setGymId] = useState<string>("")
-  const [dayOfWeek, setDayOfWeek] = useState(1)
-  const [startHour, setStartHour] = useState(8)
-  const [endHour, setEndHour] = useState(12)
-  const [error, setError] = useState("")
-  const [loading, setLoading] = useState(false)
+  const [gymId, setGymId] = useState<string>("");
+  const [dayOfWeek, setDayOfWeek] = useState(1);
+  const [startHour, setStartHour] = useState(8);
+  const [endHour, setEndHour] = useState(12);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError("")
+    e.preventDefault();
+    setError("");
 
     if (startHour >= endHour) {
-      setError("Godzina rozpoczęcia musi być mniejsza niż zakończenia")
-      return
+      setError("Godzina rozpoczęcia musi być mniejsza niż zakończenia");
+      return;
     }
 
-    setLoading(true)
+    setLoading(true);
 
     try {
       const res = await availabilityService.create({
         gymId: gymId ? Number(gymId) : null,
         dayOfWeek,
         startHour,
-        endHour
-      })
+        endHour,
+      });
 
       if (res.error) {
-        setError(res.error)
-        return
+        setError(res.error);
+        return;
       }
 
-      onAdd()
-
+      onAdd();
     } catch {
-      setError("Błąd sieci")
+      setError("Błąd sieci");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <form
       onSubmit={handleSubmit}
       className="space-y-4 p-4 rounded-2xl bg-black border border-zinc-800"
     >
-      {error && (
-        <div className="text-sm text-red-300 p-2 bg-red-500/10 rounded-md">
-          {error}
-        </div>
-      )}
+      {error && <div className="text-sm text-red-300 p-2 bg-red-500/10 rounded-md">{error}</div>}
 
       {/* SIŁOWNIA */}
       <div className="space-y-1">
-        <label className="text-xs uppercase text-zinc-400">
-          Siłownia
-        </label>
+        <label className="text-xs uppercase text-zinc-400">Siłownia</label>
         <select
           value={gymId}
           onChange={(e) => setGymId(e.target.value)}
@@ -85,9 +78,7 @@ export default function AvailabilityForm({ gyms, onAdd }: any) {
 
       {/* DZIEŃ */}
       <div className="space-y-1">
-        <label className="text-xs uppercase text-zinc-400">
-          Dzień tygodnia
-        </label>
+        <label className="text-xs uppercase text-zinc-400">Dzień tygodnia</label>
         <select
           value={dayOfWeek}
           onChange={(e) => setDayOfWeek(Number(e.target.value))}
@@ -109,7 +100,9 @@ export default function AvailabilityForm({ gyms, onAdd }: any) {
           className="p-2 rounded-xl bg-zinc-900 border border-zinc-700 text-white"
         >
           {Array.from({ length: 24 }).map((_, i) => (
-            <option key={i} value={i}>{i}:00</option>
+            <option key={i} value={i}>
+              {i}:00
+            </option>
           ))}
         </select>
 
@@ -119,20 +112,18 @@ export default function AvailabilityForm({ gyms, onAdd }: any) {
           className="p-2 rounded-xl bg-zinc-900 border border-zinc-700 text-white"
         >
           {Array.from({ length: 24 }).map((_, i) => (
-            <option key={i} value={i + 1}>{i + 1}:00</option>
+            <option key={i} value={i + 1}>
+              {i + 1}:00
+            </option>
           ))}
         </select>
       </div>
 
-    <div className="flex justify-center">
-    <Button
-        type="submit"
-        variant="outline"
-        className="w-1/2 cursor-pointer"
-    >
-        {loading ? "Dodawanie..." : "Dodaj dostępność"}
-    </Button>
-    </div>
+      <div className="flex justify-center">
+        <Button type="submit" variant="outline" className="w-1/2 cursor-pointer">
+          {loading ? "Dodawanie..." : "Dodaj dostępność"}
+        </Button>
+      </div>
     </form>
-  )
+  );
 }

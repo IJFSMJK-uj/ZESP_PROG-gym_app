@@ -4,13 +4,7 @@ import { authService } from "../api/authService";
 import { useAuth } from "../context/AuthContext";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "../components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 
 export const ProfilePage = () => {
   const { logout, isAuthenticated } = useAuth();
@@ -82,8 +76,7 @@ export const ProfilePage = () => {
     setSuccess("");
     if (!validate()) return;
 
-    const dataToUpdate: { email?: string; username?: string; role?: string } =
-      {};
+    const dataToUpdate: { email?: string; username?: string; role?: string } = {};
     if (editingEmail) dataToUpdate.email = email;
     if (editingUsername) dataToUpdate.username = username;
     if (editingRole) dataToUpdate.role = role;
@@ -120,14 +113,8 @@ export const ProfilePage = () => {
   if (!isAuthenticated) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] p-4">
-        <p className="text-lg text-white mb-4">
-          Musisz się zalogować, aby edytować profil.
-        </p>
-        <Button
-          variant="outline"
-          onClick={() => navigate("/auth")}
-          className="cursor-pointer"
-        >
+        <p className="text-lg text-white mb-4">Musisz się zalogować, aby edytować profil.</p>
+        <Button variant="outline" onClick={() => navigate("/auth")} className="cursor-pointer">
           Przejdź do logowania
         </Button>
       </div>
@@ -143,9 +130,7 @@ export const ProfilePage = () => {
         </CardHeader>
         <CardContent className="space-y-4 pb-8">
           {error && (
-            <div className="text-sm text-red-300 p-2 bg-red-500/10 rounded-md">
-              {error}
-            </div>
+            <div className="text-sm text-red-300 p-2 bg-red-500/10 rounded-md">{error}</div>
           )}
           {success && (
             <div className="text-sm text-emerald-300 p-2 bg-emerald-500/10 rounded-md">
@@ -156,10 +141,7 @@ export const ProfilePage = () => {
           {/* EMAIL */}
           <div className="space-y-2">
             <label className="text-xs uppercase text-zinc-400">
-              E-mail{" "}
-              {editingEmail && (
-                <span className="text-sky-400 normal-case">(edytujesz)</span>
-              )}
+              E-mail {editingEmail && <span className="text-sky-400 normal-case">(edytujesz)</span>}
             </label>
             <Input
               value={email}
@@ -178,9 +160,7 @@ export const ProfilePage = () => {
           <div className="space-y-2">
             <label className="text-xs uppercase text-zinc-400">
               Nazwa użytkownika{" "}
-              {editingUsername && (
-                <span className="text-sky-400 normal-case">(edytujesz)</span>
-              )}
+              {editingUsername && <span className="text-sky-400 normal-case">(edytujesz)</span>}
             </label>
             <Input
               value={username}
@@ -198,10 +178,7 @@ export const ProfilePage = () => {
           {/* ROLA */}
           <div className="space-y-2">
             <label className="text-xs uppercase text-zinc-400">
-              Rola{" "}
-              {editingRole && (
-                <span className="text-sky-400 normal-case">(edytujesz)</span>
-              )}
+              Rola {editingRole && <span className="text-sky-400 normal-case">(edytujesz)</span>}
             </label>
             <div className="flex gap-2">
               {["MEMBER", "TRAINER", "GYM"].map((option) => (
@@ -227,9 +204,7 @@ export const ProfilePage = () => {
 
           {/* SIŁOWNIA */}
           <div className="space-y-2">
-            <label className="text-xs uppercase text-zinc-400">
-              Twoja siłownia
-            </label>
+            <label className="text-xs uppercase text-zinc-400">Twoja siłownia</label>
             {gym ? (
               <Link
                 to={`/gyms/${gym.id}`}
@@ -246,38 +221,28 @@ export const ProfilePage = () => {
                 to="/gyms"
                 className="flex items-center justify-center w-full p-3 rounded-xl bg-zinc-900 border border-dashed border-zinc-700 hover:border-sky-500 transition-colors cursor-pointer"
               >
-                <span className="text-zinc-400 text-sm">
-                  + Wybierz siłownię
-                </span>
+                <span className="text-zinc-400 text-sm">+ Wybierz siłownię</span>
               </Link>
             )}
           </div>
 
           {role === "GYM" && (
-            
             <div className="space-y-2">
-              <label className="text-xs uppercase text-zinc-400">
-                Zaproszenia dla trenerów
-              </label>
+              <label className="text-xs uppercase text-zinc-400">Zaproszenia dla trenerów</label>
               <Link
                 to="/gym/invites/trainers"
                 className="flex items-center justify-between w-full p-3 rounded-xl bg-zinc-900 border border-zinc-700 hover:border-sky-500 transition-colors cursor-pointer"
               >
                 <div>
-                  <p className="text-white font-medium">
-                    Stwórz link zaproszenia dla trenera
-                  </p>
-                  <p className="text-zinc-400 text-xs">
-                    Generuj i zarządzaj aktywnymi linkami
-                  </p>
+                  <p className="text-white font-medium">Stwórz link zaproszenia dla trenera</p>
+                  <p className="text-zinc-400 text-xs">Generuj i zarządzaj aktywnymi linkami</p>
                 </div>
                 <span className="text-sky-400 text-xs">Przejdź</span>
               </Link>
             </div>
-            
           )}
 
-          {role === 'GYM' && (
+          {role === "GYM" && (
             <div className="space-y-2">
               <label className="text-xs uppercase text-zinc-400">Ustawienia siłowni</label>
               <Link
@@ -286,39 +251,36 @@ export const ProfilePage = () => {
               >
                 <div>
                   <p className="text-white font-medium">Godziny otwarcia i adres</p>
-                  <p className="text-zinc-400 text-xs">Zarządzaj lokalizacją i godzinami pracy siłowni</p>
+                  <p className="text-zinc-400 text-xs">
+                    Zarządzaj lokalizacją i godzinami pracy siłowni
+                  </p>
                 </div>
                 <span className="text-sky-400 text-xs">Edytuj</span>
               </Link>
             </div>
           )}
 
-          
-          {role === 'TRAINER' && (
-              <div className="space-y-2">
-                <label className="text-xs uppercase text-zinc-400">Dostępność trenera</label>
-                <Link
-                  to="/trainer/availability"
-                  className="flex items-center justify-between w-full p-3 rounded-xl bg-zinc-900 border border-zinc-700 hover:border-sky-500 transition-colors cursor-pointer"
-                >
-                  <div>
-                    <p className="text-white font-medium">Ustaw godziny dostępności</p>
-                    <p className="text-zinc-400 text-xs">Dodaj dni i godziny pracy</p>
-                  </div>
-                  <span className="text-sky-400 text-xs">Przejdź</span>
-                </Link>
-              </div>
+          {role === "TRAINER" && (
+            <div className="space-y-2">
+              <label className="text-xs uppercase text-zinc-400">Dostępność trenera</label>
+              <Link
+                to="/trainer/availability"
+                className="flex items-center justify-between w-full p-3 rounded-xl bg-zinc-900 border border-zinc-700 hover:border-sky-500 transition-colors cursor-pointer"
+              >
+                <div>
+                  <p className="text-white font-medium">Ustaw godziny dostępności</p>
+                  <p className="text-zinc-400 text-xs">Dodaj dni i godziny pracy</p>
+                </div>
+                <span className="text-sky-400 text-xs">Przejdź</span>
+              </Link>
+            </div>
           )}
 
           <div className="flex gap-2 mt-2">
             <Button onClick={handleSave} className="w-1/2 cursor-pointer">
               Zapisz
             </Button>
-            <Button
-              variant="outline"
-              onClick={logout}
-              className="w-1/2 cursor-pointer"
-            >
+            <Button variant="outline" onClick={logout} className="w-1/2 cursor-pointer">
               Wyloguj
             </Button>
           </div>

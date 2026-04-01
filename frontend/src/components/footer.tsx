@@ -1,5 +1,5 @@
-import { useAuth } from '../context/AuthContext';
-import { Button } from './ui/button';
+import { useAuth } from "../context/AuthContext";
+import { Button } from "./ui/button";
 
 export const Footer = () => {
   const { userEmail, logout } = useAuth();
@@ -7,7 +7,6 @@ export const Footer = () => {
   return (
     <footer className="fixed bottom-0 left-0 w-full bg-black/80 backdrop-blur-md border-t border-zinc-800/50 py-3 z-50">
       <div className="container mx-auto px-6 flex justify-between items-center">
-        
         {/* LEWA STRONA: Developer info */}
         <div className="text-[10px] uppercase tracking-widest text-zinc-500 font-semibold">
           developed by <span className="text-zinc-300">IJFSMJK-uj</span>
@@ -29,7 +28,6 @@ export const Footer = () => {
             </div>
           )}
         </div>
-
       </div>
     </footer>
   );

@@ -1,11 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-} from "../components/ui/card";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { useEffect, useState } from "react";
 import { gymsService } from "../api/gymsService";
@@ -41,11 +35,7 @@ export const GymDetailPage = () => {
         <p className="text-lg text-white mb-4">
           Musisz się zalogować, aby wybrać siłownie macierzystą
         </p>
-        <Button
-          variant="outline"
-          onClick={() => navigate("/auth")}
-          className="cursor-pointer"
-        >
+        <Button variant="outline" onClick={() => navigate("/auth")} className="cursor-pointer">
           Przejdź do logowania
         </Button>
       </div>
@@ -93,8 +83,7 @@ export const GymDetailPage = () => {
           <p className="text-white">Godziny otwarcia: {gym.openTime}</p>
           <p className="text-white">Godziny Zamknięcia: {gym.closeTime}</p>
           <p className="text-white">
-            Trenerzy polecają:{" "}
-            {gym.trainerRecommendation ? "tak 8/10" : "nie 2/10"}
+            Trenerzy polecają: {gym.trainerRecommendation ? "tak 8/10" : "nie 2/10"}
           </p>
           <p className="text-white">Powierzchnia {`${gym.area} m2`}</p>
           {error && (

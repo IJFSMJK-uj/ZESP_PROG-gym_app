@@ -16,8 +16,8 @@ export const HomePage = () => {
         </h1>
 
         <p className="text-lg md:text-xl text-zinc-400 font-medium max-w-2xl mx-auto">
-          Zarządzaj treningami, śledź postępy i ćwicz pod okiem najlepszych.
-          Wszystko w jednym miejscu.
+          Zarządzaj treningami, śledź postępy i ćwicz pod okiem najlepszych. Wszystko w jednym
+          miejscu.
         </p>
 
         <div className="pt-8 flex flex-col sm:flex-row gap-4 justify-center">

@@ -1,34 +1,21 @@
-const days = [
-  "Niedziela",
-  "Poniedziałek",
-  "Wtorek",
-  "Środa",
-  "Czwartek",
-  "Piątek",
-  "Sobota"
-]
+const days = ["Niedziela", "Poniedziałek", "Wtorek", "Środa", "Czwartek", "Piątek", "Sobota"];
 
 export default function AvailabilityList({ data, onDelete }: any) {
   // grupowanie po dniach
   const grouped = data.reduce((acc: any, item: any) => {
-    if (!acc[item.dayOfWeek]) acc[item.dayOfWeek] = []
-    acc[item.dayOfWeek].push(item)
-    return acc
-  }, {})
+    if (!acc[item.dayOfWeek]) acc[item.dayOfWeek] = [];
+    acc[item.dayOfWeek].push(item);
+    return acc;
+  }, {});
 
   return (
     <div className="space-y-4">
       {Object.keys(grouped)
         .sort((a, b) => Number(a) - Number(b))
         .map((day) => (
-          <div
-            key={day}
-            className="p-4 rounded-2xl bg-black border border-zinc-800"
-          >
+          <div key={day} className="p-4 rounded-2xl bg-black border border-zinc-800">
             {/* DAY HEADER */}
-            <h2 className="text-sm font-semibold text-zinc-300 mb-3">
-              {days[Number(day)]}
-            </h2>
+            <h2 className="text-sm font-semibold text-zinc-300 mb-3">{days[Number(day)]}</h2>
 
             <div className="space-y-2">
               {grouped[day].map((item: any) => (
@@ -43,9 +30,7 @@ export default function AvailabilityList({ data, onDelete }: any) {
                     </span>
 
                     <span className="text-xs text-zinc-400">
-                        {item.gym
-                        ? item.gym.name
-                        : "Dostępność ogólna"}
+                      {item.gym ? item.gym.name : "Dostępność ogólna"}
                     </span>
                   </div>
 
@@ -62,5 +47,5 @@ export default function AvailabilityList({ data, onDelete }: any) {
           </div>
         ))}
     </div>
-  )
+  );
 }

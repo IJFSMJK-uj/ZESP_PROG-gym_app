@@ -1,13 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "../components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { inviteService } from "../api/inviteService";
 import { useAuth } from "../context/AuthContext";
 
@@ -107,11 +101,7 @@ export const GymCreateTrainerInvitePage = () => {
         <p className="text-lg text-white mb-4">
           Musisz się zalogować, aby generować zaproszenia dla trenerów
         </p>
-        <Button
-          variant="outline"
-          onClick={() => navigate("/auth")}
-          className="cursor-pointer"
-        >
+        <Button variant="outline" onClick={() => navigate("/auth")} className="cursor-pointer">
           Przejdź do logowania
         </Button>
       </div>
@@ -132,11 +122,7 @@ export const GymCreateTrainerInvitePage = () => {
         <p className="text-lg text-red-400 mb-4 text-center">
           Tylko konto siłowni ma dostęp do tej strony
         </p>
-        <Button
-          variant="outline"
-          onClick={() => navigate("/")}
-          className="cursor-pointer"
-        >
+        <Button variant="outline" onClick={() => navigate("/")} className="cursor-pointer">
           Powrót
         </Button>
       </div>
@@ -150,8 +136,7 @@ export const GymCreateTrainerInvitePage = () => {
           <CardHeader>
             <CardTitle>Generowanie zaproszeń dla trenerów</CardTitle>
             <CardDescription>
-              Wygeneruj jednorazowy link dla trenera. Link jest ważny przez{" "}
-              {expiresInHours} godzin.
+              Wygeneruj jednorazowy link dla trenera. Link jest ważny przez {expiresInHours} godzin.
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
@@ -193,9 +178,7 @@ export const GymCreateTrainerInvitePage = () => {
                     >
                       <div>
                         <p className="text-sm text-zinc-400">Link:</p>
-                        <p className="text-sm break-all text-white">
-                          {fullLink}
-                        </p>
+                        <p className="text-sm break-all text-white">{fullLink}</p>
                       </div>
 
                       <div>
@@ -215,9 +198,7 @@ export const GymCreateTrainerInvitePage = () => {
                         </Button>
 
                         {copiedId === invite.id && (
-                          <span className="text-green-400 text-sm">
-                            Skopiowano
-                          </span>
+                          <span className="text-green-400 text-sm">Skopiowano</span>
                         )}
                       </div>
                     </div>

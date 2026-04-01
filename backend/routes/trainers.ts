@@ -4,7 +4,6 @@ import prisma from "../lib/prisma";
 
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || "jwt_x";
-const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
 
 const requireAuth = (req: any, res: any, next: any) => {
   const token = req.headers.authorization?.split(" ")[1];
@@ -14,7 +13,7 @@ const requireAuth = (req: any, res: any, next: any) => {
     req.userId = decoded.userId;
     next();
   } catch {
-    return res.status(401).json({ error: "Nieprawidlowy token" });
+    return res.status(401).json({ error: "Nieprawidłowy token" });
   }
 };
 
@@ -29,19 +28,36 @@ router.get("/gym/:gymId", requireAuth, async (req: any, res: any) => {
     const assignments = await prisma.trainerAssignment.findMany({
       where: { gymId: gymId },
       include: {
-        trainer: {
-          select: { id: true, email: true, username: true, role: true },
+        trainerProfile: {
+          include: {
+            user: {
+              select: { id: true, email: true, role: true },
+            },
+          },
         },
       },
     });
 
-    const trainers = assignments.map((assignment) => assignment.trainer);
+    const trainers = assignments.map((assignment) => {
+      const profile = assignment.trainerProfile;
+      const user = profile.user;
+
+      return {
+        assignemntId: assignment.id,
+        trainerProfileId: profile.id,
+        userId: user.id,
+        email: user.email,
+        firstName: profile.firstName,
+        lastName: profile.lastName,
+        bio: profile.bio,
+        phoneNumber: profile.phoneNumber,
+        role: user.role,
+      };
+    });
     res.json(trainers);
   } catch (error) {
     console.error(error);
-    res
-      .status(500)
-      .json({ error: "Nie udało się pobrać trenerów dla tej siłowni" });
+    res.status(500).json({ error: "Nie udało się pobrać trenerów dla tej siłowni" });
   }
 });
 

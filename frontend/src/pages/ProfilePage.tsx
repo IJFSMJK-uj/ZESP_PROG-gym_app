@@ -13,7 +13,6 @@ export const ProfilePage = () => {
   const [editingEmail, setEditingEmail] = useState(false);
   const [editingUsername, setEditingUsername] = useState(false);
   const [role, setRole] = useState("MEMBER");
-  const [editingRole, setEditingRole] = useState(false);
   const [gym, setGym] = useState<any>(null);
 
   const [loading, setLoading] = useState(true);
@@ -76,10 +75,9 @@ export const ProfilePage = () => {
     setSuccess("");
     if (!validate()) return;
 
-    const dataToUpdate: { email?: string; username?: string; role?: string } = {};
+    const dataToUpdate: { email?: string; username?: string } = {};
     if (editingEmail) dataToUpdate.email = email;
     if (editingUsername) dataToUpdate.username = username;
-    if (editingRole) dataToUpdate.role = role;
 
     if (Object.keys(dataToUpdate).length === 0) {
       setError("Kliknij w pole które chcesz zmienić");
@@ -95,7 +93,6 @@ export const ProfilePage = () => {
       setSuccess("Profil zaktualizowano pomyślnie");
       setEditingEmail(false);
       setEditingUsername(false);
-      setEditingRole(false);
       if (editingEmail) localStorage.setItem("userEmail", email);
     } catch {
       setError("Błąd sieci. Spróbuj ponownie.");
@@ -177,28 +174,9 @@ export const ProfilePage = () => {
 
           {/* ROLA */}
           <div className="space-y-2">
-            <label className="text-xs uppercase text-zinc-400">
-              Rola {editingRole && <span className="text-sky-400 normal-case">(edytujesz)</span>}
-            </label>
-            <div className="flex gap-2">
-              {["MEMBER", "TRAINER", "GYM"].map((option) => (
-                <button
-                  key={option}
-                  onClick={() => {
-                    setEditingRole(true);
-                    setRole(option);
-                  }}
-                  className={`flex-1 py-2 rounded-xl text-sm font-medium transition-colors cursor-pointer ${
-                    role === option
-                      ? "bg-sky-500 text-white"
-                      : "bg-zinc-900 text-zinc-400 hover:bg-zinc-800"
-                  }`}
-                >
-                  {option === "MEMBER" && "Member"}
-                  {option === "TRAINER" && "Trainer"}
-                  {option === "GYM" && "Gym"}
-                </button>
-              ))}
+            <label className="text-xs uppercase text-zinc-400">Rola</label>
+            <div className="w-full p-3 rounded-xl bg-zinc-950 border border-zinc-700 text-zinc-400 text-sm">
+              {role}
             </div>
           </div>
 

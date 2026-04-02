@@ -86,53 +86,91 @@ router.get("/profile", requireAuth, async (req: any, res) => {
   const user = await prisma.user.findUnique({
     where: { id: req.userId },
     include: {
-      gym: true,
-      trainerGyms: {
+      memberProfile: {
+        include: { homeGym: true },
+      },
+      trainerProfile: {
         include: {
-          gym: true,
+          assignments: {
+            include: { gym: true },
+          },
         },
       },
     },
   });
 
-  if (!user) return res.status(404).json({ error: "Uzytkownik nie znaleziony" });
+  if (!user) {
+    return res.status(404).json({ error: "Uzytkownik nie znaleziony" });
+  }
+
+  let gym = null;
+  let username = "";
+
+  if (user.memberProfile) {
+    gym = user.memberProfile.homeGym;
+    username = user.memberProfile.firstName || "";
+  }
+
+  if (user.trainerProfile) {
+    if (!gym && user.trainerProfile.assignments.length > 0) {
+      gym = user.trainerProfile.assignments[0].gym;
+    }
+    username = user.trainerProfile.firstName || "";
+  }
+
   res.json({
     email: user.email,
-    username: user.username,
+    username,
     role: user.role,
-    gym: user.gym,
-    trainerGyms: user.trainerGyms,
+    gym,
   });
 });
 
 router.put("/profile", requireAuth, async (req: any, res) => {
-  const { email, username, role } = req.body;
-  const dataToUpdate: { email?: string; username?: string; role?: Role } = {};
-
-  if (email !== undefined) {
-    dataToUpdate.email = email;
-  }
-
-  if (username !== undefined) {
-    dataToUpdate.username = username;
-  }
-
-  if (role !== undefined) {
-    dataToUpdate.role = role as Role;
-  }
+  const { email, username } = req.body;
 
   try {
-    const updated = await prisma.user.update({
+    const user = await prisma.user.findUnique({
       where: { id: req.userId },
-      data: dataToUpdate,
+      include: {
+        trainerProfile: true,
+        memberProfile: true,
+      },
     });
+
+    if (!user) {
+      return res.status(404).json({ error: "Uzytkownik nie znaleziony" });
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: req.userId },
+      data: {
+        ...(email && { email }),
+      },
+    });
+
+    if (username) {
+      if (user.memberProfile) {
+        await prisma.memberProfile.update({
+          where: { id: user.memberProfile.id },
+          data: { firstName: username },
+        });
+      }
+
+      if (user.trainerProfile) {
+        await prisma.trainerProfile.update({
+          where: { id: user.trainerProfile.id },
+          data: { firstName: username },
+        });
+      }
+    }
+
     res.json({
-      email: updated.email,
-      username: updated.username,
-      role: updated.role,
+      email: updatedUser.email,
+      username,
     });
-  } catch {
-    res.status(400).json({ error: "E-mail lub nazwa uzytkownika już zajęte." });
+  } catch (e) {
+    res.status(400).json({ error: "Błąd aktualizacji danych" });
   }
 });
 

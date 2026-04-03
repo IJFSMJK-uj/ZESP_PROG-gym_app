@@ -11,6 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../components/ui/dialog";
+import { MapPin } from "lucide-react";
 
 interface Trainer {
   assignmentId: number;
@@ -22,12 +23,20 @@ interface Trainer {
   bio: string | null;
   phoneNumber: string | null;
   role: string;
+  worksAt: { name: string; address: string }[];
+}
+
+interface GymInfo {
+  name: string;
+  address: string;
 }
 
 export const TrainersPage = () => {
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+
   const [trainers, setTrainers] = useState<Trainer[]>([]);
+  const [currentGym, setCurrentGym] = useState<GymInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -42,7 +51,8 @@ export const TrainersPage = () => {
           if (data.error) {
             setError(data.error);
           } else {
-            setTrainers(data);
+            setTrainers(data.trainers);
+            setCurrentGym(data.gym);
           }
         } catch {
           setError("Wystąpił błąd podczas ładowania trenerów:");
@@ -59,11 +69,11 @@ export const TrainersPage = () => {
 
   if (!isAuthenticated) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] p-4 text-center">
-        <p className="text-xl text-white mb-4">
-          Zaloguj się, aby zobaczyć trenerów ze swojej siłowni.
-        </p>
-        <Button onClick={() => navigate("/auth")}>Zaloguj się</Button>
+      <div className="flex flex-col items-center justify-center min-h-[60vh] p-4">
+        <p className="text-lg text-white mb-4">Musisz się zalogować, aby przejrzeć trenerów.</p>
+        <Button variant="outline" onClick={() => navigate("/auth")} className="cursor-pointer">
+          Przejdź do logowania
+        </Button>
       </div>
     );
   }
@@ -100,23 +110,30 @@ export const TrainersPage = () => {
   return (
     <div className="container mx-auto p-8 relative">
       <h1 className="text-4xl font-bold text-white mb-2">Nasi Trenerzy</h1>
-      <p className="text-zinc-400 mb-8">Trenerzy dostępni w Twojej siłowni (ID: {user.gymId})</p>
+
+      {currentGym && (
+        <div className="flex items-center text-zinc-400 mb-8 gap-2">
+          <MapPin size={18} className="text-sky-500" />
+          <p>
+            <span className="text-white">{currentGym.name}</span> ({currentGym.address})
+          </p>
+        </div>
+      )}
 
       {trainers.length === 0 ? (
         <p className="text-zinc-500">
-          Niestety, Twoja siłownia nie ma jeszcze przypisanych żadnych trenerów.
+          Twoja siłownia nie ma jeszcze przypisanych żadnych trenerów.
         </p>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {trainers.map((trainer) => (
             <Card
               key={trainer.assignmentId}
-              className="bg-zinc-950 border-zinc-800 rounded-2xl hover:border-sky-500/50 hover:shadow-[0_0_15px_rgba(14,165,233,0.15)] transition-all duration-300"
+              className="bg-zinc-950 border-zinc-800 rounded-2xl hover:border-sky-500/50 hover:shadow-[0_0_15px_rgba(14,165,233,0.15)] transition-all duration-300 pt-8 pb-6"
             >
               <CardHeader>
                 <div className="flex items-center gap-4">
-                  {/* Pseudo-Awatar z pierwszą literą maila/nazwy */}
-                  <div className="w-12 h-12 rounded-full bg-zinc-800 flex items-center justify-center text-sky-400 font-bold text-xl uppercase">
+                  <div className="w-18 h-18 rounded-full bg-zinc-800 flex items-center justify-center text-sky-400 font-bold text-xl uppercase">
                     {(trainer.firstName || trainer.email)[0]}
                   </div>
                   <div>
@@ -126,12 +143,24 @@ export const TrainersPage = () => {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="mt-2">
+                <div className="flex gap-3 mt-2">
                   <Button
+                    variant="link"
                     onClick={() => setSelectedTrainer(trainer)}
-                    className="w-full bg-zinc-800 hover:bg-sky-500 text-white transition-colors cursor-pointer"
+                    className="flex-auto bg-zinc-800 hover:bg-zinc-700 text-white cursor-pointer"
                   >
                     Zobacz Profil
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    className="flex-auto bg-zinc-800 hover:bg-zinc-700 text-white cursor-pointer"
+                    onClick={() => {
+                      // POPRAWKA: używamy obiektu "trainer" z mapowania, a nie stanu!
+                      navigate(`/trainer/${trainer.assignmentId}/schedule`);
+                    }}
+                  >
+                    Sprawdź dostępność
                   </Button>
                 </div>
               </CardContent>
@@ -139,14 +168,12 @@ export const TrainersPage = () => {
           ))}
         </div>
       )}
-
-      {}
       <Dialog open={!!selectedTrainer} onOpenChange={(open) => !open && setSelectedTrainer(null)}>
-        <DialogContent className="bg-black border border-zinc-800 text-white sm:max-w-md rounded-3xl">
+        <DialogContent className="bg-black border border-zinc-800 text-white sm:max-w-md rounded-3xl max-h-[90vh] overflow-y-auto">
           {selectedTrainer && (
             <>
               <DialogHeader className="flex flex-col items-center text-center space-y-4 pt-6">
-                <div className="w-24 h-24 rounded-full bg-zinc-900 border-2 border-sky-500 flex items-center justify-center text-sky-400 font-bold text-4xl uppercase shadow-[0_0_20px_rgba(14,165,233,0.3)]">
+                <div className="w-30 h-30 rounded-full bg-zinc-900 border-2 border-sky-500 flex items-center justify-center text-sky-400 font-bold text-4xl uppercase shadow-[0_0_20px_rgba(14,165,233,0.3)]">
                   {(selectedTrainer.firstName || selectedTrainer.email)[0]}
                 </div>
                 <div>
@@ -170,15 +197,31 @@ export const TrainersPage = () => {
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-zinc-900/50 p-4 rounded-2xl border border-zinc-800/50 text-center">
-                    <p className="text-xs text-zinc-500 uppercase">Nr telefonu</p>
-                    <p className="text-sm font-bold text-emerald-400">
-                      {selectedTrainer.phoneNumber || "Brak nr telefonu"}
+                  <div className="bg-zinc-900/50 p-4 rounded-2xl border border-zinc-800/50 flex flex-col justify-start">
+                    <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-3">
+                      Kontakt
+                    </h3>
+                    <p className="text-sm font-bold text-white">
+                      {selectedTrainer.phoneNumber || "Brak nr"}
                     </p>
                   </div>
-                  <div className="bg-zinc-900/50 p-4 rounded-2xl border border-zinc-800/50 text-center">
-                    <p className="text-xs text-zinc-500 uppercase">Siłownia ID</p>
-                    <p className="text-sm font-bold text-white">{user?.gymId}</p>
+
+                  <div className="bg-zinc-900/50 p-4 rounded-2xl border border-zinc-800/50 flex flex-col justify-start">
+                    <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-3">
+                      Pracuje w
+                    </h3>
+                    <ul className="space-y-3">
+                      {selectedTrainer.worksAt.map((gym, idx) => (
+                        <li key={idx} className="flex items-start gap-2 text-sm">
+                          <MapPin size={16} className="text-sky-500 mt-0.5 shrink-0" />
+                          <div className="flex flex-col text-left">
+                            <span className="font-medium text-zinc-200 leading-tight mb-0.5">
+                              {gym.name}
+                            </span>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
                   </div>
                 </div>
               </div>
@@ -187,18 +230,18 @@ export const TrainersPage = () => {
                 <Button
                   variant="outline"
                   onClick={() => setSelectedTrainer(null)}
-                  className="w-1/2 border-zinc-700 hover:bg-zinc-800 cursor-pointer"
+                  className="flex-auto border-zinc-700 hover:bg-zinc-800 cursor-pointer"
                 >
                   Zamknij
                 </Button>
                 <Button
-                  className="w-1/2 bg-sky-500 hover:bg-sky-400 text-white font-bold cursor-pointer shadow-lg shadow-sky-500/20"
+                  className="flex-auto bg-sky-600 hover:bg-sky-500 text-white font-bold cursor-pointer"
                   onClick={() => {
                     navigate(`/trainer/${selectedTrainer.assignmentId}/schedule`);
                     setSelectedTrainer(null);
                   }}
                 >
-                  Zarezerwuj
+                  Zarezerwuj trening
                 </Button>
               </div>
             </>

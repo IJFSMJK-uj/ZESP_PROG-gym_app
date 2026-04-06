@@ -13,7 +13,7 @@ const days = [
 ];
 
 export default function AvailabilityForm({ gyms, onAdd }: any) {
-  const [gymId, setGymId] = useState<string>("");
+  const [assignmentId, setAssignmentId] = useState<string>("");
   const [dayOfWeek, setDayOfWeek] = useState(1);
   const [startHour, setStartHour] = useState(8);
   const [endHour, setEndHour] = useState(12);
@@ -24,6 +24,11 @@ export default function AvailabilityForm({ gyms, onAdd }: any) {
     e.preventDefault();
     setError("");
 
+    if (!assignmentId) {
+      setError("Wybierz siłownię");
+      return;
+    }
+
     if (startHour >= endHour) {
       setError("Godzina rozpoczęcia musi być mniejsza niż zakończenia");
       return;
@@ -33,7 +38,7 @@ export default function AvailabilityForm({ gyms, onAdd }: any) {
 
     try {
       const res = await availabilityService.create({
-        gymId: gymId ? Number(gymId) : null,
+        assignmentId: Number(assignmentId),
         dayOfWeek,
         startHour,
         endHour,
@@ -63,13 +68,13 @@ export default function AvailabilityForm({ gyms, onAdd }: any) {
       <div className="space-y-1">
         <label className="text-xs uppercase text-zinc-400">Siłownia</label>
         <select
-          value={gymId}
-          onChange={(e) => setGymId(e.target.value)}
+          value={assignmentId}
+          onChange={(e) => setAssignmentId(e.target.value)}
           className="w-full p-2 rounded-xl bg-zinc-900 border border-zinc-700 text-white"
         >
-          <option value="">Ogólna dostępność</option>
+          <option value="">Wybierz siłownię</option>
           {gyms.map((g: any) => (
-            <option key={g.id} value={g.id}>
+            <option key={g.assignmentId} value={g.assignmentId}>
               {g.name}
             </option>
           ))}

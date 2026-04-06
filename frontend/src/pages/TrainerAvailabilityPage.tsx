@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import AvailabilityForm from "../components/AvailabilityForm";
 import AvailabilityList from "../components/AvailabilityList";
 import { availabilityService } from "../api/availabilityService";
-import { authService } from "../api/authService";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../components/ui/card";
@@ -26,13 +25,13 @@ export default function TrainerAvailabilityPage() {
 
     const fetchData = async () => {
       try {
-        const [availabilityData, profileData] = await Promise.all([
+        const [availabilityData, gymsData] = await Promise.all([
           availabilityService.getMyAvailability(),
-          authService.getProfile(),
+          availabilityService.getMyGyms(),
         ]);
 
         setAvailability(availabilityData || []);
-        setGyms(profileData?.trainerGyms?.map((t: any) => t.gym) || []);
+        setGyms(gymsData || []);
       } catch (e) {
         console.error("Availability fetch error:", e);
       }

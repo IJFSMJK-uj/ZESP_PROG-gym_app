@@ -8,17 +8,71 @@ import { requireAuth } from "./auth";
 
 router.get("/trainer/me", requireAuth, async (req: any, res) => {
   try {
-    const trainerId = req.userId;
+    const userId = req.userId;
 
-    const availability = await prisma.trainerAvailability.findMany({
-      where: { trainerId },
+    const trainerProfile = await prisma.trainerProfile.findUnique({
+      where: { userId },
       include: {
-        gym: true,
+        assignments: {
+          include: {
+            gym: true,
+            availabilities: true,
+          },
+        },
       },
-      orderBy: [{ dayOfWeek: "asc" }, { startHour: "asc" }],
     });
 
+    if (!trainerProfile) {
+      return res.json([]);
+    }
+
+    const availability = trainerProfile.assignments
+      .flatMap((assignment) =>
+        assignment.availabilities.map((slot) => ({
+          ...slot,
+          startHour: slot.startHour / 60,
+          endHour: slot.endHour / 60,
+          gym: assignment.gym,
+          assignmentId: assignment.id,
+        }))
+      )
+      .sort((a, b) => a.dayOfWeek - b.dayOfWeek || a.startHour - b.startHour);
+
     res.json(availability);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// GET trainer's assigned gyms
+router.get("/trainer/me/gyms", requireAuth, async (req: any, res) => {
+  try {
+    const userId = req.userId;
+
+    const trainerProfile = await prisma.trainerProfile.findUnique({
+      where: { userId },
+      include: {
+        assignments: {
+          include: {
+            gym: true,
+          },
+        },
+      },
+    });
+
+    if (!trainerProfile) {
+      return res.json([]);
+    }
+
+    const gyms = trainerProfile.assignments.map((assignment) => ({
+      id: assignment.gym.id,
+      name: assignment.gym.name,
+      address: assignment.gym.address,
+      assignmentId: assignment.id,
+    }));
+
+    res.json(gyms);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Server error" });
@@ -28,18 +82,25 @@ router.get("/trainer/me", requireAuth, async (req: any, res) => {
 // POST - add availability
 router.post("/", requireAuth, async (req: any, res) => {
   try {
-    const trainerId = req.userId;
-    const { gymId, dayOfWeek, startHour, endHour } = req.body;
-    // WALIDACJA ROLI
+    const userId = req.userId;
+    const { gymId, assignmentId, dayOfWeek, startHour, endHour } = req.body;
+
     const user = await prisma.user.findUnique({
-      where: { id: trainerId },
+      where: { id: userId },
+      include: {
+        trainerProfile: {
+          include: {
+            assignments: true,
+          },
+        },
+      },
     });
 
-    if (user?.role !== "TRAINER") {
+    if (user?.role !== "TRAINER" || !user.trainerProfile) {
       return res.status(403).json({ error: "Tylko trenerzy mogą dodawać dostępność" });
     }
 
-    if (trainerId == null || dayOfWeek == null || startHour == null || endHour == null) {
+    if (dayOfWeek == null || startHour == null || endHour == null) {
       return res.status(400).json({ error: "Brakujące pola" });
     }
 
@@ -57,65 +118,104 @@ router.post("/", requireAuth, async (req: any, res) => {
         error: "Godzina rozpoczęcia musi być mniejsza niż zakończenia",
       });
 
-    // check overlap
-    let overlap;
+    const startMinute = startHour * 60;
+    const endMinute = endHour * 60;
 
-    if (gymId === null) {
-      overlap = await prisma.trainerAvailability.findFirst({
-        where: {
-          trainerId,
-          dayOfWeek,
-          startHour: { lt: endHour },
-          endHour: { gt: startHour },
-        },
+    let assignment = null;
+
+    if (assignmentId != null) {
+      assignment = await prisma.trainerAssignment.findUnique({
+        where: { id: Number(assignmentId) },
       });
-    } else {
-      overlap = await prisma.trainerAvailability.findFirst({
+    } else if (gymId != null) {
+      assignment = await prisma.trainerAssignment.findFirst({
         where: {
-          trainerId,
-          dayOfWeek,
-          startHour: { lt: endHour },
-          endHour: { gt: startHour },
-          OR: [{ gymId }, { gymId: null }],
+          trainerProfileId: user.trainerProfile.id,
+          gymId: Number(gymId),
         },
       });
     }
 
+    if (!assignment || assignment.trainerProfileId !== user.trainerProfile.id) {
+      return res.status(400).json({ error: "Nieprawidłowy assignment lub brak uprawnień" });
+    }
+
+    const trainerAssignmentIds = user.trainerProfile.assignments.map((a) => a.id);
+
+    const overlap = await prisma.trainerAvailability.findFirst({
+      where: {
+        assignmentId: { in: trainerAssignmentIds },
+        dayOfWeek,
+        startHour: { lt: endMinute },
+        endHour: { gt: startMinute },
+      },
+      include: {
+        assignment: {
+          include: {
+            gym: true,
+          },
+        },
+      },
+    });
+
     if (overlap) {
-      return res.status(409).json({ error: "Kolizja czasów dostępności" });
+      const conflictGymName = overlap.assignment?.gym?.name || "innej siłowni";
+      return res.status(409).json({
+        error: `Kolizja dostępności z istniejącym slotem w ${conflictGymName}`,
+      });
     }
 
     const availability = await prisma.trainerAvailability.create({
       data: {
-        trainerId,
-        gymId,
+        assignmentId: assignment.id,
         dayOfWeek,
-        startHour,
-        endHour,
+        startHour: startMinute,
+        endHour: endMinute,
       },
     });
 
-    res.json(availability);
+    res.json({
+      ...availability,
+      startHour,
+      endHour,
+      gym: await prisma.gym.findUnique({ where: { id: assignment.gymId } }),
+      assignmentId: assignment.id,
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Server error" });
   }
 });
 
-// GET trainer availability
+// GET assignment availability
 router.get("/trainer/:trainerId", requireAuth, async (req, res) => {
   try {
-    const trainerId = parseInt(req.params.trainerId);
+    const assignmentId = parseInt(req.params.trainerId);
+
+    if (isNaN(assignmentId)) {
+      return res.status(400).json({ error: "Nieprawidłowy ID assignment" });
+    }
 
     const availability = await prisma.trainerAvailability.findMany({
-      where: { trainerId },
+      where: { assignmentId },
       include: {
-        gym: true,
+        assignment: {
+          include: {
+            gym: true,
+          },
+        },
       },
       orderBy: [{ dayOfWeek: "asc" }, { startHour: "asc" }],
     });
 
-    res.json(availability);
+    const result = availability.map((item) => ({
+      ...item,
+      startHour: item.startHour / 60,
+      endHour: item.endHour / 60,
+      gym: item.assignment.gym,
+    }));
+
+    res.json(result);
   } catch (err) {
     res.status(500).json({ error: "Server error" });
   }
@@ -133,21 +233,27 @@ router.delete("/:id", requireAuth, async (req: any, res) => {
 
     const user = await prisma.user.findUnique({
       where: { id: userId },
+      include: {
+        trainerProfile: true,
+      },
     });
 
-    if (!user || user.role !== "TRAINER") {
+    if (!user || user.role !== "TRAINER" || !user.trainerProfile) {
       return res.status(403).json({ error: "Tylko trenerzy mogą usuwać dostępność" });
     }
 
     const slot = await prisma.trainerAvailability.findUnique({
       where: { id },
+      include: {
+        assignment: true,
+      },
     });
 
     if (!slot) {
       return res.status(404).json({ error: "Dostępność nie znaleziona" });
     }
 
-    if (slot.trainerId !== userId) {
+    if (slot.assignment.trainerProfileId !== user.trainerProfile.id) {
       return res.status(403).json({ error: "Tylko właściciel może usuwać dostępność" });
     }
 

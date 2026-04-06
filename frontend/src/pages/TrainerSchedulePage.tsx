@@ -36,7 +36,7 @@ function getStartOfWeek(date: Date) {
 }
 
 export default function TrainerSchedulePage() {
-  const { trainerId } = useParams();
+  const { assignmentId } = useParams();
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [schedule, setSchedule] = useState<Record<number, Slot[]>>({});
@@ -50,12 +50,31 @@ export default function TrainerSchedulePage() {
   const [errorKey, setErrorKey] = useState<string | null>(null);
   const [nextAvailable, setNextAvailable] = useState<string | null>(null);
 
+  const findNextAvailable = (schedule: Record<number, Slot[]>) => {
+    for (let day = 0; day < 7; day++) {
+      const date = new Date(weekStart);
+      const offset = day === 0 ? 6 : day - 1;
+      date.setDate(weekStart.getDate() + offset);
+
+      const slots = schedule[day] || [];
+
+      for (const slot of slots) {
+        if (!slot.available) continue;
+        if (isPastSlot(date, slot.startHour)) continue;
+
+        return `${date.toLocaleDateString()} ${slot.startHour}:00`;
+      }
+    }
+
+    return null;
+  };
+
   const fetchSchedule = async () => {
     try {
       const token = localStorage.getItem("token");
 
       const res = await fetch(
-        `http://localhost:5174/api/trainer-schedule/${trainerId}?weekStart=${weekStart.toISOString()}`,
+        `http://localhost:5174/api/trainer-schedule/${assignmentId}?weekStart=${weekStart.toISOString()}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -65,11 +84,15 @@ export default function TrainerSchedulePage() {
 
       const data = await res.json();
 
-      setSchedule(data.schedule);
+      if (!res.ok) {
+        console.error("Błąd pobierania harmonogramu:", data.error);
+        return;
+      }
+
+      setSchedule(data.schedule || {});
       setTrainerName(data.trainer?.username || data.trainer?.email || "Trener");
       setTrainerEmail(data.trainer?.email || "");
-      setSchedule(data.schedule);
-      setNextAvailable(findNextAvailable(data.schedule));
+      setNextAvailable(findNextAvailable(data.schedule || {}));
     } catch (err) {
       console.error(err);
     } finally {
@@ -86,7 +109,7 @@ export default function TrainerSchedulePage() {
     if (isAuthenticated) {
       fetchSchedule();
     }
-  }, [trainerId, isAuthenticated, weekStart]);
+  }, [assignmentId, isAuthenticated, weekStart]);
   useEffect(() => {
     const initial: Record<number, boolean> = {};
 
@@ -150,24 +173,6 @@ export default function TrainerSchedulePage() {
   if (loading) {
     return <div className="text-center mt-20 text-white">Ładowanie harmonogramu...</div>;
   }
-  const findNextAvailable = (schedule: Record<number, Slot[]>) => {
-    for (let day = 0; day < 7; day++) {
-      const date = new Date(weekStart);
-      const offset = day === 0 ? 6 : day - 1;
-      date.setDate(weekStart.getDate() + offset);
-
-      const slots = schedule[day] || [];
-
-      for (const slot of slots) {
-        if (!slot.available) continue;
-        if (isPastSlot(date, slot.startHour)) continue;
-
-        return `${date.toLocaleDateString()} ${slot.startHour}:00`;
-      }
-    }
-
-    return null;
-  };
 
   return (
     <div className="flex flex-col items-center min-h-[80vh] p-4">
@@ -361,7 +366,7 @@ export default function TrainerSchedulePage() {
                                       Authorization: `Bearer ${token}`,
                                     },
                                     body: JSON.stringify({
-                                      trainerId: Number(trainerId),
+                                      assignmentId: Number(assignmentId),
                                       date: date.toISOString(),
                                       startHour: slot.startHour,
                                       endHour: slot.endHour,

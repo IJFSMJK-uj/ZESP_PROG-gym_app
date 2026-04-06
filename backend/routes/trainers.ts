@@ -43,7 +43,7 @@ router.get("/gym/:gymId", requireAuth, async (req: any, res: any) => {
       const user = profile.user;
 
       return {
-        assignemntId: assignment.id,
+        assignmentId: assignment.id,
         trainerProfileId: profile.id,
         userId: user.id,
         email: user.email,

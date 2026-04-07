@@ -35,7 +35,7 @@ const TRAINERS_DATA = [
     lastName: "Kowalski",
     bio: "Specjalista od trójboju siłowego. Pomogę Ci dźwigać więcej!",
     phoneNumber: "+48 111 222 333",
-    worksAt: ["Gym Central Kraków", "Gym Central Norymberska"], // Pracuje w dwóch!
+    worksAt: ["Gym Central Wadowicka", "Gym Central Norymberska"], // Pracuje w dwóch!
   },
   {
     email: "trener.anna@gymapp.pl",
@@ -51,7 +51,7 @@ const TRAINERS_DATA = [
     lastName: "Ezoteryczny",
     bio: "Kalistenika, ezoteryka, permakultura i trening funkcjonalny to moja pasja. Posiadam 2137 lat doświadczenia i jaszczurkę. Namaste.",
     phoneNumber: "+48 420 420 420",
-    worksAt: ["Gym Central Kraków"], // Tylko jedna siłownia
+    worksAt: ["Gym Central Wadowicka"], // Tylko jedna siłownia
   },
 ];
 

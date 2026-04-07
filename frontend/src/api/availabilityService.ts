@@ -10,8 +10,17 @@ export const availabilityService = {
     return response.json();
   },
 
+  async getMyGyms() {
+    const response = await fetch(`${API_URL}/trainer/me/gyms`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    });
+    return response.json();
+  },
+
   async create(data: {
-    gymId?: number | null;
+    assignmentId?: number | null;
     dayOfWeek: number;
     startHour: number;
     endHour: number;

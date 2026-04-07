@@ -30,7 +30,7 @@ function App() {
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/gyms" element={<SelectGymPage />} />
               <Route path="/gyms/:gymId" element={<GymDetailPage />} />
-              <Route path="/trainer/:trainerId/schedule" element={<TrainerSchedulePage />} />
+              <Route path="/trainer/:assignmentId/schedule" element={<TrainerSchedulePage />} />
               <Route path="/gym/invites/trainers" element={<GymCreateTrainerInvitePage />} />
               <Route path="/gym/admin" element={<GymAdminPage />} />
               <Route path="/trainer-invite/:hash" element={<GymInviteTrainerPage />} />

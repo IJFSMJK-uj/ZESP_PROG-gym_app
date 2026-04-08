@@ -2,7 +2,7 @@ import { useAuth } from "../context/AuthContext";
 import { Button } from "./ui/button";
 
 export const Footer = () => {
-  const { userEmail, logout } = useAuth();
+  const { user, isAuthenticated } = useAuth();
 
   return (
     <footer className="fixed bottom-0 left-0 w-full bg-black/80 backdrop-blur-md border-t border-zinc-800/50 py-3 z-50">
@@ -14,11 +14,11 @@ export const Footer = () => {
 
         {/* PRAWA STRONA: Status logowania */}
         <div className="flex items-center gap-4 text-sm font-medium">
-          {userEmail ? (
+          {isAuthenticated ? (
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2 text-zinc-400">
                 <span className="w-1.5 h-1.5 bg-sky-500 rounded-full shadow-[0_0_8px_rgba(14,165,233,0.6)]" />
-                Jesteś zalogowany jako: <span className="text-white">{userEmail}</span>
+                Jesteś zalogowany jako: <span className="text-white">{user.email}</span>
               </div>
             </div>
           ) : (

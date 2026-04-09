@@ -30,7 +30,7 @@ router.get("/", requireAuth, async (req: any, res: any) => {
   }
 });
 
-// Aktualizacja danych własnej siłowni (tylko rola GYM) - PATCH /gyms/me
+// Aktualizacja danych własnej siłowni (tylko rola GYM_MANAGER) - PATCH /gyms/me
 // WAŻNE: musi być przed /:id żeby Express nie potraktował "me" jako id
 router.patch("/me", requireAuth, async (req: any, res: any) => {
   try {
@@ -42,7 +42,7 @@ router.patch("/me", requireAuth, async (req: any, res: any) => {
       return res.status(404).json({ error: "Nie znaleziono użytkownika" });
     }
 
-    if (user.role !== Role.GYM) {
+    if (user.role !== Role.GYM_MANAGER) {
       return res.status(403).json({
         error: "Brak uprawnień. Tylko konto siłowni może edytować dane siłowni.",
       });
@@ -114,17 +114,33 @@ router.put("/:id", requireAuth, async (req: any, res: any) => {
   }
 
   try {
-    const gym = await prisma.gym.findUnique({ where: { id: gymId } });
-    if (!gym) return res.status(404).json({ error: "Nie znaleziono siłowni ale checa" });
+    const user = await prisma.user.findUnique({ where: { id: req.userId } });
+    if (!user) return res.status(404).json({ error: "Nie znaleziono użytkownika" });
 
-    const updatedUser = await prisma.user.update({
-      where: { id: req.userId },
-      data: { gymId },
+    const gym = await prisma.gym.findUnique({
+      where: { id: gymId },
+      include: { managers: { select: { id: true } } },
+    });
+    if (!gym) return res.status(404).json({ error: "Nie znaleziono siłowni" });
+
+    if (user.role === Role.GYM_MANAGER) {
+      const isManager = gym.managers.some((m) => m.id === req.userId);
+      if (!isManager) {
+        return res.status(403).json({
+          error: "Nie jesteś managerem tej siłowni.",
+        });
+      }
+    }
+
+    await prisma.memberProfile.upsert({
+      where: { userId: req.userId },
+      update: { homeGymId: gymId },
+      create: { userId: req.userId, homeGymId: gymId },
     });
 
     res.json({
       message: `Wybrano siłownię: ${gym.name}`,
-      gym: updatedUser.gymId,
+      gym: gymId,
     });
   } catch (err) {
     console.error(err);

@@ -56,7 +56,7 @@ export default function TrainerAvailabilityPage() {
     );
   }
 
-  if (user.role !== "TRAINER") {
+  if (!isTrainer) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] p-4 text-center">
         <p className="text-lg text-white mb-4">Tylko trener może ustawiać dostępność</p>

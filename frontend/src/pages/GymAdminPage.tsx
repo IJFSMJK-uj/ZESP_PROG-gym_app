@@ -38,7 +38,7 @@ export const GymAdminPage = () => {
 
         setRole(profile.role || "");
 
-        if (profile.role !== "GYM") {
+        if (profile.role !== "GYM_MANAGER") {
           setLoading(false);
           return;
         }
@@ -113,7 +113,7 @@ export const GymAdminPage = () => {
     );
   }
 
-  if (role !== "GYM") {
+  if (role !== "GYM_MANAGER") {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] p-4">
         <p className="text-lg text-red-400 mb-4 text-center">

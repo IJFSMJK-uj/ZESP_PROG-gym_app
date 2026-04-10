@@ -40,6 +40,12 @@ export const Navbar = () => {
           >
             Trenerzy
           </Link>
+          <Link
+            to="/contact"
+            className="text-sm font-semibold text-zinc-400 hover:text-white transition-colors"
+          >
+            Dla siłowni
+          </Link>
         </div>
 
         <div className="flex items-center gap-4">

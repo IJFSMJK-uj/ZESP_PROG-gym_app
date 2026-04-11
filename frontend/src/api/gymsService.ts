@@ -1,5 +1,11 @@
 const API_URL = "http://localhost:5174/api/gyms";
 
+export interface OperatingHour {
+  dayOfWeek: number;
+  openTime: number;
+  closeTime: number;
+}
+
 export const gymsService = {
   async getGyms() {
     const token = localStorage.getItem("token");
@@ -10,7 +16,7 @@ export const gymsService = {
     });
     if (!response.ok) {
       const text = await response.text();
-      console.error("Błąd backendu getGyms:", text);
+      console.error(text);
       return { error: "Nie udało się pobrać siłowni" };
     }
     return response.json();
@@ -25,7 +31,7 @@ export const gymsService = {
     });
     if (!response.ok) {
       const text = await response.text();
-      console.error("Błąd backendu getGymById:", text);
+      console.error(text);
       return { error: "Nie udało się pobrać siłowni" };
     }
     return response.json();
@@ -43,13 +49,18 @@ export const gymsService = {
 
     if (!response.ok) {
       const text = await response.text();
-      console.error("Błąd backendu selectGym:", text);
+      console.error(text);
       return { error: "Nie udało się wybrać siłowni" };
     }
 
     return response.json();
   },
-  async updateMyGym(data: { openTime?: string; closeTime?: string; address?: string }) {
+
+  async updateMyGym(data: {
+    address?: string;
+    operatingHours?: OperatingHour[];
+    additionalInfo?: string;
+  }) {
     const token = localStorage.getItem("token");
     const response = await fetch(`${API_URL}/me`, {
       method: "PATCH",
@@ -62,7 +73,7 @@ export const gymsService = {
 
     if (!response.ok) {
       const text = await response.text();
-      console.error("Błąd backendu updateMyGym:", text);
+      console.error(text);
       return { error: "Nie udało się zaktualizować danych siłowni" };
     }
 

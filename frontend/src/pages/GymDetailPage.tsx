@@ -5,6 +5,24 @@ import { useEffect, useState } from "react";
 import { gymsService } from "../api/gymsService";
 import { useAuth } from "../context/AuthContext";
 
+const minutesToTime = (minutes: number) => {
+  const h = Math.floor(minutes / 60)
+    .toString()
+    .padStart(2, "0");
+  const m = (minutes % 60).toString().padStart(2, "0");
+  return `${h}:${m}`;
+};
+
+const DAYS_OF_WEEK = [
+  "Niedziela",
+  "Poniedziałek",
+  "Wtorek",
+  "Środa",
+  "Czwartek",
+  "Piątek",
+  "Sobota",
+];
+
 export const GymDetailPage = () => {
   const { gymId } = useParams<{ gymId: string }>();
   const { isAuthenticated, updateUser } = useAuth();
@@ -18,6 +36,7 @@ export const GymDetailPage = () => {
   useEffect(() => {
     const loadGym = async () => {
       try {
+        if (!gymId) return;
         const data = await gymsService.getGymById(gymId);
         setGym(data);
       } catch (err) {
@@ -71,6 +90,14 @@ export const GymDetailPage = () => {
 
   if (!gym) return <p className="text-red-500">Nie znaleziono siłowni</p>;
 
+  const sortedHours = gym.operatingHours
+    ? [...gym.operatingHours].sort((a: any, b: any) => {
+        const dayA = a.dayOfWeek === 0 ? 7 : a.dayOfWeek;
+        const dayB = b.dayOfWeek === 0 ? 7 : b.dayOfWeek;
+        return dayA - dayB;
+      })
+    : [];
+
   return (
     <div className="p-8 flex flex-col items-center">
       <Card className="w-full max-w-4xl bg-black border border-zinc-800 rounded-3xl">
@@ -79,15 +106,40 @@ export const GymDetailPage = () => {
           <CardDescription>{gym.address}</CardDescription>
         </CardHeader>
         <CardContent>
-          <p className="text-white mb-4">{gym.description}</p>
-          <p className="text-white">Godziny otwarcia: {gym.openTime}</p>
-          <p className="text-white">Godziny Zamknięcia: {gym.closeTime}</p>
-          <p className="text-white">
+          <p className="text-white mb-6">{gym.description}</p>
+
+          <div className="mb-6 bg-zinc-900 p-4 rounded-xl border border-zinc-800">
+            <h3 className="text-zinc-300 font-semibold mb-3">Godziny otwarcia:</h3>
+            {sortedHours.length > 0 ? (
+              <ul className="space-y-2">
+                {sortedHours.map((hour: any) => (
+                  <li key={hour.dayOfWeek} className="text-zinc-400 flex justify-between max-w-xs">
+                    <span>{DAYS_OF_WEEK[hour.dayOfWeek]}:</span>
+                    <span>
+                      {minutesToTime(hour.openTime)} - {minutesToTime(hour.closeTime)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-zinc-500">Brak danych o godzinach otwarcia.</p>
+            )}
+          </div>
+
+          {gym.additionalInfo && (
+            <div className="mb-6 bg-zinc-900 p-4 rounded-xl border border-zinc-800">
+              <h3 className="text-zinc-300 font-semibold mb-2">Dodatkowe informacje:</h3>
+              <p className="text-zinc-400 whitespace-pre-wrap">{gym.additionalInfo}</p>
+            </div>
+          )}
+
+          <p className="text-white mb-2">
             Trenerzy polecają: {gym.trainerRecommendation ? "tak 8/10" : "nie 2/10"}
           </p>
-          <p className="text-white">Powierzchnia {`${gym.area} m2`}</p>
+          <p className="text-white mb-4">Powierzchnia {`${gym.area} m2`}</p>
+
           {error && (
-            <div className="text-sm text-red-300 p-2 bg-red-500/10 rounded-md mt-3  text-center ">
+            <div className="text-sm text-red-300 p-2 bg-red-500/10 rounded-md mt-3 text-center">
               {error}
             </div>
           )}
@@ -97,7 +149,7 @@ export const GymDetailPage = () => {
             </div>
           )}
         </CardContent>
-        <div className="flex justify-center p-4">
+        <div className="flex justify-center p-4 gap-2">
           <Button
             onClick={() => navigate(-1)}
             variant="outline"
@@ -108,7 +160,7 @@ export const GymDetailPage = () => {
           <Button
             onClick={handleSave}
             variant="outline"
-            className="cursor-pointer text-xs hover:bg-zinc-800 ml-2"
+            className="cursor-pointer text-xs hover:bg-zinc-800"
           >
             Wybierz
           </Button>

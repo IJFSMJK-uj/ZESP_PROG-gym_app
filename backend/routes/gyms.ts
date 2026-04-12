@@ -19,10 +19,13 @@ const requireAuth = (req: any, res: any, next: any) => {
   }
 };
 
-// Pobieramy wszystkie siłownie - GET /gyms
 router.get("/", requireAuth, async (req: any, res: any) => {
   try {
-    const gyms = await prisma.gym.findMany();
+    const gyms = await prisma.gym.findMany({
+      include: {
+        operatingHours: true,
+      },
+    });
     res.json(gyms);
   } catch (error) {
     console.error(error);
@@ -30,46 +33,53 @@ router.get("/", requireAuth, async (req: any, res: any) => {
   }
 });
 
-// Aktualizacja danych własnej siłowni (tylko rola GYM) - PATCH /gyms/me
-// WAŻNE: musi być przed /:id żeby Express nie potraktował "me" jako id
 router.patch("/me", requireAuth, async (req: any, res: any) => {
   try {
     const user = await prisma.user.findUnique({
       where: { id: req.userId },
+      include: { managedGyms: true },
     });
 
     if (!user) {
       return res.status(404).json({ error: "Nie znaleziono użytkownika" });
     }
 
-    if (user.role !== Role.GYM) {
+    if (user.role !== Role.GYM_MANAGER) {
       return res.status(403).json({
-        error: "Brak uprawnień. Tylko konto siłowni może edytować dane siłowni.",
+        error: "Brak uprawnień.",
       });
     }
 
-    if (!user.gymId) {
+    if (user.managedGyms.length === 0) {
       return res.status(400).json({ error: "Konto nie jest powiązane z żadną siłownią" });
     }
 
-    const { openTime, closeTime, address } = req.body;
-    const dataToUpdate: {
-      openTime?: string;
-      closeTime?: string;
-      address?: string;
-    } = {};
+    const gymId = user.managedGyms[0].id;
+    const { address, operatingHours, additionalInfo } = req.body;
 
-    if (openTime !== undefined) dataToUpdate.openTime = openTime;
-    if (closeTime !== undefined) dataToUpdate.closeTime = closeTime;
+    const dataToUpdate: any = {};
     if (address !== undefined) dataToUpdate.address = address;
+    if (additionalInfo !== undefined) dataToUpdate.additionalInfo = additionalInfo;
+
+    if (operatingHours && Array.isArray(operatingHours)) {
+      dataToUpdate.operatingHours = {
+        deleteMany: {},
+        create: operatingHours.map((hour: any) => ({
+          dayOfWeek: hour.dayOfWeek,
+          openTime: hour.openTime,
+          closeTime: hour.closeTime,
+        })),
+      };
+    }
 
     if (Object.keys(dataToUpdate).length === 0) {
       return res.status(400).json({ error: "Brak danych do aktualizacji" });
     }
 
     const updatedGym = await prisma.gym.update({
-      where: { id: user.gymId },
+      where: { id: gymId },
       data: dataToUpdate,
+      include: { operatingHours: true },
     });
 
     res.json({
@@ -82,7 +92,6 @@ router.patch("/me", requireAuth, async (req: any, res: any) => {
   }
 });
 
-// Pobieramy jedną siłownie po ID - GET /gyms/:id
 router.get("/:id", requireAuth, async (req: any, res: any) => {
   const gymId = parseInt(req.params.id);
   if (isNaN(gymId)) {
@@ -92,6 +101,7 @@ router.get("/:id", requireAuth, async (req: any, res: any) => {
   try {
     const gym = await prisma.gym.findUnique({
       where: { id: gymId },
+      include: { operatingHours: true },
     });
 
     if (!gym) {
@@ -107,24 +117,39 @@ router.get("/:id", requireAuth, async (req: any, res: any) => {
 
 router.put("/:id", requireAuth, async (req: any, res: any) => {
   const gymId = parseInt(req.params.id);
-  console.log("req.userId:", req.userId, "gymId:", gymId);
 
   if (isNaN(gymId)) {
     return res.status(400).json({ error: "Nieprawidłowe ID siłowni" });
   }
 
   try {
-    const gym = await prisma.gym.findUnique({ where: { id: gymId } });
-    if (!gym) return res.status(404).json({ error: "Nie znaleziono siłowni ale checa" });
+    const user = await prisma.user.findUnique({ where: { id: req.userId } });
+    if (!user) return res.status(404).json({ error: "Nie znaleziono użytkownika" });
 
-    const updatedUser = await prisma.user.update({
-      where: { id: req.userId },
-      data: { gymId },
+    const gym = await prisma.gym.findUnique({
+      where: { id: gymId },
+      include: { managers: { select: { id: true } } },
+    });
+    if (!gym) return res.status(404).json({ error: "Nie znaleziono siłowni" });
+
+    if (user.role === Role.GYM_MANAGER) {
+      const isManager = gym.managers.some((m) => m.id === req.userId);
+      if (!isManager) {
+        return res.status(403).json({
+          error: "Nie jesteś managerem.",
+        });
+      }
+    }
+
+    await prisma.memberProfile.upsert({
+      where: { userId: req.userId },
+      update: { homeGymId: gymId },
+      create: { userId: req.userId, homeGymId: gymId },
     });
 
     res.json({
       message: `Wybrano siłownię: ${gym.name}`,
-      gym: updatedUser.gymId,
+      gym: gymId,
     });
   } catch (err) {
     console.error(err);

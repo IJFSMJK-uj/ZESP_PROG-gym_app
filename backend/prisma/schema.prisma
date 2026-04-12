@@ -16,6 +16,7 @@ enum Role {
 enum ReservationStatus {
   CONFIRMED
   CANCELLED
+  DONE
 }
 
 model User {
@@ -67,6 +68,9 @@ model Gym {
   id      Int    @id @default(autoincrement())
   name    String @unique
   address String @unique
+  additionalInfo String?
+
+  operatingHours     GymOperatingHours[]
 
   members            MemberProfile[]     @relation("MemberHomeGym")
   trainerAssignments TrainerAssignment[]
@@ -152,4 +156,17 @@ model GymInviteTrainer {
 
   @@index([gymId])
   @@index([hash])
+}
+model GymOperatingHours {
+  id        Int @id @default(autoincrement())
+
+  gym       Gym @relation(fields: [gymId], references: [id], onDelete: Cascade)
+  gymId     Int
+
+  dayOfWeek Int 
+  openTime  Int 
+  closeTime Int 
+
+  @@unique([gymId, dayOfWeek])
+  @@index([gymId])
 }

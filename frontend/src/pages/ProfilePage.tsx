@@ -180,9 +180,24 @@ export const ProfilePage = () => {
             </div>
           </div>
 
+          {/* TWOJE REZERWACJE*/}
+          <div className="space-y-2">
+            <label className="text-xs uppercase text-zinc-400">Zarządzanie treningami</label>
+            <Link
+              to="/my-reservations"
+              className="flex items-center justify-between w-full p-3 rounded-xl bg-zinc-900 border border-zinc-700 hover:border-sky-500 transition-colors cursor-pointer"
+            >
+              <div>
+                <p className="text-white font-medium">Moje rezerwacje</p>
+                <p className="text-zinc-400 text-xs">Podgląd i anulowanie Twoich treningów</p>
+              </div>
+              <span className="text-sky-400 text-xs">Przejdź</span>
+            </Link>
+          </div>
+
           {/* SIŁOWNIA */}
           <div className="space-y-2">
-            <label className="text-xs uppercase text-zinc-400">Twoja siłownia</label>
+            <label className="text-xs uppercase text-zinc-400">Wybrana siłownia</label>
             {gym ? (
               <Link
                 to={`/gyms/${gym.id}`}
@@ -204,7 +219,7 @@ export const ProfilePage = () => {
             )}
           </div>
 
-          {role === "GYM" && (
+          {role === "GYM_MANAGER" && (
             <div className="space-y-2">
               <label className="text-xs uppercase text-zinc-400">Zaproszenia dla trenerów</label>
               <Link
@@ -220,7 +235,7 @@ export const ProfilePage = () => {
             </div>
           )}
 
-          {role === "GYM" && (
+          {role === "GYM_MANAGER" && (
             <div className="space-y-2">
               <label className="text-xs uppercase text-zinc-400">Ustawienia siłowni</label>
               <Link

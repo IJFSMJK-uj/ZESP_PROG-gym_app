@@ -96,6 +96,7 @@ router.get("/profile", requireAuth, async (req: any, res) => {
           },
         },
       },
+      managedGyms: true,
     },
   });
 
@@ -105,6 +106,12 @@ router.get("/profile", requireAuth, async (req: any, res) => {
 
   let gym = null;
   let username = "";
+
+  if (user.role === "GYM_MANAGER") {
+    if (user.managedGyms.length > 0) {
+      gym = user.managedGyms[0];
+    }
+  }
 
   if (user.memberProfile) {
     gym = user.memberProfile.homeGym;

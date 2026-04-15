@@ -60,6 +60,8 @@ export const gymsService = {
     address?: string;
     operatingHours?: OperatingHour[];
     additionalInfo?: string;
+    lat?: number | null;
+    lng?: number | null;
   }) {
     const token = localStorage.getItem("token");
     const response = await fetch(`${API_URL}/me`, {

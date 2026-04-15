@@ -72,6 +72,10 @@ model Gym {
   lng     Float?
   additionalInfo String?
 
+  email   String?
+  phoneNumber String?
+  description String?
+
   operatingHours     GymOperatingHours[]
 
   members            MemberProfile[]     @relation("MemberHomeGym")

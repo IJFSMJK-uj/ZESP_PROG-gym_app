@@ -6,6 +6,7 @@ import inviteRoutes from "./routes/invite";
 import trainersRoutes from "./routes/trainers";
 import trainerAvailabilityRoutes from "./routes/trainerAvailability";
 import trainerScheduleRoutes from "./routes/trainerSchedule";
+import adminRoutes from "./routes/admin";
 
 const app = express();
 const BACKEND_PORT = 5174;
@@ -26,6 +27,7 @@ app.use("/api/invite", inviteRoutes);
 app.use("/api/trainers", trainersRoutes);
 app.use("/api/trainer-availability", trainerAvailabilityRoutes);
 app.use("/api/trainer-schedule", trainerScheduleRoutes);
+app.use("/api/admin", adminRoutes);
 
 // START SERWERA
 app.listen(BACKEND_PORT, () => {

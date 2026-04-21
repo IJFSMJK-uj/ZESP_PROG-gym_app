@@ -15,6 +15,9 @@ import { GymAdminPage } from "./pages/GymAdminPage";
 import TrainerSchedulePage from "./pages/TrainerSchedulePage";
 import { ContactPage } from "./pages/ContactPage";
 import { MyReservationsPage } from "./pages/MyReservationsPage";
+import { TermsPage } from "./pages/TermsPage";
+import { PrivacyPage } from "./pages/PrivacyPage";
+import { AdminDashboardPage } from "./pages/AdminDashboardPage";
 
 function App() {
   return (
@@ -38,6 +41,9 @@ function App() {
               <Route path="/gym/admin" element={<GymAdminPage />} />
               <Route path="/trainer-invite/:hash" element={<GymInviteTrainerPage />} />
               <Route path="/contact" element={<ContactPage />} />
+              <Route path="/tos" element={<TermsPage />} />
+              <Route path="/privacy" element={<PrivacyPage />} />
+              <Route path="/admin" element={<AdminDashboardPage />} />
             </Routes>
           </main>
 

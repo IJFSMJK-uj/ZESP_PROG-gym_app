@@ -21,11 +21,14 @@ enum ReservationStatus {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  password  String
-  role      Role     @default(MEMBER)
-  createdAt DateTime @default(now())
+  id                      Int       @id @default(autoincrement())
+  email                   String    @unique
+  password                String
+  role                    Role      @default(MEMBER)
+  createdAt               DateTime  @default(now())
+  isEmailVerified         Boolean   @default(false)
+  verificationToken       String?   @unique
+  verificationTokenExpiry DateTime?
 
   // RELACJE ZWIĄZANE Z ROLAMI
   memberProfile  MemberProfile?
@@ -66,14 +69,14 @@ model TrainerProfile {
 }
 
 model Gym {
-  id      Int    @id @default(autoincrement())
-  name    String @unique
-  address String @unique
-  lat     Float?
-  lng     Float?
+  id             Int     @id @default(autoincrement())
+  name           String  @unique
+  address        String  @unique
+  lat            Float?
+  lng            Float?
   additionalInfo String?
 
-  operatingHours     GymOperatingHours[]
+  operatingHours GymOperatingHours[]
 
   members            MemberProfile[]     @relation("MemberHomeGym")
   trainerAssignments TrainerAssignment[]
@@ -160,15 +163,16 @@ model GymInviteTrainer {
   @@index([gymId])
   @@index([hash])
 }
+
 model GymOperatingHours {
-  id        Int @id @default(autoincrement())
+  id Int @id @default(autoincrement())
 
-  gym       Gym @relation(fields: [gymId], references: [id], onDelete: Cascade)
-  gymId     Int
+  gym   Gym @relation(fields: [gymId], references: [id], onDelete: Cascade)
+  gymId Int
 
-  dayOfWeek Int 
-  openTime  Int 
-  closeTime Int 
+  dayOfWeek Int
+  openTime  Int
+  closeTime Int
 
   @@unique([gymId, dayOfWeek])
   @@index([gymId])

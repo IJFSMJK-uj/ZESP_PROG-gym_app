@@ -19,6 +19,7 @@ import { TermsPage } from "./pages/TermsPage";
 import { PrivacyPage } from "./pages/PrivacyPage";
 import { AdminDashboardPage } from "./pages/AdminDashboardPage";
 import { FaqPage } from "./pages/FaqPage";
+import { VerifyEmailPage } from "./pages/VerifyEmailPage";
 
 function App() {
   return (
@@ -46,6 +47,7 @@ function App() {
               <Route path="/privacy" element={<PrivacyPage />} />
               <Route path="/admin" element={<AdminDashboardPage />} />
               <Route path="/faq" element={<FaqPage />} />
+              <Route path="/verify-email" element={<VerifyEmailPage />} />
             </Routes>
           </main>
 

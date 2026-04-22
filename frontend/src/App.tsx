@@ -18,6 +18,7 @@ import { MyReservationsPage } from "./pages/MyReservationsPage";
 import { TermsPage } from "./pages/TermsPage";
 import { PrivacyPage } from "./pages/PrivacyPage";
 import { AdminDashboardPage } from "./pages/AdminDashboardPage";
+import { FaqPage } from "./pages/FaqPage";
 
 function App() {
   return (
@@ -26,7 +27,7 @@ function App() {
         <div className="min-h-screen bg-black text-zinc-50 flex flex-col font-sans selection:bg-sky-500/30">
           <Navbar />
 
-          <main className="flex-grow flex flex-col pt-8 pb-24">
+          <main className="flex-grow flex flex-col overflow-hidden">
             <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/auth" element={<AuthPage />} />
@@ -44,6 +45,7 @@ function App() {
               <Route path="/tos" element={<TermsPage />} />
               <Route path="/privacy" element={<PrivacyPage />} />
               <Route path="/admin" element={<AdminDashboardPage />} />
+              <Route path="/faq" element={<FaqPage />} />
             </Routes>
           </main>
 

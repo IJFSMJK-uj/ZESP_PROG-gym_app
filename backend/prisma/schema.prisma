@@ -69,6 +69,8 @@ model Gym {
   id      Int    @id @default(autoincrement())
   name    String @unique
   address String @unique
+  lat     Float?
+  lng     Float?
   additionalInfo String?
 
   operatingHours     GymOperatingHours[]

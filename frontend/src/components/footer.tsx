@@ -48,6 +48,39 @@ export const Footer = () => {
           <div className="flex items-center gap-6">
             <div className="text-[10px] uppercase tracking-widest text-zinc-500 font-semibold hidden md:block">
               developed by <span className="text-zinc-300">IJFSMJK-uj</span>
+        {/* SRODEK: Przyciski */}
+        <div className="hidden md:flex items-center gap-8">
+          <Link
+            to="/faq"
+            className="text-sm font-semibold text-zinc-400 hover:text-white transition-colors"
+          >
+            {" "}
+            FAQ{" "}
+          </Link>
+          <Link
+            to="/"
+            className="text-sm font-semibold text-zinc-400 hover:text-white transition-colors"
+          >
+            {" "}
+            Privacy Policy{" "}
+          </Link>
+          <Link
+            to="/"
+            className="text-sm font-semibold text-zinc-400 hover:text-white transition-colors"
+          >
+            {" "}
+            Terms of Service
+          </Link>
+        </div>
+
+        {/* PRAWA STRONA: Status logowania */}
+        <div className="flex items-center gap-4 text-sm font-medium">
+          {isAuthenticated ? (
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 text-zinc-400">
+                <span className="w-1.5 h-1.5 bg-sky-500 rounded-full shadow-[0_0_8px_rgba(14,165,233,0.6)]" />
+                Jesteś zalogowany jako: <span className="text-white">{user.email}</span>
+              </div>
             </div>
 
             <div className="flex items-center gap-4 text-[10px] uppercase tracking-widest font-semibold">

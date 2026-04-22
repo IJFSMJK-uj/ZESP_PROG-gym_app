@@ -14,16 +14,22 @@ const GYMS_DATA = [
   {
     name: "Gym Central Wadowicka",
     address: "ul. Wadowicka 6, Kraków",
+    lat: 50.038,
+    lng: 19.9499,
     managerEmails: ["manager.krakow@gymapp.pl"],
   },
   {
     name: "Gym Central Norymberska",
     address: "ul. Norymberska 10, Kraków",
+    lat: 50.0647,
+    lng: 19.945,
     managerEmails: ["manager.krakow@gymapp.pl"],
   },
   {
     name: "Empty Gym Wieliczka",
     address: "ul. Szpitalna 1, Wieliczka",
+    lat: 49.9884,
+    lng: 20.0652,
     managerEmails: ["manager.wieliczka@gymapp.pl"], // Siłownia bez trenerów
   },
 ];
@@ -109,6 +115,8 @@ async function seedGyms(): Promise<Record<string, number>> {
       create: {
         name: gymData.name,
         address: gymData.address,
+        lat: gymData.lat,
+        lng: gymData.lng,
         // Łączymy menadżerów po ich emailach
         managers: {
           connect: gymData.managerEmails.map((email) => ({ email })),

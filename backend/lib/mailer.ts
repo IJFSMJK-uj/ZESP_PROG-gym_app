@@ -16,7 +16,7 @@ export const sendVerificationEmail = async (email: string, token: string) => {
     to: email,
     subject: "Potwierdź swój adres email",
     html: `
-      <div style="font-family: sans-serif; max-width: 480px; margin: auto;">
+      <div style="font-family: sans-serif; margin: auto;">
         <h2>Witaj w GymApp!</h2>
         <p>Kliknij poniższy link aby potwierdzić swój adres email:</p>
         <a href="${verifyUrl}" style="

@@ -45,55 +45,36 @@ export const Footer = () => {
 
       <footer className="fixed bottom-0 left-0 w-full bg-black/80 backdrop-blur-md border-t border-zinc-800/50 py-3 z-50">
         <div className="container mx-auto px-6 flex justify-between items-center">
+          {/* LEWA STRONA */}
           <div className="flex items-center gap-6">
             <div className="text-[10px] uppercase tracking-widest text-zinc-500 font-semibold hidden md:block">
               developed by <span className="text-zinc-300">IJFSMJK-uj</span>
-        {/* SRODEK: Przyciski */}
-        <div className="hidden md:flex items-center gap-8">
-          <Link
-            to="/faq"
-            className="text-sm font-semibold text-zinc-400 hover:text-white transition-colors"
-          >
-            {" "}
-            FAQ{" "}
-          </Link>
-          <Link
-            to="/"
-            className="text-sm font-semibold text-zinc-400 hover:text-white transition-colors"
-          >
-            {" "}
-            Privacy Policy{" "}
-          </Link>
-          <Link
-            to="/"
-            className="text-sm font-semibold text-zinc-400 hover:text-white transition-colors"
-          >
-            {" "}
-            Terms of Service
-          </Link>
-        </div>
-
-        {/* PRAWA STRONA: Status logowania */}
-        <div className="flex items-center gap-4 text-sm font-medium">
-          {isAuthenticated ? (
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2 text-zinc-400">
-                <span className="w-1.5 h-1.5 bg-sky-500 rounded-full shadow-[0_0_8px_rgba(14,165,233,0.6)]" />
-                Jesteś zalogowany jako: <span className="text-white">{user.email}</span>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-4 text-[10px] uppercase tracking-widest font-semibold">
-              <Link to="/tos" className="text-zinc-500 hover:text-sky-400 transition-colors">
-                Regulamin
-              </Link>
-              <span className="text-zinc-800">|</span>
-              <Link to="/privacy" className="text-zinc-500 hover:text-sky-400 transition-colors">
-                Prywatność
-              </Link>
             </div>
           </div>
 
+          {/* SRODEK: Przyciski */}
+          <div className="hidden md:flex items-center gap-8">
+            <Link
+              to="/faq"
+              className="text-sm font-semibold text-zinc-400 hover:text-white transition-colors"
+            >
+              FAQ
+            </Link>
+            <Link
+              to="/privacy"
+              className="text-sm font-semibold text-zinc-400 hover:text-white transition-colors"
+            >
+              Privacy Policy
+            </Link>
+            <Link
+              to="/tos"
+              className="text-sm font-semibold text-zinc-400 hover:text-white transition-colors"
+            >
+              Terms of Service
+            </Link>
+          </div>
+
+          {/* PRAWA STRONA: Status logowania */}
           <div className="flex items-center gap-4 text-sm font-medium">
             {isAuthenticated ? (
               <div className="flex items-center gap-4">

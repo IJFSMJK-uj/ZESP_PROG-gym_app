@@ -214,6 +214,112 @@ async function seedMembers(passwordHash: string, gymMap: Record<string, number>)
   }
 }
 
+async function seedReservations(gymMap: Record<string, number>) {
+  console.log("⚙️ Creating training reservations...");
+
+  // Get trainers and members
+  const trainers = await prisma.trainerAssignment.findMany({
+    where: {
+      gym: {
+        name: "Gym Central Wadowicka",
+      },
+    },
+    include: {
+      trainerProfile: {
+        include: {
+          user: true,
+        },
+      },
+    },
+  });
+
+  const members = await prisma.memberProfile.findMany({
+    where: {
+      homeGymId: gymMap["Gym Central Wadowicka"],
+    },
+    include: {
+      user: true,
+    },
+  });
+
+  if (trainers.length === 0 || members.length === 0) return;
+
+  // Clear old reservations
+  await prisma.trainerReservation.deleteMany({});
+
+  // Create 3 reservations with DONE status
+  const now = new Date();
+  const pastDate = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000); // 2 days ago
+
+  const reservationsToCreate = [
+    {
+      userId: members[0].user.id,
+      assignmentId: trainers[0].id,
+      date: pastDate,
+      startHour: 10,
+      endHour: 11,
+      status: "DONE" as const,
+    },
+    {
+      userId: members[1]?.user.id || members[0].user.id,
+      assignmentId: trainers[0].id,
+      date: pastDate,
+      startHour: 11,
+      endHour: 12,
+      status: "DONE" as const,
+    },
+    {
+      userId: members[0].user.id,
+      assignmentId: trainers.length > 1 ? trainers[1].id : trainers[0].id,
+      date: pastDate,
+      startHour: 12,
+      endHour: 13,
+      status: "DONE" as const,
+    },
+  ];
+
+  for (const res of reservationsToCreate) {
+    await prisma.trainerReservation.create({
+      data: res,
+    });
+  }
+}
+
+async function seedReviews() {
+  console.log("⚙️ Creating trainer reviews...");
+
+  // Get done reservations
+  const reservations = await prisma.trainerReservation.findMany({
+    where: { status: "DONE" },
+    include: {
+      assignment: {
+        include: {
+          trainerProfile: true,
+        },
+      },
+      user: true,
+    },
+  });
+
+  if (reservations.length === 0) return;
+
+  // Clear old reviews
+  await prisma.trainerReview.deleteMany({});
+
+  // Create example reviews for first 3 reservations
+  const reviewsToCreate = reservations.slice(0, 3).map((res, idx) => ({
+    reservationId: res.id,
+    rating: [5, 4, 5][idx],
+    opinion: ["Wspaniały trening!", "Dobrze przeprowadzony trening.", "Najlepszy trener!"][idx],
+  }));
+
+  for (const review of reviewsToCreate) {
+    await prisma.trainerReview.create({
+      data: review,
+    });
+  }
+}
+
 async function main() {
   console.log("⚙️ Seeding database...");
 
@@ -224,6 +330,8 @@ async function main() {
   const gymMap = await seedGyms();
   await seedTrainers(passwordHash, gymMap);
   await seedMembers(passwordHash, gymMap);
+  await seedReservations(gymMap);
+  await seedReviews();
 
   console.log("✅ Finished seeding database.");
   console.log('Default password for all accounts is: "password"');

@@ -90,7 +90,14 @@ export const ProfilePage = () => {
         setError(data.error);
         return;
       }
-      setSuccess("Profil zaktualizowano pomyślnie");
+
+      if (data.emailChanged) {
+        setSuccess(
+          "Profil zaktualizowany. Na Twój nowy adres wysłaliśmy link weryfikacyjny. Zweryfikuj go, aby zachować dostęp do konta!"
+        );
+      } else {
+        setSuccess("Profil zaktualizowano pomyślnie");
+      }
       setEditingEmail(false);
       setEditingUsername(false);
       if (editingEmail) localStorage.setItem("userEmail", email);

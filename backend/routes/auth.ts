@@ -3,7 +3,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import prisma from "../lib/prisma";
 import crypto from "crypto";
-import { sendVerificationEmail } from "../lib/mailer";
+import { sendVerificationEmail, sendPasswordResetEmail } from "../lib/mailer";
 
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || "jwt_x";
@@ -222,6 +222,66 @@ router.put("/profile", requireAuth, async (req: any, res) => {
     });
   } catch (e) {
     res.status(400).json({ error: "Błąd aktualizacji danych" });
+  }
+});
+
+// Request password reset
+router.post("/request-password-reset", async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    const user = await prisma.user.findUnique({ where: { email } });
+
+    if (!user) {
+      return res.json({ error: "Uzytkownik nie znaleziony" });
+    }
+
+    const token = crypto.randomBytes(32).toString("hex");
+    const expiry = new Date(Date.now() + 1 * 60 * 60 * 1000); // 1h
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        verificationToken: token,
+        verificationTokenExpiry: expiry,
+      },
+    });
+
+    await sendPasswordResetEmail(email, token);
+
+    res.json({ message: "Link do zmiany hasła został wysłany" });
+  } catch (error) {
+    res.status(500).json({ error: "Błąd serwera" });
+  }
+});
+
+// Reset password with token
+router.post("/change-password", async (req, res) => {
+  const { token, newPassword } = req.body;
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { verificationToken: token },
+    });
+
+    if (!user || !user.verificationTokenExpiry || user.verificationTokenExpiry < new Date()) {
+      return res.status(400).json({ error: "Link jest nieprawidłowy lub wygasł." });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        password: hashedPassword,
+        verificationToken: null,
+        verificationTokenExpiry: null,
+      },
+    });
+
+    res.json({ message: "Hasło zostało zmienione pomyślnie." });
+  } catch (error) {
+    res.status(500).json({ error: "Błąd podczas zmiany hasła." });
   }
 });
 

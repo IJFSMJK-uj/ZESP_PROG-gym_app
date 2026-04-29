@@ -13,11 +13,13 @@ export const AuthPage = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [success, setSuccess] = useState("");
   const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleAuth = async (type: "login" | "register") => {
     setError("");
+    setSuccess("");
 
     if (type === "register" && !acceptedTerms) {
       setError("Musisz zaakceptować regulamin, aby stworzyć konto.");
@@ -34,18 +36,16 @@ export const AuthPage = () => {
         if (res.token && res.user) {
           login(res.token, res.user);
           navigate("/");
+        } else if (res.error?.includes("Potwierdź")) {
+          setError(res.error);
         } else {
           setError(res.error || "Nieprawidłowe dane logowania");
         }
       } else if (type === "register") {
         if (res.userId) {
-          const loginRes = await authService.login(email, password);
-          if (loginRes.token && loginRes.user) {
-            login(loginRes.token, loginRes.user);
-            navigate("/");
-          } else {
-            setError(loginRes.error || "Błąd logowania po rejestracji");
-          }
+          setSuccess("Konto utworzone! Sprawdź skrzynkę email i kliknij link aktywacyjny.");
+          setEmail("");
+          setPassword("");
         } else {
           setError(res.error || "Błąd rejestracji");
         }
@@ -88,6 +88,12 @@ export const AuthPage = () => {
             {error && (
               <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs text-center">
                 {error}
+              </div>
+            )}
+
+            {success && (
+              <div className="mb-4 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs text-center">
+                {success}
               </div>
             )}
 

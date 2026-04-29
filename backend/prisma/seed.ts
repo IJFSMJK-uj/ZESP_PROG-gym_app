@@ -99,6 +99,7 @@ async function seedManagers(passwordHash: string) {
         email: manager.email,
         password: passwordHash,
         role: Role.GYM_MANAGER,
+        isEmailVerified: true,
       },
     });
   }
@@ -139,6 +140,7 @@ async function seedTrainers(passwordHash: string, gymMap: Record<string, number>
         email: trainerData.email,
         password: passwordHash,
         role: Role.TRAINER,
+        isEmailVerified: true,
         trainerProfile: {
           create: {
             firstName: trainerData.firstName,
@@ -202,6 +204,7 @@ async function seedMembers(passwordHash: string, gymMap: Record<string, number>)
         email: memberData.email,
         password: passwordHash,
         role: Role.MEMBER,
+        isEmailVerified: true,
         memberProfile: {
           create: {
             firstName: memberData.firstName,

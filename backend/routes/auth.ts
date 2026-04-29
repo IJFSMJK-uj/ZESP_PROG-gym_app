@@ -2,7 +2,8 @@ import express from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import prisma from "../lib/prisma";
-import { Role } from "@prisma/client";
+import crypto from "crypto";
+import { sendVerificationEmail } from "../lib/mailer";
 
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || "jwt_x";
@@ -27,21 +28,65 @@ router.post("/register", async (req, res) => {
     // hash
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // token weryfikacyjny
+    const verificationToken = crypto.randomBytes(32).toString("hex");
+    const verificationTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24h
+
     // add do db
     const user = await prisma.user.create({
       data: {
         email,
         password: hashedPassword,
+        verificationToken,
+        verificationTokenExpiry,
         memberProfile: {
           create: {},
         },
       },
     });
 
-    res.status(201).json({ message: "Użytkownik stworzony!", userId: user.id });
+    // wysylanie maila
+    await sendVerificationEmail(email, verificationToken);
+
+    res
+      .status(201)
+      .json({ message: "Konto zostało utworzone! Sprawdź swoją skrzynkę email.", userId: user.id });
   } catch (error) {
     res.status(400).json({ error: "Użytkownik z tym mailem już istnieje." });
   }
+});
+
+// verify email
+router.get("/verify-email", async (req, res) => {
+  const { token } = req.query;
+
+  if (!token || typeof token !== "string") {
+    return res.status(400).json({ error: "Brak tokenu w zapytaniu" });
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { verificationToken: token },
+  });
+
+  if (!user) {
+    return res.status(400).json({ error: "Nieprawidłowy token weryfikacyjny" });
+  }
+
+  if (user.verificationTokenExpiry && user.verificationTokenExpiry < new Date()) {
+    return res.status(400).json({ error: "Token weryfikacyjny wygasł" });
+  }
+
+  // update user status
+  await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      isEmailVerified: true,
+      verificationToken: null,
+      verificationTokenExpiry: null,
+    },
+  });
+
+  res.json({ success: true });
 });
 
 // login
@@ -65,6 +110,12 @@ router.post("/login", async (req, res) => {
 
   if (!isPasswordValid) {
     return res.status(401).json({ error: "Nieprawidłowy e-mail lub hasło" });
+  }
+
+  if (!user.isEmailVerified) {
+    return res
+      .status(403)
+      .json({ error: "Konto nie zostało zweryfikowane. Sprawdź swoją skrzynkę email." });
   }
 
   // generate token

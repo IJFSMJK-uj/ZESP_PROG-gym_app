@@ -21,6 +21,7 @@ import { AdminDashboardPage } from "./pages/AdminDashboardPage";
 import { FaqPage } from "./pages/FaqPage";
 import { VerifyEmailPage } from "./pages/VerifyEmailPage";
 import { ChangePasswordPage } from "./pages/ChangePasswordPage";
+import { ForgotPasswordPage } from "./pages/ForgotPasswordPage";
 
 function App() {
   return (
@@ -50,6 +51,7 @@ function App() {
               <Route path="/faq" element={<FaqPage />} />
               <Route path="/verify-email" element={<VerifyEmailPage />} />
               <Route path="/change-password" element={<ChangePasswordPage />} />
+              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             </Routes>
           </main>
 

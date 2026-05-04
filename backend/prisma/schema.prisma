@@ -136,7 +136,8 @@ model TrainerReservation {
   canceller     User? @relation("CancelledReservations", fields: [cancelledById], references: [id], onDelete: SetNull)
   cancelledById Int?
 
-  createdAt DateTime @default(now())
+  createdAt DateTime       @default(now())
+  review    TrainerReview?
 
   @@index([assignmentId, date])
   @@index([userId])
@@ -176,4 +177,16 @@ model GymOperatingHours {
 
   @@unique([gymId, dayOfWeek])
   @@index([gymId])
+}
+
+model TrainerReview {
+  id Int @id @default(autoincrement())
+
+  reservation   TrainerReservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  reservationId Int                @unique
+
+  rating  Int // 1-5
+  opinion String?
+
+  createdAt DateTime @default(now())
 }

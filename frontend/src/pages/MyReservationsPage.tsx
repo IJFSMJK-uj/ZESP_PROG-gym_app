@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { reservationsService } from "../api/reservationsService";
 import { useAuth } from "../context/AuthContext";
 import { Card, CardContent, CardHeader } from "../components/ui/card";
+import { ReviewModal } from "../components/ReviewModal";
 
 export const MyReservationsPage = () => {
   const { user } = useAuth();
@@ -9,6 +10,11 @@ export const MyReservationsPage = () => {
   const [trainerReservations, setTrainerReservations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"upcoming" | "history">("upcoming");
+  const [reviewModalOpen, setReviewModalOpen] = useState(false);
+  const [selectedReservation, setSelectedReservation] = useState<any>(null);
+  const [reviewQueue, setReviewQueue] = useState<any[]>([]);
+  const [reviewIndex, setReviewIndex] = useState(0);
+  const [queueOpen, setQueueOpen] = useState(false);
 
   const loadAllData = async () => {
     setLoading(true);
@@ -35,6 +41,56 @@ export const MyReservationsPage = () => {
     if (!window.confirm("Czy na pewno chcesz anulować tę rezerwację?")) return;
     const res = await reservationsService.cancelReservation(id);
     if (res && !res.error) loadAllData();
+  };
+
+  const handleOpenReviewModal = (res: any) => {
+    setSelectedReservation(res);
+    setReviewModalOpen(true);
+  };
+
+  const handleReviewSuccess = async () => {
+    const nextIndex = reviewIndex + 1;
+
+    await loadAllData();
+
+    if (nextIndex < reviewQueue.length) {
+      setReviewIndex(nextIndex);
+      setSelectedReservation(reviewQueue[nextIndex]);
+      setReviewModalOpen(true);
+    } else {
+      setReviewModalOpen(false);
+      setSelectedReservation(null);
+      setReviewQueue([]);
+      setReviewIndex(0);
+    }
+  };
+  const handleSkipReview = () => {
+    const nextIndex = reviewIndex + 1;
+
+    if (nextIndex < reviewQueue.length) {
+      setReviewIndex(nextIndex);
+      setSelectedReservation(reviewQueue[nextIndex]);
+      setReviewModalOpen(true);
+    } else {
+      setReviewModalOpen(false);
+      setSelectedReservation(null);
+      setReviewQueue([]);
+      setReviewIndex(0);
+    }
+  };
+
+  const pendingReviews = useMemo(() => {
+    return clientReservations.filter((r: any) => r.status === "DONE" && !r.review);
+  }, [clientReservations]);
+
+  const startReviewQueue = () => {
+    setReviewQueue(pendingReviews);
+    setReviewIndex(0);
+
+    if (pendingReviews.length > 0) {
+      setSelectedReservation(pendingReviews[0]);
+      setReviewModalOpen(true);
+    }
   };
 
   const upClient = clientReservations.filter((r) => r.status === "CONFIRMED");
@@ -103,7 +159,15 @@ export const MyReservationsPage = () => {
               >
                 Anuluj
               </button>
-            )}
+            )}{" "}
+            {res.status === "DONE" && !isTrainer && !res.review && (
+              <button
+                onClick={() => handleOpenReviewModal(res)}
+                className="text-[10px] text-emerald-400 hover:text-emerald-300 transition-colors underline cursor-pointer"
+              >
+                Oceń trenera
+              </button>
+            )}{" "}
           </div>
         </div>
       </div>
@@ -117,6 +181,20 @@ export const MyReservationsPage = () => {
           <h1 className="text-3xl font-black text-white uppercase tracking-tighter">
             Moje rezerwacje
           </h1>
+          {pendingReviews.length > 0 && (
+            <div className="mx-auto max-w-md rounded-2xl border border-yellow-500/20 bg-yellow-500/5 px-5 py-4">
+              <p className="text-xs uppercase font-black tracking-widest text-yellow-400 mb-2">
+                Masz {pendingReviews.length} treningów do oceny
+              </p>
+
+              <button
+                onClick={startReviewQueue}
+                className="px-5 py-2 rounded-xl bg-yellow-500 text-black text-xs font-black uppercase hover:scale-105 transition-all cursor-pointer"
+              >
+                Oceń teraz
+              </button>
+            </div>
+          )}
 
           <div className="flex justify-center p-1.5 bg-zinc-900/80 rounded-2xl border border-zinc-800 w-fit mx-auto">
             <button
@@ -178,6 +256,16 @@ export const MyReservationsPage = () => {
           )}
         </CardContent>
       </Card>
+
+      <ReviewModal
+        isOpen={reviewModalOpen}
+        onClose={() => setReviewModalOpen(false)}
+        reservation={selectedReservation}
+        onSuccess={handleReviewSuccess}
+        onSkip={handleSkipReview}
+        currentIndex={reviewIndex}
+        totalCount={reviewQueue.length}
+      />
     </div>
   );
 };

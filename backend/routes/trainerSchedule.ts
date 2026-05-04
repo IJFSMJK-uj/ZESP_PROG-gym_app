@@ -146,6 +146,7 @@ router.get("/client/me", requireAuth, async (req: any, res) => {
             gym: true,
           },
         },
+        review: true,
       },
       orderBy: { date: "desc" },
     });

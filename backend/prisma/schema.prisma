@@ -11,6 +11,7 @@ enum Role {
   MEMBER
   TRAINER
   GYM_MANAGER
+  ADMIN
 }
 
 enum ReservationStatus {
@@ -20,11 +21,14 @@ enum ReservationStatus {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  password  String
-  role      Role     @default(MEMBER)
-  createdAt DateTime @default(now())
+  id                      Int       @id @default(autoincrement())
+  email                   String    @unique
+  password                String
+  role                    Role      @default(MEMBER)
+  createdAt               DateTime  @default(now())
+  isEmailVerified         Boolean   @default(false)
+  verificationToken       String?   @unique
+  verificationTokenExpiry DateTime?
 
   // RELACJE ZWIĄZANE Z ROLAMI
   memberProfile  MemberProfile?
@@ -65,18 +69,19 @@ model TrainerProfile {
 }
 
 model Gym {
-  id      Int    @id @default(autoincrement())
-  name    String @unique
-  address String @unique
-  lat     Float?
-  lng     Float?
+  id             Int     @id @default(autoincrement())
+  name           String  @unique
+  address        String  @unique
+  lat            Float?
+  lng            Float?
   additionalInfo String?
 
-  email   String?
+  email       String?
   phoneNumber String?
   description String?
 
   operatingHours     GymOperatingHours[]
+
 
   members            MemberProfile[]     @relation("MemberHomeGym")
   trainerAssignments TrainerAssignment[]
@@ -136,7 +141,8 @@ model TrainerReservation {
   canceller     User? @relation("CancelledReservations", fields: [cancelledById], references: [id], onDelete: SetNull)
   cancelledById Int?
 
-  createdAt DateTime @default(now())
+  createdAt DateTime       @default(now())
+  review    TrainerReview?
 
   @@index([assignmentId, date])
   @@index([userId])
@@ -163,16 +169,29 @@ model GymInviteTrainer {
   @@index([gymId])
   @@index([hash])
 }
+
 model GymOperatingHours {
-  id        Int @id @default(autoincrement())
+  id Int @id @default(autoincrement())
 
-  gym       Gym @relation(fields: [gymId], references: [id], onDelete: Cascade)
-  gymId     Int
+  gym   Gym @relation(fields: [gymId], references: [id], onDelete: Cascade)
+  gymId Int
 
-  dayOfWeek Int 
-  openTime  Int 
-  closeTime Int 
+  dayOfWeek Int
+  openTime  Int
+  closeTime Int
 
   @@unique([gymId, dayOfWeek])
   @@index([gymId])
+}
+
+model TrainerReview {
+  id Int @id @default(autoincrement())
+
+  reservation   TrainerReservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  reservationId Int                @unique
+
+  rating  Int // 1-5
+  opinion String?
+
+  createdAt DateTime @default(now())
 }

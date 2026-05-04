@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:5174/api/gyms";
+const API_URL = "http://localhost:3001/api/gyms";
 
 export interface OperatingHour {
   dayOfWeek: number;

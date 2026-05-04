@@ -5,6 +5,7 @@ import { Button } from "./ui/button";
 export const Navbar = () => {
   const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
+
   const handleLogout = () => {
     logout();
     navigate("/");
@@ -57,6 +58,15 @@ export const Navbar = () => {
           >
             Dla siłowni
           </Link>
+
+          {user?.role === "ADMIN" && (
+            <Link
+              to="/admin"
+              className="text-sm font-black text-red-500 hover:text-red-400 transition-colors tracking-widest uppercase"
+            >
+              Admin
+            </Link>
+          )}
         </div>
 
         <div className="flex items-center gap-4">

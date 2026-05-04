@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:5174/api/trainer-schedule";
+const API_URL = "http://localhost:3001/api/trainer-schedule";
 
 export const reservationsService = {
   async getSchedule(assignmentId: string | number, weekStart: string) {

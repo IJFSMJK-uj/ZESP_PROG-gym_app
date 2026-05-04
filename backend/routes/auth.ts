@@ -51,8 +51,13 @@ router.post("/register", async (req, res) => {
     res
       .status(201)
       .json({ message: "Konto zostało utworzone! Sprawdź swoją skrzynkę email.", userId: user.id });
-  } catch (error) {
-    res.status(400).json({ error: "Użytkownik z tym mailem już istnieje." });
+  } catch (error: any) {
+    if (error?.code === "P2002") {
+      res.status(400).json({ error: "Użytkownik z tym mailem już istnieje." });
+    } else {
+      console.error("Błąd rejestracji:", error);
+      res.status(500).json({ error: "Błąd serwera podczas rejestracji." });
+    }
   }
 });
 
@@ -69,7 +74,9 @@ router.get("/verify-email", async (req, res) => {
   });
 
   if (!user) {
-    return res.status(400).json({ error: "Nieprawidłowy token weryfikacyjny" });
+    return res
+      .status(400)
+      .json({ error: "Link weryfikacyjny jest nieważny lub już został użyty." });
   }
 
   if (user.verificationTokenExpiry && user.verificationTokenExpiry < new Date()) {
@@ -193,10 +200,25 @@ router.put("/profile", requireAuth, async (req: any, res) => {
       return res.status(404).json({ error: "Uzytkownik nie znaleziony" });
     }
 
+    let emailChanged = false;
+    let verificationToken = null;
+    let verificationTokenExpiry = null;
+
+    if (email && email !== user.email) {
+      emailChanged = true;
+      verificationToken = crypto.randomBytes(32).toString("hex");
+      verificationTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24h
+    }
+
     const updatedUser = await prisma.user.update({
       where: { id: req.userId },
       data: {
         ...(email && { email }),
+        ...(emailChanged && {
+          isEmailVerified: false,
+          verificationToken,
+          verificationTokenExpiry,
+        }),
       },
     });
 
@@ -216,9 +238,14 @@ router.put("/profile", requireAuth, async (req: any, res) => {
       }
     }
 
+    if (emailChanged && verificationToken) {
+      await sendVerificationEmail(email, verificationToken);
+    }
+
     res.json({
       email: updatedUser.email,
       username,
+      emailChanged,
     });
   } catch (e) {
     res.status(400).json({ error: "Błąd aktualizacji danych" });

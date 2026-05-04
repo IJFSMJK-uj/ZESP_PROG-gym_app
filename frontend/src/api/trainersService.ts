@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:5174/api/trainers";
+const API_URL = "http://localhost:3001/api/trainers";
 
 const getHeaders = () => {
   const token = localStorage.getItem("token");

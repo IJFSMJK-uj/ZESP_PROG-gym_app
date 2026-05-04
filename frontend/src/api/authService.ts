@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:5174/api/auth";
+const API_URL = "http://localhost:3001/api/auth";
 
 export const authService = {
   async register(email: string, password: string) {
@@ -48,5 +48,31 @@ export const authService = {
       body: JSON.stringify(data),
     });
     return response.json();
+  },
+
+  async requestPasswordReset(email: string) {
+    try {
+      const response = await fetch(`${API_URL}/request-password-reset`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      return await response.json();
+    } catch (error) {
+      return { error: "Błąd połączenia z serwerem" };
+    }
+  },
+
+  changePassword: async (token: string, newPassword: string) => {
+    try {
+      const response = await fetch(`${API_URL}/change-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token, newPassword }),
+      });
+      return await response.json();
+    } catch (error) {
+      return { error: "Błąd sieci. Spróbuj ponownie." };
+    }
   },
 };

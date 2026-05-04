@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:5174/api/trainer-availability";
+const API_URL = "http://localhost:3001/api/trainer-availability";
 
 export const availabilityService = {
   async getMyAvailability() {

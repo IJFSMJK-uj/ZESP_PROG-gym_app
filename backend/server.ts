@@ -10,7 +10,7 @@ import adminRoutes from "./routes/admin";
 import reviewsRoutes from "./routes/reviews";
 
 const app = express();
-const BACKEND_PORT = 5174;
+const BACKEND_PORT = 3001;
 
 // MIDDLEWARE
 app.use(cors()); // frontend - backend connection

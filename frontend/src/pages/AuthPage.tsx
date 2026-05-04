@@ -113,6 +113,14 @@ export const AuthPage = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   className="bg-zinc-900 border-zinc-800 h-12 rounded-xl text-white"
                 />
+                <div className="flex justify-end px-1">
+                  <Link
+                    to="/forgot-password"
+                    className="text-xs text-zinc-500 hover:text-sky-400 transition-colors"
+                  >
+                    Zapomniałeś hasła?
+                  </Link>
+                </div>
                 <Button
                   onClick={() => handleAuth("login")}
                   className="w-full bg-sky-500 hover:bg-sky-400 h-12 rounded-full font-bold shadow-lg shadow-sky-500/20"

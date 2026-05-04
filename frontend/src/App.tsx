@@ -20,6 +20,7 @@ import { PrivacyPage } from "./pages/PrivacyPage";
 import { AdminDashboardPage } from "./pages/AdminDashboardPage";
 import { FaqPage } from "./pages/FaqPage";
 import { VerifyEmailPage } from "./pages/VerifyEmailPage";
+import { ChangePasswordPage } from "./pages/ChangePasswordPage";
 
 function App() {
   return (
@@ -48,6 +49,7 @@ function App() {
               <Route path="/admin" element={<AdminDashboardPage />} />
               <Route path="/faq" element={<FaqPage />} />
               <Route path="/verify-email" element={<VerifyEmailPage />} />
+              <Route path="/change-password" element={<ChangePasswordPage />} />
             </Routes>
           </main>
 

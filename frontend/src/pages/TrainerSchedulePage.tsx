@@ -74,7 +74,7 @@ export default function TrainerSchedulePage() {
       const token = localStorage.getItem("token");
 
       const res = await fetch(
-        `http://localhost:5174/api/trainer-schedule/${assignmentId}?weekStart=${weekStart.toISOString()}`,
+        `http://localhost:3001/api/trainer-schedule/${assignmentId}?weekStart=${weekStart.toISOString()}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -358,7 +358,7 @@ export default function TrainerSchedulePage() {
                                 }
                                 setBooking(bookingKey);
                                 const res = await fetch(
-                                  "http://localhost:5174/api/trainer-schedule",
+                                  "http://localhost:3001/api/trainer-schedule",
                                   {
                                     method: "POST",
                                     headers: {

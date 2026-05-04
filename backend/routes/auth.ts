@@ -51,8 +51,13 @@ router.post("/register", async (req, res) => {
     res
       .status(201)
       .json({ message: "Konto zostało utworzone! Sprawdź swoją skrzynkę email.", userId: user.id });
-  } catch (error) {
-    res.status(400).json({ error: "Użytkownik z tym mailem już istnieje." });
+  } catch (error: any) {
+    if (error?.code === "P2002") {
+      res.status(400).json({ error: "Użytkownik z tym mailem już istnieje." });
+    } else {
+      console.error("Błąd rejestracji:", error);
+      res.status(500).json({ error: "Błąd serwera podczas rejestracji." });
+    }
   }
 });
 
@@ -69,7 +74,9 @@ router.get("/verify-email", async (req, res) => {
   });
 
   if (!user) {
-    return res.status(400).json({ error: "Nieprawidłowy token weryfikacyjny" });
+    return res
+      .status(400)
+      .json({ error: "Link weryfikacyjny jest nieważny lub już został użyty." });
   }
 
   if (user.verificationTokenExpiry && user.verificationTokenExpiry < new Date()) {

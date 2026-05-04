@@ -13,7 +13,7 @@ export const VerifyEmailPage = () => {
       return;
     }
 
-    fetch(`http://localhost:5174/api/auth/verify-email?token=${token}`)
+    fetch(`http://localhost:3001/api/auth/verify-email?token=${token}`)
       .then(async (res) => {
         const data = await res.json();
 
@@ -31,14 +31,19 @@ export const VerifyEmailPage = () => {
       {status === "loading" && <p className="text-white">Weryfikacja...</p>}
       {status === "success" && (
         <div className="text-center">
-          <p className="text-emerald-400 text-xl mb-4">Email potwierdzony!</p>
+          <p className="text-emerald-400 text-xl mb-4">Adres email potwierdzony!</p>
           <button onClick={() => navigate("/auth")} className="text-sky-400 hover:text-sky-300">
             Przejdź do logowania
           </button>
         </div>
       )}
       {status === "error" && (
-        <p className="text-red-400 text-xl">Link jest nieprawidłowy lub wygasł.</p>
+        <div className="text-center">
+          <p className="text-blue-400 text-xl mb-4">Adres email został już potwierdzony.</p>
+          <button onClick={() => navigate("/auth")} className="text-sky-400 hover:text-sky-300">
+            Przejdź do logowania
+          </button>
+        </div>
       )}
     </div>
   );

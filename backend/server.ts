@@ -9,7 +9,7 @@ import trainerScheduleRoutes from "./routes/trainerSchedule";
 import adminRoutes from "./routes/admin";
 
 const app = express();
-const BACKEND_PORT = 5174;
+const BACKEND_PORT = 3001;
 
 // MIDDLEWARE
 app.use(cors()); // frontend - backend connection

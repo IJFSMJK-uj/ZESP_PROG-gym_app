@@ -11,6 +11,7 @@ enum Role {
   MEMBER
   TRAINER
   GYM_MANAGER
+  ADMIN
 }
 
 enum ReservationStatus {

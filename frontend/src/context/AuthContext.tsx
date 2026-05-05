@@ -43,6 +43,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       try {
         setToken(savedToken);
         setUser(JSON.parse(savedUser));
+
+        // Odśwież dane usera z backendu (np. po zmianie roli przez admina)
+        fetch("http://localhost:3001/api/auth/me", {
+          headers: { Authorization: `Bearer ${savedToken}` },
+        })
+          .then((r) => (r.ok ? r.json() : null))
+          .then((freshUser) => {
+            if (freshUser && !freshUser.error) {
+              setUser(freshUser);
+              localStorage.setItem("user", JSON.stringify(freshUser));
+            }
+          })
+          .catch(() => {
+            /* sieć niedostępna – zostaw localStorage */
+          });
       } catch (e) {
         console.error("Błąd odczytu sesji:", e);
       }

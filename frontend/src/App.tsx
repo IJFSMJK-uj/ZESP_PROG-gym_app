@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { Navbar } from "./components/navbar";
 import { Footer } from "./components/footer";
@@ -17,7 +17,8 @@ import { ContactPage } from "./pages/ContactPage";
 import { MyReservationsPage } from "./pages/MyReservationsPage";
 import { TermsPage } from "./pages/TermsPage";
 import { PrivacyPage } from "./pages/PrivacyPage";
-import { AdminDashboardPage } from "./pages/AdminDashboardPage";
+import { AdminGymsPage } from "./pages/AdminGymsPage";
+import { AdminUsersPage } from "./pages/AdminUsersPage";
 import { FaqPage } from "./pages/FaqPage";
 import { VerifyEmailPage } from "./pages/VerifyEmailPage";
 import { ChangePasswordPage } from "./pages/ChangePasswordPage";
@@ -47,7 +48,9 @@ function App() {
               <Route path="/contact" element={<ContactPage />} />
               <Route path="/tos" element={<TermsPage />} />
               <Route path="/privacy" element={<PrivacyPage />} />
-              <Route path="/admin" element={<AdminDashboardPage />} />
+              <Route path="/admin" element={<Navigate to="/admin/gyms" replace />} />
+              <Route path="/admin/gyms" element={<AdminGymsPage />} />
+              <Route path="/admin/users" element={<AdminUsersPage />} />
               <Route path="/faq" element={<FaqPage />} />
               <Route path="/verify-email" element={<VerifyEmailPage />} />
               <Route path="/change-password" element={<ChangePasswordPage />} />

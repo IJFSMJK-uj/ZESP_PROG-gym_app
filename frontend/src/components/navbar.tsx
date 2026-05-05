@@ -1,80 +1,84 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { Button } from "./ui/button";
 
 export const Navbar = () => {
   const { user, isAuthenticated, logout } = useAuth();
-  const isAdmin = user?.role === "ADMIN";
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/");
+  };
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-zinc-800 bg-black/50 backdrop-blur-md">
       <div className="container mx-auto flex h-16 items-center justify-between px-6">
         <Link
           to="/"
-          className={`text-2xl font-extrabold tracking-tight transition-colors ${isAdmin ? "text-red-500 hover:text-red-400" : "text-sky-400 hover:text-sky-300"}`}
+          className="text-2xl font-extrabold tracking-tight text-sky-400 hover:text-sky-300 transition-colors"
         >
           GYMAPP
         </Link>
 
         <div className="hidden md:flex items-center gap-8">
-          {isAdmin ? (
-            <>
-              <Link
-                to="/admin/gyms"
-                className="text-sm font-semibold text-red-400 hover:text-red-300 transition-colors"
-              >
-                Siłownie
-              </Link>
-              <Link
-                to="/admin/users"
-                className="text-sm font-semibold text-red-400 hover:text-red-300 transition-colors"
-              >
-                Użytkownicy
-              </Link>
-            </>
-          ) : (
-            <>
-              <Link
-                to="/profile"
-                className="text-sm font-semibold text-zinc-400 hover:text-white transition-colors"
-              >
-                Profil
-              </Link>
-              <Link
-                to="/dashboard"
-                className="text-sm font-semibold text-zinc-400 hover:text-white transition-colors"
-              >
-                Panel
-              </Link>
-              <Link
-                to="/gyms"
-                className="text-sm font-semibold text-zinc-400 hover:text-white transition-colors"
-              >
-                Mapa siłowni
-              </Link>
-              <Link
-                to="/trainers"
-                className="text-sm font-semibold text-zinc-400 hover:text-white transition-colors"
-              >
-                Trenerzy
-              </Link>
-            </>
+          <Link
+            to="/profile"
+            className="text-sm font-semibold text-zinc-400 hover:text-white transition-colors"
+          >
+            Profil
+          </Link>
+          <Link
+            to="/my-reservations"
+            className="text-sm font-semibold text-sky-400 hover:text-sky-300 transition-colors"
+          >
+            Rezerwacje
+          </Link>
+          <Link
+            to="/dashboard"
+            className="text-sm font-semibold text-zinc-400 hover:text-white transition-colors"
+          >
+            Panel
+          </Link>
+          <Link
+            to="/gyms"
+            className="text-sm font-semibold text-zinc-400 hover:text-white transition-colors"
+          >
+            Mapa siłowni
+          </Link>
+          <Link
+            to="/trainers"
+            className="text-sm font-semibold text-zinc-400 hover:text-white transition-colors"
+          >
+            Trenerzy
+          </Link>
+          <Link
+            to="/contact"
+            className="text-sm font-semibold text-zinc-400 hover:text-white transition-colors"
+          >
+            Dla siłowni
+          </Link>
+
+          {user?.role === "ADMIN" && (
+            <Link
+              to="/admin"
+              className="text-sm font-black text-red-500 hover:text-red-400 transition-colors tracking-widest uppercase"
+            >
+              Admin
+            </Link>
           )}
         </div>
 
         <div className="flex items-center gap-4">
           {isAuthenticated ? (
             <div className="flex items-center gap-4">
-              {isAdmin && (
-                <span className="text-xs text-red-400 bg-red-500/10 border border-red-500/30 px-2 py-0.5 rounded-full">
-                  ADMIN
-                </span>
-              )}
-              <span className="text-sm text-zinc-400 hidden sm:inline-block">{user.email}</span>
+              <span className="text-sm text-zinc-400 hidden sm:inline-block">
+                Cześć, <span className="text-white">{user?.email}</span>
+              </span>
               <Button
-                onClick={logout}
+                onClick={handleLogout}
                 variant="ghost"
-                className={`rounded-full ${isAdmin ? "text-red-400 hover:text-red-300 hover:bg-red-400/10" : "text-sky-400 hover:text-sky-300 hover:bg-sky-400/10"}`}
+                className="rounded-full text-sky-400 hover:text-sky-300 hover:bg-sky-400/10 cursor-pointer"
               >
                 Wyloguj
               </Button>

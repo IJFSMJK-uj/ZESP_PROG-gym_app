@@ -19,6 +19,7 @@ export const ProfilePage = () => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const navigate = useNavigate();
+  const [resetLoading, setResetLoading] = useState(false);
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -90,12 +91,38 @@ export const ProfilePage = () => {
         setError(data.error);
         return;
       }
-      setSuccess("Profil zaktualizowano pomyślnie");
+
+      if (data.emailChanged) {
+        setSuccess(
+          "Profil zaktualizowany. Na Twój nowy adres wysłaliśmy link weryfikacyjny. Zweryfikuj go, aby zachować dostęp do konta!"
+        );
+      } else {
+        setSuccess("Profil zaktualizowano pomyślnie");
+      }
       setEditingEmail(false);
       setEditingUsername(false);
       if (editingEmail) localStorage.setItem("userEmail", email);
     } catch {
       setError("Błąd sieci. Spróbuj ponownie.");
+    }
+  };
+
+  const handlePasswordResetRequest = async () => {
+    setError("");
+    setSuccess("");
+    setResetLoading(true);
+
+    try {
+      const data = await authService.requestPasswordReset(email);
+      if (data.error) {
+        setError(data.error);
+      } else {
+        setSuccess("Link do zmiany hasła został wysłany na Twój adres e-mail.");
+      }
+    } catch {
+      setError("Nie udało się wysłać prośby o zmianę hasła.");
+    } finally {
+      setResetLoading(false);
     }
   };
 
@@ -180,9 +207,24 @@ export const ProfilePage = () => {
             </div>
           </div>
 
+          {/* TWOJE REZERWACJE*/}
+          <div className="space-y-2">
+            <label className="text-xs uppercase text-zinc-400">Zarządzanie treningami</label>
+            <Link
+              to="/my-reservations"
+              className="flex items-center justify-between w-full p-3 rounded-xl bg-zinc-900 border border-zinc-700 hover:border-sky-500 transition-colors cursor-pointer"
+            >
+              <div>
+                <p className="text-white font-medium">Moje rezerwacje</p>
+                <p className="text-zinc-400 text-xs">Podgląd i anulowanie Twoich treningów</p>
+              </div>
+              <span className="text-sky-400 text-xs">Przejdź</span>
+            </Link>
+          </div>
+
           {/* SIŁOWNIA */}
           <div className="space-y-2">
-            <label className="text-xs uppercase text-zinc-400">Twoja siłownia</label>
+            <label className="text-xs uppercase text-zinc-400">Wybrana siłownia</label>
             {gym ? (
               <Link
                 to={`/gyms/${gym.id}`}
@@ -204,7 +246,7 @@ export const ProfilePage = () => {
             )}
           </div>
 
-          {role === "GYM" && (
+          {role === "GYM_MANAGER" && (
             <div className="space-y-2">
               <label className="text-xs uppercase text-zinc-400">Zaproszenia dla trenerów</label>
               <Link
@@ -220,7 +262,7 @@ export const ProfilePage = () => {
             </div>
           )}
 
-          {role === "GYM" && (
+          {role === "GYM_MANAGER" && (
             <div className="space-y-2">
               <label className="text-xs uppercase text-zinc-400">Ustawienia siłowni</label>
               <Link
@@ -253,6 +295,25 @@ export const ProfilePage = () => {
               </Link>
             </div>
           )}
+
+          <div className="space-y-2">
+            <label className="text-xs uppercase text-zinc-400">Zmień hasło</label>
+            <Button
+              variant="outline"
+              type="button"
+              onClick={handlePasswordResetRequest}
+              disabled={resetLoading}
+              className="w-full justify-start bg-zinc-950 border-zinc-700 hover:border-sky-500 text-zinc-300 h-auto p-3 rounded-xl transition-colors"
+            >
+              <div className="text-left">
+                <p className="text-zinc-400 text-xs">
+                  {resetLoading
+                    ? "Wysyłanie..."
+                    : "Link do zmiany hasła zostanie wysłany na Twój e-mail"}
+                </p>
+              </div>
+            </Button>
+          </div>
 
           <div className="flex gap-2 mt-2">
             <Button onClick={handleSave} className="w-1/2 cursor-pointer">

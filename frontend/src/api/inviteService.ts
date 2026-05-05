@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:5174/api/invite";
+const API_URL = "http://localhost:3001/api/invite";
 
 export const inviteService = {
   async generateTrainerInvite(expiresInHours?: number) {

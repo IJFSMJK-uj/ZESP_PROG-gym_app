@@ -13,8 +13,15 @@ import { GymCreateTrainerInvitePage } from "./pages/GymCreateTrainerInvitePage";
 import TrainerAvailabilityPage from "./pages/TrainerAvailabilityPage";
 import { GymAdminPage } from "./pages/GymAdminPage";
 import TrainerSchedulePage from "./pages/TrainerSchedulePage";
-import { AdminGymsPage } from "./pages/AdminGymsPage";
-import { AdminUsersPage } from "./pages/AdminUsersPage";
+import { ContactPage } from "./pages/ContactPage";
+import { MyReservationsPage } from "./pages/MyReservationsPage";
+import { TermsPage } from "./pages/TermsPage";
+import { PrivacyPage } from "./pages/PrivacyPage";
+import { AdminDashboardPage } from "./pages/AdminDashboardPage";
+import { FaqPage } from "./pages/FaqPage";
+import { VerifyEmailPage } from "./pages/VerifyEmailPage";
+import { ChangePasswordPage } from "./pages/ChangePasswordPage";
+import { ForgotPasswordPage } from "./pages/ForgotPasswordPage";
 
 function App() {
   return (
@@ -23,7 +30,7 @@ function App() {
         <div className="min-h-screen bg-black text-zinc-50 flex flex-col font-sans selection:bg-sky-500/30">
           <Navbar />
 
-          <main className="flex-grow flex flex-col pt-8 pb-24">
+          <main className="flex-grow flex flex-col overflow-hidden">
             <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/auth" element={<AuthPage />} />
@@ -33,11 +40,18 @@ function App() {
               <Route path="/gyms" element={<SelectGymPage />} />
               <Route path="/gyms/:gymId" element={<GymDetailPage />} />
               <Route path="/trainer/:assignmentId/schedule" element={<TrainerSchedulePage />} />
+              <Route path="/my-reservations" element={<MyReservationsPage />} />
               <Route path="/gym/invites/trainers" element={<GymCreateTrainerInvitePage />} />
               <Route path="/gym/admin" element={<GymAdminPage />} />
               <Route path="/trainer-invite/:hash" element={<GymInviteTrainerPage />} />
-              <Route path="/admin/gyms" element={<AdminGymsPage />} />
-              <Route path="/admin/users" element={<AdminUsersPage />} />
+              <Route path="/contact" element={<ContactPage />} />
+              <Route path="/tos" element={<TermsPage />} />
+              <Route path="/privacy" element={<PrivacyPage />} />
+              <Route path="/admin" element={<AdminDashboardPage />} />
+              <Route path="/faq" element={<FaqPage />} />
+              <Route path="/verify-email" element={<VerifyEmailPage />} />
+              <Route path="/change-password" element={<ChangePasswordPage />} />
+              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             </Routes>
           </main>
 

@@ -8,7 +8,7 @@ import { useAuth } from "../context/AuthContext";
 export const GymInviteTrainerPage = () => {
   const { hash } = useParams<{ hash: string }>();
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, updateUser } = useAuth();
 
   const [loading, setLoading] = useState(true);
   const [usingInvite, setUsingInvite] = useState(false);
@@ -64,9 +64,10 @@ export const GymInviteTrainerPage = () => {
       if (data.error) {
         setError(data.error);
       } else {
+        updateUser({ role: "TRAINER" });
         setSuccess(data.message || "Zaproszenie zostało wykorzystane");
         setTimeout(() => {
-          navigate("/");
+          navigate("/trainer/availability");
         }, 1500);
       }
     } catch {

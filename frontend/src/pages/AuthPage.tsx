@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { authService } from "../api/authService";
 
@@ -12,11 +12,20 @@ export const AuthPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [success, setSuccess] = useState("");
   const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleAuth = async (type: "login" | "register") => {
     setError("");
+    setSuccess("");
+
+    if (type === "register" && !acceptedTerms) {
+      setError("Musisz zaakceptować regulamin, aby stworzyć konto.");
+      return;
+    }
+
     try {
       const res =
         type === "login"
@@ -27,18 +36,16 @@ export const AuthPage = () => {
         if (res.token && res.user) {
           login(res.token, res.user);
           navigate("/");
+        } else if (res.error?.includes("Potwierdź")) {
+          setError(res.error);
         } else {
           setError(res.error || "Nieprawidłowe dane logowania");
         }
       } else if (type === "register") {
         if (res.userId) {
-          const loginRes = await authService.login(email, password);
-          if (loginRes.token && loginRes.user) {
-            login(loginRes.token, loginRes.user);
-            navigate("/");
-          } else {
-            setError(loginRes.error || "Błąd logowania po rejestracji");
-          }
+          setSuccess("Konto utworzone! Sprawdź skrzynkę email i kliknij link aktywacyjny.");
+          setEmail("");
+          setPassword("");
         } else {
           setError(res.error || "Błąd rejestracji");
         }
@@ -50,7 +57,6 @@ export const AuthPage = () => {
   };
 
   return (
-    // Główny kontener - upewnij się, że ma min-h-screen i flex-col
     <div className="flex flex-col items-center justify-center w-full min-h-[80vh] py-10">
       <Card className="w-[400px] bg-black border border-zinc-800 rounded-[2.5rem] shadow-2xl relative overflow-hidden">
         <Tabs defaultValue="login" className="flex flex-col w-full">
@@ -64,7 +70,6 @@ export const AuthPage = () => {
           </CardHeader>
 
           <CardContent className="flex flex-col px-8 pb-10">
-            {/* Przełącznik TabsList - wymuszamy, by był nad formularzem */}
             <TabsList className="grid w-full grid-cols-2 bg-zinc-900/50 rounded-full p-1 mb-8 border border-zinc-800">
               <TabsTrigger
                 value="login"
@@ -86,7 +91,12 @@ export const AuthPage = () => {
               </div>
             )}
 
-            {/* FORMULARZ - upewniamy się, że każdy TabsContent ma swój flow */}
+            {success && (
+              <div className="mb-4 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs text-center">
+                {success}
+              </div>
+            )}
+
             <TabsContent value="login" className="m-0 focus-visible:ring-0">
               <div className="flex flex-col space-y-4">
                 <Input
@@ -103,6 +113,14 @@ export const AuthPage = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   className="bg-zinc-900 border-zinc-800 h-12 rounded-xl text-white"
                 />
+                <div className="flex justify-end px-1">
+                  <Link
+                    to="/forgot-password"
+                    className="text-xs text-zinc-500 hover:text-sky-400 transition-colors"
+                  >
+                    Zapomniałeś hasła?
+                  </Link>
+                </div>
                 <Button
                   onClick={() => handleAuth("login")}
                   className="w-full bg-sky-500 hover:bg-sky-400 h-12 rounded-full font-bold shadow-lg shadow-sky-500/20"
@@ -128,9 +146,38 @@ export const AuthPage = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   className="bg-zinc-900 border-zinc-800 h-12 rounded-xl text-white"
                 />
+                <div className="flex items-start space-x-3 py-2">
+                  <input
+                    type="checkbox"
+                    id="terms"
+                    checked={acceptedTerms}
+                    onChange={(e) => setAcceptedTerms(e.target.checked)}
+                    className="mt-1 h-4 w-4 rounded border-zinc-700 bg-zinc-900 text-sky-500 focus:ring-sky-500 focus:ring-offset-zinc-900 cursor-pointer"
+                  />
+                  <label
+                    htmlFor="terms"
+                    className="text-xs text-zinc-400 leading-tight cursor-pointer"
+                  >
+                    Zapoznałem/am się i akceptuję{" "}
+                    <Link to="/tos" target="_blank" className="text-sky-400 hover:underline">
+                      Regulamin serwisu
+                    </Link>{" "}
+                    oraz{" "}
+                    <Link to="/privacy" target="_blank" className="text-sky-400 hover:underline">
+                      Politykę prywatności
+                    </Link>
+                    .
+                  </label>
+                </div>
+
                 <Button
                   onClick={() => handleAuth("register")}
-                  className="w-full bg-white hover:bg-zinc-200 text-black h-12 rounded-full font-bold"
+                  className={`w-full h-12 rounded-full font-bold transition-all ${
+                    acceptedTerms
+                      ? "bg-white hover:bg-zinc-200 text-black cursor-pointer"
+                      : "bg-zinc-800 text-zinc-500 cursor-not-allowed opacity-50"
+                  }`}
+                  disabled={!acceptedTerms}
                 >
                   Stwórz konto
                 </Button>

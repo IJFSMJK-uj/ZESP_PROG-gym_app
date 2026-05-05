@@ -12,6 +12,7 @@ import {
   DialogTitle,
 } from "../components/ui/dialog";
 import { MapPin } from "lucide-react";
+import { ReviewsList } from "../components/ReviewsList";
 
 interface Trainer {
   assignmentId: number;
@@ -169,64 +170,72 @@ export const TrainersPage = () => {
         </div>
       )}
       <Dialog open={!!selectedTrainer} onOpenChange={(open) => !open && setSelectedTrainer(null)}>
-        <DialogContent className="bg-black border border-zinc-800 text-white sm:max-w-md rounded-3xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="bg-black border border-zinc-800 text-white sm:max-w-md rounded-3xl max-h-[90vh] flex flex-col p-0 overflow-hidden">
           {selectedTrainer && (
             <>
-              <DialogHeader className="flex flex-col items-center text-center space-y-4 pt-6">
-                <div className="w-30 h-30 rounded-full bg-zinc-900 border-2 border-sky-500 flex items-center justify-center text-sky-400 font-bold text-4xl uppercase shadow-[0_0_20px_rgba(14,165,233,0.3)]">
-                  {(selectedTrainer.firstName || selectedTrainer.email)[0]}
-                </div>
-                <div>
-                  <DialogTitle className="text-2xl font-bold">
-                    {getDisplayName(selectedTrainer)}
-                  </DialogTitle>
-                  <DialogDescription className="text-zinc-400">
-                    {selectedTrainer.email}
-                  </DialogDescription>
-                </div>
-              </DialogHeader>
-
-              <div className="py-6 space-y-4">
-                <div className="bg-zinc-900/50 p-4 rounded-2xl border border-zinc-800/50">
-                  <h3 className="text-sm font-semibold text-zinc-300 mb-2 uppercase tracking-wider">
-                    O mnie
-                  </h3>
-                  <p className="text-sm text-zinc-500 leading-relaxed">
-                    {selectedTrainer.bio || "Ten trener nie dodał jeszcze opisu."}
-                  </p>
+              <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                <div className="px-6 pt-6">
+                  <DialogHeader className="flex flex-col items-center text-center space-y-4">
+                    <div className="w-30 h-30 rounded-full bg-zinc-900 border-2 border-sky-500 flex items-center justify-center text-sky-400 font-bold text-4xl uppercase shadow-[0_0_20px_rgba(14,165,233,0.3)]">
+                      {(selectedTrainer.firstName || selectedTrainer.email)[0]}
+                    </div>
+                    <div>
+                      <DialogTitle className="text-2xl font-bold">
+                        {getDisplayName(selectedTrainer)}
+                      </DialogTitle>
+                      <DialogDescription className="text-zinc-400">
+                        {selectedTrainer.email}
+                      </DialogDescription>
+                    </div>
+                  </DialogHeader>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-zinc-900/50 p-4 rounded-2xl border border-zinc-800/50 flex flex-col justify-start">
-                    <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-3">
-                      Kontakt
+                <div className="py-6 space-y-4 px-6">
+                  <div className="bg-zinc-900/50 p-4 rounded-2xl border border-zinc-800/50">
+                    <h3 className="text-sm font-semibold text-zinc-300 mb-2 uppercase tracking-wider">
+                      O mnie
                     </h3>
-                    <p className="text-sm font-bold text-white">
-                      {selectedTrainer.phoneNumber || "Brak nr"}
+                    <p className="text-sm text-zinc-500 leading-relaxed">
+                      {selectedTrainer.bio || "Ten trener nie dodał jeszcze opisu."}
                     </p>
                   </div>
 
-                  <div className="bg-zinc-900/50 p-4 rounded-2xl border border-zinc-800/50 flex flex-col justify-start">
-                    <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-3">
-                      Pracuje w
-                    </h3>
-                    <ul className="space-y-3">
-                      {selectedTrainer.worksAt.map((gym, idx) => (
-                        <li key={idx} className="flex items-start gap-2 text-sm">
-                          <MapPin size={16} className="text-sky-500 mt-0.5 shrink-0" />
-                          <div className="flex flex-col text-left">
-                            <span className="font-medium text-zinc-200 leading-tight mb-0.5">
-                              {gym.name}
-                            </span>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-zinc-900/50 p-4 rounded-2xl border border-zinc-800/50 flex flex-col justify-start">
+                      <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-3">
+                        Kontakt
+                      </h3>
+                      <p className="text-sm font-bold text-white">
+                        {selectedTrainer.phoneNumber || "Brak nr"}
+                      </p>
+                    </div>
+
+                    <div className="bg-zinc-900/50 p-4 rounded-2xl border border-zinc-800/50 flex flex-col justify-start">
+                      <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-3">
+                        Pracuje w
+                      </h3>
+                      <ul className="space-y-3">
+                        {selectedTrainer.worksAt.map((gym, idx) => (
+                          <li key={idx} className="flex items-start gap-2 text-sm">
+                            <MapPin size={16} className="text-sky-500 mt-0.5 shrink-0" />
+                            <div className="flex flex-col text-left">
+                              <span className="font-medium text-zinc-200 leading-tight mb-0.5">
+                                {gym.name}
+                              </span>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+
+                  <div className="bg-zinc-900/50 p-4 rounded-2xl border border-zinc-800/50">
+                    <ReviewsList trainerId={selectedTrainer.trainerProfileId} />
                   </div>
                 </div>
               </div>
 
-              <div className="flex gap-3 pb-2">
+              <div className="bg-black border-t border-zinc-800 p-4 flex gap-3 flex-shrink-0">
                 <Button
                   variant="outline"
                   onClick={() => setSelectedTrainer(null)}

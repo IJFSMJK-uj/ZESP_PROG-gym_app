@@ -7,9 +7,10 @@ import trainersRoutes from "./routes/trainers";
 import trainerAvailabilityRoutes from "./routes/trainerAvailability";
 import trainerScheduleRoutes from "./routes/trainerSchedule";
 import adminRoutes from "./routes/admin";
+import reviewsRoutes from "./routes/reviews";
 
 const app = express();
-const BACKEND_PORT = 5174;
+const BACKEND_PORT = 3001;
 
 // MIDDLEWARE
 app.use(cors()); // frontend - backend connection
@@ -27,6 +28,7 @@ app.use("/api/invite", inviteRoutes);
 app.use("/api/trainers", trainersRoutes);
 app.use("/api/trainer-availability", trainerAvailabilityRoutes);
 app.use("/api/trainer-schedule", trainerScheduleRoutes);
+app.use("/api/reviews", reviewsRoutes);
 app.use("/api/admin", adminRoutes);
 
 // START SERWERA

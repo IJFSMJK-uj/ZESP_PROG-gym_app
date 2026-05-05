@@ -101,6 +101,7 @@ async function seedAdmins(passwordHash: string) {
         email: admin.email,
         password: passwordHash,
         role: Role.ADMIN,
+        isEmailVerified: true,
       },
     });
   }

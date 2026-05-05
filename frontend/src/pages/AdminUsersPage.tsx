@@ -234,81 +234,90 @@ export const AdminUsersPage = () => {
                     <td className="px-4 py-3 text-zinc-200">{u.email}</td>
 
                     <td className="px-4 py-3">
-                      <select
-                        value={u.role}
-                        onChange={(e) => handleRoleChange(u.id, e.target.value)}
-                        className={`bg-transparent border border-zinc-700 rounded-md px-2 py-0.5 text-sm outline-none cursor-pointer hover:border-zinc-500 ${ROLE_COLORS[u.role]}`}
-                      >
-                        <option value="MEMBER">Członek</option>
-                        <option value="TRAINER">Trener</option>
-                        <option value="GYM_MANAGER">Manager</option>
-                        <option value="ADMIN">Admin</option>
-                      </select>
+                      {u.role === "ADMIN" ? (
+                        <span className={`text-sm ${ROLE_COLORS["ADMIN"]}`}>Admin</span>
+                      ) : (
+                        <select
+                          value={u.role}
+                          onChange={(e) => handleRoleChange(u.id, e.target.value)}
+                          className={`bg-transparent border border-zinc-700 rounded-md px-2 py-0.5 text-sm outline-none cursor-pointer hover:border-zinc-500 ${ROLE_COLORS[u.role]}`}
+                        >
+                          <option value="MEMBER">Członek</option>
+                          <option value="TRAINER">Trener</option>
+                          <option value="GYM_MANAGER">Manager</option>
+                        </select>
+                      )}
                     </td>
 
                     <td className="px-4 py-3">
-                      <div className="flex flex-wrap gap-1 items-center">
-                        {u.managedGyms.length === 0 && !isAssigning && (
-                          <span className="text-zinc-600">—</span>
-                        )}
-                        {u.managedGyms.map((gym) => (
-                          <span
-                            key={gym.id}
-                            className="inline-flex items-center gap-1 text-xs bg-zinc-800 border border-zinc-700 text-zinc-300 rounded-full px-2 py-0.5"
-                          >
-                            {gym.name}
-                            <button
-                              onClick={() => handleRemoveGym(u.id, gym.id)}
-                              className="text-zinc-500 hover:text-red-400 cursor-pointer leading-none"
+                      {u.role !== "GYM_MANAGER" ? (
+                        <span className="text-xs text-zinc-600 italic">
+                          Tylko manager może zarządzać siłowniami
+                        </span>
+                      ) : (
+                        <div className="flex flex-wrap gap-1 items-center">
+                          {u.managedGyms.length === 0 && !isAssigning && (
+                            <span className="text-zinc-600">—</span>
+                          )}
+                          {u.managedGyms.map((gym) => (
+                            <span
+                              key={gym.id}
+                              className="inline-flex items-center gap-1 text-xs bg-zinc-800 border border-zinc-700 text-zinc-300 rounded-full px-2 py-0.5"
                             >
-                              ×
-                            </button>
-                          </span>
-                        ))}
-                        {isAssigning ? (
-                          <span className="flex items-center gap-1">
-                            <select
-                              value={assignGymId}
-                              onChange={(e) => setAssignGymId(e.target.value)}
-                              className="h-7 text-xs bg-black border border-zinc-700 text-zinc-100 rounded-md px-2 outline-none focus:border-red-500 cursor-pointer"
-                            >
-                              <option value="">Wybierz siłownię...</option>
-                              {availableGyms.map((g) => (
-                                <option key={g.id} value={g.id}>
-                                  {g.name}
-                                </option>
-                              ))}
-                            </select>
-                            <button
-                              onClick={() => handleAssignGym(u.id)}
-                              className="text-xs text-emerald-400 hover:text-emerald-300 cursor-pointer"
-                            >
-                              ok
-                            </button>
-                            <button
-                              onClick={() => {
-                                setAssigningUserId(null);
-                                setAssignGymId("");
-                              }}
-                              className="text-xs text-zinc-500 hover:text-white cursor-pointer"
-                            >
-                              anuluj
-                            </button>
-                          </span>
-                        ) : (
-                          availableGyms.length > 0 && (
-                            <button
-                              onClick={() => {
-                                setAssigningUserId(u.id);
-                                setAssignGymId("");
-                              }}
-                              className="text-xs text-zinc-600 hover:text-zinc-300 cursor-pointer border border-dashed border-zinc-700 hover:border-zinc-500 rounded-full px-2 py-0.5 transition-colors"
-                            >
-                              + przypisz
-                            </button>
-                          )
-                        )}
-                      </div>
+                              {gym.name}
+                              <button
+                                onClick={() => handleRemoveGym(u.id, gym.id)}
+                                className="text-zinc-500 hover:text-red-400 cursor-pointer leading-none"
+                              >
+                                ×
+                              </button>
+                            </span>
+                          ))}
+                          {isAssigning ? (
+                            <span className="flex items-center gap-1">
+                              <select
+                                value={assignGymId}
+                                onChange={(e) => setAssignGymId(e.target.value)}
+                                className="h-7 text-xs bg-black border border-zinc-700 text-zinc-100 rounded-md px-2 outline-none focus:border-red-500 cursor-pointer"
+                              >
+                                <option value="">Wybierz siłownię...</option>
+                                {availableGyms.map((g) => (
+                                  <option key={g.id} value={g.id}>
+                                    {g.name}
+                                  </option>
+                                ))}
+                              </select>
+                              <button
+                                onClick={() => handleAssignGym(u.id)}
+                                className="text-xs text-emerald-400 hover:text-emerald-300 cursor-pointer"
+                              >
+                                ok
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setAssigningUserId(null);
+                                  setAssignGymId("");
+                                }}
+                                className="text-xs text-zinc-500 hover:text-white cursor-pointer"
+                              >
+                                anuluj
+                              </button>
+                            </span>
+                          ) : (
+                            availableGyms.length > 0 && (
+                              <button
+                                onClick={() => {
+                                  setAssigningUserId(u.id);
+                                  setAssignGymId("");
+                                }}
+                                className="text-xs text-zinc-600 hover:text-zinc-300 cursor-pointer border border-dashed border-zinc-700 hover:border-zinc-500 rounded-full px-2 py-0.5 transition-colors"
+                              >
+                                + przypisz
+                              </button>
+                            )
+                          )}
+                        </div>
+                      )}
                     </td>
 
                     <td className="px-4 py-3 text-right text-zinc-700 text-xs">

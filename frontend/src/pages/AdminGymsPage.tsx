@@ -9,6 +9,8 @@ interface Gym {
   id: number;
   name: string;
   address: string;
+  lat: number | null;
+  lng: number | null;
 }
 
 export const AdminGymsPage = () => {
@@ -23,6 +25,8 @@ export const AdminGymsPage = () => {
   const [editingGym, setEditingGym] = useState<Gym | null>(null);
   const [formName, setFormName] = useState("");
   const [formAddress, setFormAddress] = useState("");
+  const [formLat, setFormLat] = useState("");
+  const [formLng, setFormLng] = useState("");
   const [formError, setFormError] = useState("");
   const [formLoading, setFormLoading] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
@@ -50,12 +54,16 @@ export const AdminGymsPage = () => {
     setEditingGym(gym);
     setFormName(gym.name);
     setFormAddress(gym.address);
+    setFormLat(gym.lat != null ? String(gym.lat) : "");
+    setFormLng(gym.lng != null ? String(gym.lng) : "");
     setFormError("");
   };
   const cancelEdit = () => {
     setEditingGym(null);
     setFormName("");
     setFormAddress("");
+    setFormLat("");
+    setFormLng("");
     setFormError("");
   };
 
@@ -66,9 +74,10 @@ export const AdminGymsPage = () => {
     }
     setFormLoading(true);
     setFormError("");
+    const payload = { name: formName, address: formAddress, lat: formLat, lng: formLng };
     const data = editingGym
-      ? await adminService.updateGym(token, editingGym.id, { name: formName, address: formAddress })
-      : await adminService.createGym(token, { name: formName, address: formAddress });
+      ? await adminService.updateGym(token, editingGym.id, payload)
+      : await adminService.createGym(token, payload);
     if (data.error) setFormError(data.error);
     else {
       showFlash("ok", editingGym ? "Zaktualizowano." : "Dodano.");
@@ -135,18 +144,30 @@ export const AdminGymsPage = () => {
           {editingGym ? `Edytujesz: ${editingGym.name}` : "Nowa siłownia"}
         </span>
         {formError && <p className="text-sm text-red-400">{formError}</p>}
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <Input
             value={formName}
             onChange={(e) => setFormName(e.target.value)}
             placeholder="Nazwa"
-            className="h-9 border-zinc-700 bg-black text-zinc-100 focus:border-red-500"
+            className="h-9 border-zinc-700 bg-black text-zinc-100 focus:border-red-500 min-w-40 flex-1"
           />
           <Input
             value={formAddress}
             onChange={(e) => setFormAddress(e.target.value)}
             placeholder="Adres"
-            className="h-9 border-zinc-700 bg-black text-zinc-100 focus:border-red-500"
+            className="h-9 border-zinc-700 bg-black text-zinc-100 focus:border-red-500 min-w-48 flex-1"
+          />
+          <Input
+            value={formLat}
+            onChange={(e) => setFormLat(e.target.value)}
+            placeholder="Szerokość (lat)"
+            className="h-9 border-zinc-700 bg-black text-zinc-100 focus:border-red-500 w-36"
+          />
+          <Input
+            value={formLng}
+            onChange={(e) => setFormLng(e.target.value)}
+            placeholder="Długość (lng)"
+            className="h-9 border-zinc-700 bg-black text-zinc-100 focus:border-red-500 w-36"
           />
           <Button
             size="sm"
@@ -167,6 +188,18 @@ export const AdminGymsPage = () => {
             </Button>
           )}
         </div>
+        <p className="text-xs text-zinc-600">
+          Współrzędne możesz skopiować z{" "}
+          <a
+            href="https://maps.google.com"
+            target="_blank"
+            rel="noreferrer"
+            className="text-zinc-500 hover:text-zinc-300 underline"
+          >
+            Google Maps
+          </a>{" "}
+          (PPM na mapie → „Co tu jest?")
+        </p>
       </div>
 
       {/* LISTA */}
@@ -194,6 +227,7 @@ export const AdminGymsPage = () => {
                 <th className="px-4 py-2 text-left font-normal w-10">#</th>
                 <th className="px-4 py-2 text-left font-normal">Nazwa</th>
                 <th className="px-4 py-2 text-left font-normal">Adres</th>
+                <th className="px-4 py-2 text-left font-normal w-40">Koordynaty</th>
                 <th className="px-4 py-2 text-right font-normal w-32"></th>
               </tr>
             </thead>
@@ -206,6 +240,15 @@ export const AdminGymsPage = () => {
                   <td className="px-4 py-2 text-zinc-600">{gym.id}</td>
                   <td className="px-4 py-2 text-zinc-200">{gym.name}</td>
                   <td className="px-4 py-2 text-zinc-400">{gym.address}</td>
+                  <td className="px-4 py-2 text-zinc-600 font-mono text-xs">
+                    {gym.lat != null && gym.lng != null ? (
+                      <span className="text-zinc-500">
+                        {gym.lat.toFixed(5)}, {gym.lng.toFixed(5)}
+                      </span>
+                    ) : (
+                      <span className="text-zinc-700 italic">brak</span>
+                    )}
+                  </td>
                   <td className="px-4 py-2 text-right">
                     {deletingId === gym.id ? (
                       <span className="flex items-center justify-end gap-1">

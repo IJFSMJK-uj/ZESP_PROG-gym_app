@@ -37,6 +37,12 @@ export const Navbar = () => {
               >
                 Użytkownicy
               </Link>
+              <Link
+                to="/admin/dashboard"
+                className="text-sm font-semibold text-red-400 hover:text-red-300 transition-colors"
+              >
+                Dane
+              </Link>
             </>
           ) : (
             <>

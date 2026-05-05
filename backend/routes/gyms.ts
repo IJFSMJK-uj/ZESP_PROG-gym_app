@@ -165,4 +165,72 @@ router.put("/:id", requireAuth, async (req: any, res: any) => {
   }
 });
 
+router.patch("/:id", requireAuth, async (req: any, res: any) => {
+  const gymId = parseInt(req.params.id);
+
+  if (isNaN(gymId)) {
+    return res.status(400).json({ error: "Nieprawidłowe ID siłowni" });
+  }
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.userId },
+      include: { managedGyms: true },
+    });
+
+    if (!user || user.role !== Role.GYM_MANAGER) {
+      return res.status(403).json({ error: "Brak uprawnień" });
+    }
+
+    const isManager = user.managedGyms.some((g) => g.id === gymId);
+
+    if (!isManager) {
+      return res.status(403).json({ error: "Nie zarządzasz tą siłownią" });
+    }
+
+    const { address, additionalInfo, description, lat, lng, email, phoneNumber, operatingHours } =
+      req.body;
+
+    const dataToUpdate: any = {};
+
+    if (address !== undefined) dataToUpdate.address = address;
+    if (additionalInfo !== undefined) dataToUpdate.additionalInfo = additionalInfo;
+    if (description !== undefined) dataToUpdate.description = description;
+    if (lat !== undefined) dataToUpdate.lat = lat;
+    if (lng !== undefined) dataToUpdate.lng = lng;
+    if (email !== undefined) dataToUpdate.email = email;
+    if (phoneNumber !== undefined) dataToUpdate.phoneNumber = phoneNumber;
+
+    // Godziny
+    if (operatingHours && Array.isArray(operatingHours)) {
+      dataToUpdate.operatingHours = {
+        deleteMany: {}, // usuń stare
+        create: operatingHours.map((hour: any) => ({
+          dayOfWeek: hour.dayOfWeek,
+          openTime: hour.openTime,
+          closeTime: hour.closeTime,
+        })),
+      };
+    }
+
+    if (Object.keys(dataToUpdate).length === 0) {
+      return res.status(400).json({ error: "Brak danych do aktualizacji" });
+    }
+
+    const updatedGym = await prisma.gym.update({
+      where: { id: gymId },
+      data: dataToUpdate,
+      include: { operatingHours: true },
+    });
+
+    res.json({
+      message: "Zaktualizowano siłownię",
+      gym: updatedGym,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Nie udało się zaktualizować danych siłowni" });
+  }
+});
+
 export default router;

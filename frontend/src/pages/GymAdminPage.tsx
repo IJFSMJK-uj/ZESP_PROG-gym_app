@@ -5,6 +5,7 @@ import { gymsService, type OperatingHour } from "../api/gymsService";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
+import { useParams } from "react-router-dom";
 
 import { MapContainer, TileLayer, Marker, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
@@ -59,6 +60,7 @@ const normalizePhone = (phone: string) => {
 export const GymAdminPage = () => {
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
+  const { gymId } = useParams();
 
   const [role, setRole] = useState("");
   const [gymName, setGymName] = useState("");
@@ -94,7 +96,14 @@ export const GymAdminPage = () => {
 
         if (profile.role !== "GYM_MANAGER") return;
 
-        const gym = await gymsService.getGymById(profile.gym.id);
+        // const gym = await gymsService.getGymById(profile.gym.id);
+
+        if (!gymId) {
+          setError("Brak ID siłowni");
+          return;
+        }
+
+        const gym = await gymsService.getGymById(gymId);
 
         setGymName(gym.name || "");
         setAddress(gym.address || "");
@@ -254,7 +263,18 @@ export const GymAdminPage = () => {
       }));
 
     try {
-      const res = await gymsService.updateMyGym({
+      // const res = await gymsService.updateMyGym({
+      //   address,
+      //   email,
+      //   phoneNumber,
+      //   additionalInfo,
+      //   description,
+      //   lat,
+      //   lng,
+      //   operatingHours,
+      // });
+
+      const res = await gymsService.updateGym(Number(gymId), {
         address,
         email,
         phoneNumber,
@@ -337,6 +357,16 @@ export const GymAdminPage = () => {
               placeholder="Telefon"
             />
 
+            <div className="flex flex-col gap-2">
+              {/* <label className="text-sm text-zinc-400">Opis siłowni</label> */}
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Opis siłowni..."
+                className="p-3 bg-zinc-900 text-white rounded-xl border border-zinc-700 min-h-[120px]"
+              />
+            </div>
+
             {/* HOURS */}
             {schedule.map((day) => (
               <div key={day.dayOfWeek} className="flex gap-3 items-center ">
@@ -381,13 +411,23 @@ export const GymAdminPage = () => {
 
             {success && <div className="text-green-400 text-center my-4">{success}</div>}
 
-            <Button
-              className="cursor-pointer px-2 py-5 text-xl bg-sky-500 hover:bg-sky-600 text-white"
-              onClick={handleSave}
-              disabled={saving}
-            >
-              {saving ? "Zapisywanie..." : "Zapisz"}
-            </Button>
+            <div className="flex gap-3">
+              <Button
+                className="flex-1 cursor-pointer px-2 py-5 text-xl bg-sky-500 hover:bg-sky-600 text-white"
+                onClick={handleSave}
+                disabled={saving}
+              >
+                {saving ? "Zapisywanie..." : "Zapisz"}
+              </Button>
+
+              <Button
+                variant="outline"
+                className="flex-1 cursor-pointer px-2 py-5 text-xl"
+                onClick={() => navigate("/dashboard")}
+              >
+                Powrót
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>

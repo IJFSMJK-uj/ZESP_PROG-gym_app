@@ -45,7 +45,8 @@ function App() {
               <Route path="/trainer/:assignmentId/schedule" element={<TrainerSchedulePage />} />
               <Route path="/my-reservations" element={<MyReservationsPage />} />
               <Route path="/gym/invites/trainers" element={<GymCreateTrainerInvitePage />} />
-              <Route path="/gym/admin" element={<GymAdminPage />} />
+              {/* <Route path="/gym/admin" element={<GymAdminPage />} /> */}
+              <Route path="/gym/:gymId/admin" element={<GymAdminPage />} />
               <Route path="/trainer-invite/:hash" element={<GymInviteTrainerPage />} />
               <Route path="/contact" element={<ContactPage />} />
               <Route path="/tos" element={<TermsPage />} />
@@ -58,7 +59,7 @@ function App() {
               <Route path="/change-password" element={<ChangePasswordPage />} />
               <Route path="/forgot-password" element={<ForgotPasswordPage />} />
               <Route path="/dashboard" element={<PanelPage />} />
-              <Route path="/admin" element={<AdminDashboardPage />} />
+              <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
             </Routes>
           </main>
 

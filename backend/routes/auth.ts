@@ -206,6 +206,7 @@ router.get("/profile", requireAuth, async (req: any, res) => {
     username,
     role: user.role,
     gym,
+    managedGyms: user.managedGyms,
   });
 });
 

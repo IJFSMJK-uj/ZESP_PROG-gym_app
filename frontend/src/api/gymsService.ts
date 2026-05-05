@@ -82,4 +82,25 @@ export const gymsService = {
 
     return response.json();
   },
+
+  async updateGym(id: number, data: any) {
+    const token = localStorage.getItem("token");
+
+    const response = await fetch(`${API_URL}/${id}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      console.error(text);
+      return { error: "Nie udało się zaktualizować danych siłowni" };
+    }
+
+    return response.json();
+  },
 };

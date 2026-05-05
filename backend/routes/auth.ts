@@ -46,7 +46,11 @@ router.post("/register", async (req, res) => {
     });
 
     // wysylanie maila
-    await sendVerificationEmail(email, verificationToken);
+    try {
+      await sendVerificationEmail(email, verificationToken);
+    } catch (mailError) {
+      console.error("Błąd wysyłki emaila weryfikacyjnego:", mailError);
+    }
 
     res
       .status(201)
@@ -137,6 +141,20 @@ router.post("/login", async (req, res) => {
       role: user.role,
       gymId: user.memberProfile?.homeGymId || null,
     },
+  });
+});
+
+router.get("/me", requireAuth, async (req: any, res) => {
+  const user = await prisma.user.findUnique({
+    where: { id: req.userId },
+    include: { memberProfile: true },
+  });
+  if (!user) return res.status(404).json({ error: "Nie znaleziono użytkownika" });
+  res.json({
+    id: user.id,
+    email: user.email,
+    role: user.role,
+    gymId: user.memberProfile?.homeGymId || null,
   });
 });
 
@@ -239,7 +257,11 @@ router.put("/profile", requireAuth, async (req: any, res) => {
     }
 
     if (emailChanged && verificationToken) {
-      await sendVerificationEmail(email, verificationToken);
+      try {
+        await sendVerificationEmail(email, verificationToken);
+      } catch (mailError) {
+        console.error("Błąd wysyłki emaila weryfikacyjnego:", mailError);
+      }
     }
 
     res.json({

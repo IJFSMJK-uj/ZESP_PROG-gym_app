@@ -4,6 +4,8 @@ import bcrypt from "bcrypt";
 const prisma = new PrismaClient();
 
 // --- DANE ---
+const ADMIN_DATA = [{ email: "admin@gymapp.pl" }];
+
 const MANAGERS_DATA = [
   { email: "manager@gymapp.pl" },
   { email: "manager.krakow@gymapp.pl" },
@@ -88,6 +90,22 @@ const MEMBERS_DATA = [
   },
   { email: "klient.kamil@gymapp.pl", firstName: "Kamil", lastName: "Stoch" }, // Zwykły user, bez wybranej siłowni
 ];
+
+async function seedAdmins(passwordHash: string) {
+  console.log("⚙️ Creating admins...");
+  for (const admin of ADMIN_DATA) {
+    await prisma.user.upsert({
+      where: { email: admin.email },
+      update: {},
+      create: {
+        email: admin.email,
+        password: passwordHash,
+        role: Role.ADMIN,
+        isEmailVerified: true,
+      },
+    });
+  }
+}
 
 async function seedManagers(passwordHash: string) {
   console.log("⚙️ Creating managers...");
@@ -329,6 +347,7 @@ async function main() {
   // drugi argument bcrypt.hash - 10, musi być taki sam jak w backend/routes/auth w router.post("register")
   const passwordHash = await bcrypt.hash("password", 10);
 
+  await seedAdmins(passwordHash);
   await seedManagers(passwordHash);
   const gymMap = await seedGyms();
   await seedTrainers(passwordHash, gymMap);

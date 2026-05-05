@@ -22,8 +22,8 @@ export const AdminDashboardPage = () => {
       setLoading(true);
       try {
         const [usersData, gymsData] = await Promise.all([
-          adminService.getUsers(),
-          adminService.getGyms(),
+          adminService.fetchUsers(localStorage.getItem("token")),
+          adminService.fetchGyms(localStorage.getItem("token")),
         ]);
         if (!usersData.error) setUsers(usersData);
         if (!gymsData.error) setGyms(gymsData);

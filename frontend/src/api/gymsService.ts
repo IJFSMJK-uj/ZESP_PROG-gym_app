@@ -103,4 +103,22 @@ export const gymsService = {
 
     return response.json();
   },
+
+  async getGymStats(id: number) {
+    const token = localStorage.getItem("token");
+
+    const response = await fetch(`${API_URL}/${id}/stats`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      console.error(text);
+      return { error: "Nie udało się pobrać statystyk" };
+    }
+
+    return response.json();
+  },
 };

@@ -100,6 +100,93 @@ router.patch("/me", requireAuth, async (req: any, res: any) => {
   }
 });
 
+router.get("/:id/stats", async (req, res) => {
+  try {
+    const gymId = Number(req.params.id);
+
+    if (!gymId) {
+      return res.status(400).json({ error: "Brak ID siłowni" });
+    }
+
+    const now = new Date();
+
+    // Staty
+    const reservations = await prisma.trainerReservation.findMany({
+      where: {
+        assignment: {
+          gymId: gymId,
+        },
+      },
+      select: {
+        status: true,
+        date: true,
+      },
+    });
+
+    let confirmed = 0;
+    let cancelled = 0;
+    let done = 0;
+
+    reservations.forEach((r) => {
+      if (r.status === "CONFIRMED" && r.date >= now) confirmed++;
+      if (r.status === "CANCELLED") cancelled++;
+      if (r.status === "DONE") done++;
+    });
+
+    // Trenerzy
+    const trainers = await prisma.trainerAssignment.findMany({
+      where: {
+        gymId: gymId,
+      },
+      include: {
+        trainerProfile: {
+          select: {
+            firstName: true,
+            lastName: true,
+          },
+        },
+        reservations: {
+          select: {
+            status: true,
+            date: true,
+          },
+        },
+      },
+    });
+
+    const formattedTrainers = trainers.map((t) => {
+      let confirmed = 0;
+      let cancelled = 0;
+      let done = 0;
+
+      t.reservations.forEach((r) => {
+        if (r.status === "CONFIRMED" && r.date >= now) confirmed++;
+        if (r.status === "CANCELLED") cancelled++;
+        if (r.status === "DONE") done++;
+      });
+
+      return {
+        id: t.id,
+        firstName: t.trainerProfile?.firstName || "",
+        lastName: t.trainerProfile?.lastName || "",
+        confirmed,
+        cancelled,
+        done,
+      };
+    });
+
+    return res.json({
+      confirmed,
+      cancelled,
+      done,
+      trainers: formattedTrainers,
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: "Błąd serwera" });
+  }
+});
+
 router.get("/:id", requireAuth, async (req: any, res: any) => {
   const gymId = parseInt(req.params.id);
   if (isNaN(gymId)) {

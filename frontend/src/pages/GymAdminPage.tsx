@@ -65,6 +65,10 @@ export const GymAdminPage = () => {
   const [role, setRole] = useState("");
   const [gymName, setGymName] = useState("");
 
+  const [tab, setTab] = useState<"settings" | "stats">("settings");
+  const [stats, setStats] = useState<any>(null);
+  const [statsLoading, setStatsLoading] = useState(false);
+
   const [address, setAddress] = useState("");
   const [email, setEmail] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -87,7 +91,30 @@ export const GymAdminPage = () => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  // 🔥 LOAD
+  const [statsError, setStatsError] = useState("");
+
+  const loadStats = async () => {
+    if (!gymId) return;
+
+    setStatsLoading(true);
+    setStatsError("");
+
+    try {
+      const res = await gymsService.getGymStats(Number(gymId));
+      setStats(res);
+    } catch {
+      setStatsError("Błąd ładowania statystyk");
+    } finally {
+      setStatsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (tab === "stats") {
+      loadStats();
+    }
+  }, [tab]);
+
   useEffect(() => {
     const init = async () => {
       try {
@@ -157,7 +184,6 @@ export const GymAdminPage = () => {
         setLat(newLat);
         setLng(newLng);
 
-        // 🔥 KLUCZOWE: fallback
         if (first.address) {
           const a = first.address;
 
@@ -301,136 +327,325 @@ export const GymAdminPage = () => {
       <div className="w-full max-w-2xl flex flex-col gap-6">
         <Card className="bg-black border border-zinc-800 rounded-3xl mb-10">
           <CardHeader>
-            <CardTitle>Ustawienia siłowni</CardTitle>
+            <CardTitle>Siłownia</CardTitle>
             <CardDescription>{gymName}</CardDescription>
           </CardHeader>
+          <div className="flex gap-2 ml-2">
+            <Button
+              variant={tab === "settings" ? "default" : "outline"}
+              onClick={() => setTab("settings")}
+            >
+              Ustawienia
+            </Button>
 
+            <Button
+              variant={tab === "stats" ? "default" : "outline"}
+              onClick={() => setTab("stats")}
+            >
+              Statystyki
+            </Button>
+          </div>
           <CardContent className="flex flex-col gap-5">
-            {error && <div className="text-red-400">{error}</div>}
-            {success && <div className="text-green-400">{success}</div>}
+            {/* ===== SETTINGS ===== */}
+            {tab === "settings" && (
+              <>
+                {error && <div className="text-red-400">{error}</div>}
+                {success && <div className="text-green-400">{success}</div>}
 
-            {/* ADDRESS */}
-            <div className="flex gap-2">
-              <Input
-                value={address}
-                onChange={(e) => {
-                  setAddress(e.target.value);
-                  setError("");
-                }}
-              />
-              <Button onClick={handleSearchAddress}>Szukaj</Button>
-            </div>
-
-            {/* MAP */}
-            <div className="h-[300px] w-full rounded-xl overflow-hidden">
-              <MapContainer
-                center={lat && lng ? [lat, lng] : [50.0647, 19.945]}
-                zoom={13}
-                className="h-full w-full z-0"
-              >
-                <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                <FlyTo lat={lat} lng={lng} />
-
-                {lat && lng && (
-                  <Marker
-                    position={[lat, lng]}
-                    draggable={true}
-                    eventHandlers={{
-                      dragend: (e) => {
-                        const pos = e.target.getLatLng();
-                        setLat(pos.lat);
-                        setLng(pos.lng);
-                        setError("");
-                        fetchAddressFromCoords(pos.lat, pos.lng);
-                      },
+                {/* ADDRESS */}
+                <div className="flex gap-2">
+                  <Input
+                    value={address}
+                    onChange={(e) => {
+                      setAddress(e.target.value);
+                      setError("");
                     }}
                   />
+                  <Button onClick={handleSearchAddress}>Szukaj</Button>
+                </div>
+
+                {/* MAP */}
+                <div className="h-[300px] w-full rounded-xl overflow-hidden">
+                  <MapContainer
+                    center={lat && lng ? [lat, lng] : [50.0647, 19.945]}
+                    zoom={13}
+                    className="h-full w-full z-0"
+                  >
+                    <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                    <FlyTo lat={lat} lng={lng} />
+
+                    {lat && lng && (
+                      <Marker
+                        position={[lat, lng]}
+                        draggable={true}
+                        eventHandlers={{
+                          dragend: (e) => {
+                            const pos = e.target.getLatLng();
+                            setLat(pos.lat);
+                            setLng(pos.lng);
+                            setError("");
+                            fetchAddressFromCoords(pos.lat, pos.lng);
+                          },
+                        }}
+                      />
+                    )}
+                  </MapContainer>
+                </div>
+
+                <Input
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Email"
+                />
+
+                <Input
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
+                  placeholder="Telefon"
+                />
+
+                <textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Opis siłowni..."
+                  className="p-3 bg-zinc-900 text-white rounded-xl border border-zinc-700 min-h-[120px]"
+                />
+
+                {/* HOURS */}
+                {schedule.map((day) => (
+                  <div key={day.dayOfWeek} className="flex gap-3 items-center">
+                    <span className="w-32 text-white">{DAYS_OF_WEEK[day.dayOfWeek]}</span>
+
+                    <select
+                      value={day.open}
+                      onChange={(e) => handleScheduleChange(day.dayOfWeek, "open", e.target.value)}
+                      className="bg-zinc-900 text-white p-2 px-8 rounded"
+                    >
+                      <option value="">--</option>
+                      {HOURS.map((h) => (
+                        <option key={h} value={h}>
+                          {h}
+                        </option>
+                      ))}
+                    </select>
+
+                    <select
+                      value={day.close}
+                      onChange={(e) => handleScheduleChange(day.dayOfWeek, "close", e.target.value)}
+                      className="bg-zinc-900 text-white p-2 px-8 rounded"
+                    >
+                      <option value="">--</option>
+                      {HOURS.map((h) => (
+                        <option key={h} value={h}>
+                          {h}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                ))}
+
+                <div className="flex gap-3">
+                  <Button
+                    className="flex-1 px-2 py-5 text-xl bg-sky-500 hover:bg-sky-600 text-white"
+                    onClick={handleSave}
+                    disabled={saving}
+                  >
+                    {saving ? "Zapisywanie..." : "Zapisz"}
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    className="flex-1 px-2 py-5 text-xl"
+                    onClick={() => navigate("/dashboard")}
+                  >
+                    Powrót
+                  </Button>
+                </div>
+              </>
+            )}
+
+            {/* ===== STATS ===== */}
+            {tab === "stats" && (
+              <div className="flex flex-col gap-4 text-white">
+                {statsLoading ? (
+                  <p>Ładowanie statystyk...</p>
+                ) : statsError ? (
+                  <p className="text-red-400">{statsError}</p>
+                ) : stats ? (
+                  <>
+                    <div>Wszystkie rezerwacje</div>
+                    <div className="flex gap-4">
+                      <div className="p-4 bg-zinc-900 rounded-xl">
+                        <p>Przyszłe</p>
+                        <p className="text-xl">{stats.confirmed}</p>
+                      </div>
+
+                      <div className="p-4 bg-zinc-900 rounded-xl">
+                        <p>Anulowane</p>
+                        <p className="text-xl">{stats.cancelled}</p>
+                      </div>
+
+                      <div className="p-4 bg-zinc-900 rounded-xl">
+                        <p>Wykonane</p>
+                        <p className="text-xl">{stats.done}</p>
+                      </div>
+                    </div>
+
+                    <div>
+                      <h3 className="text-lg font-bold mb-2">Obłożenie trenerów</h3>
+
+                      {stats.trainers.map((t: any) => (
+                        <div
+                          key={t.id}
+                          className="flex justify-between p-2 border-b border-zinc-800"
+                        >
+                          <span>
+                            {t.firstName} {t.lastName}
+                          </span>
+                          <div className="flex justify-between p-2 border-b border-zinc-800">
+                            <div className="flex gap-3 text-xs">
+                              <span className="text-green-400">Wykonane: {t.done}</span>
+                              <span className="text-yellow-400">Przyszłe: {t.confirmed}</span>
+                              <span className="text-red-400">Anulowane: {t.cancelled}</span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <p>Brak danych</p>
                 )}
-              </MapContainer>
-            </div>
-
-            {/* EMAIL / PHONE */}
-            <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" />
-            <Input
-              value={phoneNumber}
-              onChange={(e) => setPhoneNumber(e.target.value)}
-              placeholder="Telefon"
-            />
-
-            <div className="flex flex-col gap-2">
-              {/* <label className="text-sm text-zinc-400">Opis siłowni</label> */}
-              <textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Opis siłowni..."
-                className="p-3 bg-zinc-900 text-white rounded-xl border border-zinc-700 min-h-[120px]"
-              />
-            </div>
-
-            {/* HOURS */}
-            {schedule.map((day) => (
-              <div key={day.dayOfWeek} className="flex gap-3 items-center ">
-                <span className="w-32 text-white">{DAYS_OF_WEEK[day.dayOfWeek]}</span>
-
-                <select
-                  value={day.open}
-                  onChange={(e) => handleScheduleChange(day.dayOfWeek, "open", e.target.value)}
-                  className="bg-zinc-900 text-white p-2 px-8 rounded ml-60 "
-                >
-                  <option value="">--</option>
-                  {HOURS.map((h) => (
-                    <option key={h} value={h}>
-                      {h}
-                    </option>
-                  ))}
-                </select>
-
-                <select
-                  value={day.close}
-                  onChange={(e) => handleScheduleChange(day.dayOfWeek, "close", e.target.value)}
-                  className="bg-zinc-900 text-white p-2 px-8 rounded"
-                >
-                  <option value="">--</option>
-                  {HOURS.map((h) => (
-                    <option key={h} value={h}>
-                      {h}
-                    </option>
-                  ))}
-                </select>
               </div>
-            ))}
-
-            {/* INFO
-            <textarea
-              value={additionalInfo}
-              onChange={(e) => setAdditionalInfo(e.target.value)}
-              className="p-2 bg-zinc-900 text-white"
-            /> */}
-
-            {error && <div className="text-red-400 text-center text-sm my-4">{error}</div>}
-
-            {success && <div className="text-green-400 text-center my-4">{success}</div>}
-
-            <div className="flex gap-3">
-              <Button
-                className="flex-1 cursor-pointer px-2 py-5 text-xl bg-sky-500 hover:bg-sky-600 text-white"
-                onClick={handleSave}
-                disabled={saving}
-              >
-                {saving ? "Zapisywanie..." : "Zapisz"}
-              </Button>
-
-              <Button
-                variant="outline"
-                className="flex-1 cursor-pointer px-2 py-5 text-xl"
-                onClick={() => navigate("/dashboard")}
-              >
-                Powrót
-              </Button>
-            </div>
+            )}
           </CardContent>
         </Card>
       </div>
     </div>
   );
 };
+
+// <CardContent className="flex flex-col gap-5">
+//           {error && <div className="text-red-400">{error}</div>}
+//           {success && <div className="text-green-400">{success}</div>}
+
+//           {/* ADDRESS */}
+//           <div className="flex gap-2">
+//             <Input
+//               value={address}
+//               onChange={(e) => {
+//                 setAddress(e.target.value);
+//                 setError("");
+//               }}
+//             />
+//             <Button onClick={handleSearchAddress}>Szukaj</Button>
+//           </div>
+
+//           {/* MAP */}
+//           <div className="h-[300px] w-full rounded-xl overflow-hidden">
+//             <MapContainer
+//               center={lat && lng ? [lat, lng] : [50.0647, 19.945]}
+//               zoom={13}
+//               className="h-full w-full z-0"
+//             >
+//               <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+//               <FlyTo lat={lat} lng={lng} />
+
+//               {lat && lng && (
+//                 <Marker
+//                   position={[lat, lng]}
+//                   draggable={true}
+//                   eventHandlers={{
+//                     dragend: (e) => {
+//                       const pos = e.target.getLatLng();
+//                       setLat(pos.lat);
+//                       setLng(pos.lng);
+//                       setError("");
+//                       fetchAddressFromCoords(pos.lat, pos.lng);
+//                     },
+//                   }}
+//                 />
+//               )}
+//             </MapContainer>
+//           </div>
+
+//           {/* EMAIL / PHONE */}
+//           <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" />
+//           <Input
+//             value={phoneNumber}
+//             onChange={(e) => setPhoneNumber(e.target.value)}
+//             placeholder="Telefon"
+//           />
+
+//           <div className="flex flex-col gap-2">
+//             {/* <label className="text-sm text-zinc-400">Opis siłowni</label> */}
+//             <textarea
+//               value={description}
+//               onChange={(e) => setDescription(e.target.value)}
+//               placeholder="Opis siłowni..."
+//               className="p-3 bg-zinc-900 text-white rounded-xl border border-zinc-700 min-h-[120px]"
+//             />
+//           </div>
+
+//           {/* HOURS */}
+//           {schedule.map((day) => (
+//             <div key={day.dayOfWeek} className="flex gap-3 items-center ">
+//               <span className="w-32 text-white">{DAYS_OF_WEEK[day.dayOfWeek]}</span>
+
+//               <select
+//                 value={day.open}
+//                 onChange={(e) => handleScheduleChange(day.dayOfWeek, "open", e.target.value)}
+//                 className="bg-zinc-900 text-white p-2 px-8 rounded ml-60 "
+//               >
+//                 <option value="">--</option>
+//                 {HOURS.map((h) => (
+//                   <option key={h} value={h}>
+//                     {h}
+//                   </option>
+//                 ))}
+//               </select>
+
+//               <select
+//                 value={day.close}
+//                 onChange={(e) => handleScheduleChange(day.dayOfWeek, "close", e.target.value)}
+//                 className="bg-zinc-900 text-white p-2 px-8 rounded"
+//               >
+//                 <option value="">--</option>
+//                 {HOURS.map((h) => (
+//                   <option key={h} value={h}>
+//                     {h}
+//                   </option>
+//                 ))}
+//               </select>
+//             </div>
+//           ))}
+
+//           {/* INFO
+//           <textarea
+//             value={additionalInfo}
+//             onChange={(e) => setAdditionalInfo(e.target.value)}
+//             className="p-2 bg-zinc-900 text-white"
+//           /> */}
+
+//           {error && <div className="text-red-400 text-center text-sm my-4">{error}</div>}
+
+//           {success && <div className="text-green-400 text-center my-4">{success}</div>}
+
+//           <div className="flex gap-3">
+//             <Button
+//               className="flex-1 cursor-pointer px-2 py-5 text-xl bg-sky-500 hover:bg-sky-600 text-white"
+//               onClick={handleSave}
+//               disabled={saving}
+//             >
+//               {saving ? "Zapisywanie..." : "Zapisz"}
+//             </Button>
+
+//             <Button
+//               variant="outline"
+//               className="flex-1 cursor-pointer px-2 py-5 text-xl"
+//               onClick={() => navigate("/dashboard")}
+//             >
+//               Powrót
+//             </Button>
+//           </div>
+//         </CardContent>

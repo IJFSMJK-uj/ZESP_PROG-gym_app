@@ -58,7 +58,7 @@ const GymMap = ({
   address: string;
 }) => {
   return (
-    <div className="h-[400px] w-full rounded-xl overflow-hidden z-0">
+    <div className="h-[250px] w-full max-w-xl mx-auto rounded-xl overflow-hidden">
       <MapContainer center={[lat, lng]} zoom={15} className="h-full w-full z-0">
         <TileLayer
           attribution="&copy; OpenStreetMap"
@@ -149,16 +149,14 @@ export const GymDetailPage = () => {
     : [];
 
   return (
-    <div>
+    <div className="max-w-5xl mx-auto px-4">
       <div className="flex flex-col items-center mx-30 mt-20 mb-5">
-        <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight text-white leading-tight">
-          {gym.name}
-        </h1>
-        <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-blue-600">
+        <h1 className="text-3xl md:text-4xl font-bold text-white text-center">{gym.name}</h1>
+        <h1 className="text-sm md:text-base text-zinc-400 text-center mt-1 tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-blue-600">
           {gym.address}
         </h1>
       </div>
-      <div className="mx-50 mb-20 mt-15">
+      <div className="mt-10 mb-12 text-center">
         <h2 className="text-zinc-300 font-semibold mb-2 text-center text-2xl">Lokalizacja:</h2>
         {gym.lat && gym.lng ? (
           <div>
@@ -176,47 +174,41 @@ export const GymDetailPage = () => {
         )}
       </div>
       <div className="flex flex-col items-center mx-30 mt-20 mb-20">
-        <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-white leading-tight mb-5">
-          Dlaczego {gym.name}?
-        </h1>
-        <h2 className="text-2xs font-extrabold tracking-tight text-white leading-loose mx-30">
+        <h2 className="text-xl font-semibold text-white mb-3 text-center">Dlaczego {gym.name}?</h2>
+        <h2 className="text-sm text-zinc-300 leading-relaxed max-w-2xl mx-auto text-center">
           {gym.description}
         </h2>
       </div>
       <div className="flex flex-col items-center mx-30 mt-20 mb-20">
-        <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-white leading-tight ">
-          Kontakt
-        </h1>
+        <h2 className="text-lg font-semibold text-white mb-3">Kontakt</h2>
         <div className="flex flex-col mt-3">
           {(gym.email || gym.phoneNumber) && (
             <div className="mt-5 gap-8 flex flex-col text-zinc-400">
               {gym.email && (
-                <div className="flex gap-40 text-2xl border-b-2">
-                  <div>E-mail</div>
+                <div className="flex justify-between text-sm border-b border-zinc-800 py-2">
+                  <div className="text-zinc-500">E-mail</div>
                   <div>{gym.email}</div>
                 </div>
               )}
               {gym.phoneNumber && (
-                <div className="flex gap-40 text-2xl border-b-2">
-                  <div>Telefon</div>
-                  <div className="self-end">{gym.phoneNumber}</div>
+                <div className="flex justify-between text-sm border-b border-zinc-800 py-2">
+                  <div className="text-zinc-500">Telefon</div>
+                  <div>{gym.phoneNumber}</div>
                 </div>
               )}
             </div>
           )}
         </div>
       </div>
-      <div className="flex flex-col items-center mx-30 mt-20 mb-20">
-        <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-white leading-tight">
-          Godziny otwarcia siłowni
-        </h2>
+      <div className="flex flex-col items-center mt-12 mb-12 w-full max-w-xl mx-auto">
+        <h2 className="text-lg font-semibold text-white mb-3">Godziny otwarcia</h2>
         <div className="mt-5 text-2xl">
           {sortedHours.length > 0 ? (
             <ul className="space-y-6">
               {sortedHours.map((hour) => (
                 <li
                   key={hour.dayOfWeek}
-                  className="text-zinc-400 flex justify-between gap-50 border-b-2"
+                  className="text-zinc-400 grid grid-cols-[1fr_auto] text-sm border-b border-zinc-800 py-2 gap-6"
                 >
                   <span>{DAYS_OF_WEEK[mapDayToIndex(hour.dayOfWeek)]}</span>
                   <span>
@@ -243,22 +235,22 @@ export const GymDetailPage = () => {
           </div>
         )}
 
-        <div className="flex gap-6">
-          <Button
-            onClick={() => navigate("/gyms")}
-            variant="outline"
-            className="cursor-pointer px-8 py-5 text-xl hover:bg-zinc-800"
-          >
-            Powrót do mapy
-          </Button>
+        <div className="flex flex-col gap-3 items-center">
           {user?.role !== "GYM_MANAGER" && (
             <Button
               onClick={handleSave}
-              className="cursor-pointer px-8 py-5 text-xl bg-sky-500 hover:bg-sky-600 text-white"
+              className="cursor-pointer px-4 py-2 text-sm bg-sky-500 hover:bg-sky-600 text-white"
             >
               Wybierz tę siłownię
             </Button>
           )}
+          <Button
+            onClick={() => navigate("/gyms")}
+            variant="outline"
+            className="cursor-pointer px-4 py-2 text-sm hover:bg-zinc-800"
+          >
+            Powrót do mapy
+          </Button>
         </div>
       </div>
     </div>

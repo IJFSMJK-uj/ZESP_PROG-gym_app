@@ -67,6 +67,7 @@ export const GymAdminPage = () => {
   const [email, setEmail] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [additionalInfo, setAdditionalInfo] = useState("");
+  const [description, setDescription] = useState("");
 
   const [lat, setLat] = useState<number | null>(null);
   const [lng, setLng] = useState<number | null>(null);
@@ -100,6 +101,7 @@ export const GymAdminPage = () => {
         setEmail(gym.email || "");
         setPhoneNumber(gym.phoneNumber || "");
         setAdditionalInfo(gym.additionalInfo || "");
+        setDescription(gym.description || "");
 
         setLat(gym.lat || null);
         setLng(gym.lng || null);
@@ -257,6 +259,7 @@ export const GymAdminPage = () => {
         email,
         phoneNumber,
         additionalInfo,
+        description,
         lat,
         lng,
         operatingHours,

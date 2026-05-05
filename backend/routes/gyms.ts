@@ -55,12 +55,14 @@ router.patch("/me", requireAuth, async (req: any, res: any) => {
     }
 
     const gymId = user.managedGyms[0].id;
-    const { address, operatingHours, additionalInfo, lat, lng, email, phoneNumber } = req.body;
+    const { address, operatingHours, additionalInfo, description, lat, lng, email, phoneNumber } =
+      req.body;
 
     const dataToUpdate: any = {};
 
     if (address !== undefined) dataToUpdate.address = address;
     if (additionalInfo !== undefined) dataToUpdate.additionalInfo = additionalInfo;
+    if (description !== undefined) dataToUpdate.description = description;
 
     if (lat !== undefined) dataToUpdate.lat = lat;
     if (lng !== undefined) dataToUpdate.lng = lng;

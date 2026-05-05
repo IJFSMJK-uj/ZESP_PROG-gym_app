@@ -56,7 +56,7 @@ router.post("/gyms", requireAuth, requireAdmin, async (req: any, res: any) => {
   }
 });
 
-router.put("/gyms/:id", requireAuth, requireAdmin, async (req: any, res: any) => {
+router.patch("/gyms/:id", requireAuth, requireAdmin, async (req: any, res: any) => {
   const gymId = parseInt(req.params.id);
   if (isNaN(gymId)) return res.status(400).json({ error: "Nieprawidłowe ID" });
 

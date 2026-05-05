@@ -60,6 +60,7 @@ export const gymsService = {
     address?: string;
     operatingHours?: OperatingHour[];
     additionalInfo?: string;
+    description?: string;
     lat?: number | null;
     lng?: number | null;
   }) {

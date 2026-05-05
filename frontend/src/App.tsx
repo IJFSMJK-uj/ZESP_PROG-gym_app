@@ -23,6 +23,8 @@ import { FaqPage } from "./pages/FaqPage";
 import { VerifyEmailPage } from "./pages/VerifyEmailPage";
 import { ChangePasswordPage } from "./pages/ChangePasswordPage";
 import { ForgotPasswordPage } from "./pages/ForgotPasswordPage";
+import { PanelPage } from "./pages/PanelPage";
+import { AdminDashboardPage } from "./pages/AdminDashboardPage";
 
 function App() {
   return (
@@ -55,6 +57,8 @@ function App() {
               <Route path="/verify-email" element={<VerifyEmailPage />} />
               <Route path="/change-password" element={<ChangePasswordPage />} />
               <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+              <Route path="/dashboard" element={<PanelPage />} />
+              <Route path="/admin" element={<AdminDashboardPage />} />
             </Routes>
           </main>
 

@@ -262,7 +262,7 @@ export const ProfilePage = () => {
             </div>
           )}
 
-          {role === "GYM_MANAGER" && (
+          {/* {role === "GYM_MANAGER" && (
             <div className="space-y-2">
               <label className="text-xs uppercase text-zinc-400">Ustawienia siłowni</label>
               <Link
@@ -278,7 +278,7 @@ export const ProfilePage = () => {
                 <span className="text-sky-400 text-xs">Edytuj</span>
               </Link>
             </div>
-          )}
+          )} */}
 
           {role === "TRAINER" && (
             <div className="space-y-2">

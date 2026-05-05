@@ -44,7 +44,7 @@ const GYMS_DATA = [
     phoneNumber: "555 666 777",
     description:
       "Empty Gym Wieliczka to nowoczesna przestrzeń treningowa o powierzchni 1500 m². Klub wyróżnia się otwartą koncepcją wnętrza, która zapewnia pełną swobodę ruchu i doskonały komfort ćwiczeń w każdej z 10 wyspecjalizowanych stref. Wewnątrz czeka na Ciebie przestronna, otwarta strefa wolnych ciężarów. Po treningu zapraszamy do regeneracji w saunie. Zapewniamy darmowe Wi-Fi oraz dostęp do bezpłatnego parkingu.",
-    managerEmails: ["manager.wieliczka@gymapp.pl"], // Siłownia bez trenerów
+    managerEmails: ["manager.wieliczka@gymapp.pl"],
   },
 ];
 

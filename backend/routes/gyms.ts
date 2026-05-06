@@ -100,7 +100,7 @@ router.patch("/me", requireAuth, async (req: any, res: any) => {
   }
 });
 
-router.get("/:id/stats", async (req, res) => {
+router.get("/:id/stats", requireAuth, async (req: any, res: any) => {
   try {
     const gymId = Number(req.params.id);
 

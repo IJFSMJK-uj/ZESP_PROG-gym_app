@@ -41,16 +41,6 @@ export const PanelPage = () => {
     return <div className="text-white text-center mt-10">Pusto</div>;
   }
 
-  const filtered = gyms.filter(
-    (g) =>
-      g.name?.toLowerCase().includes(search.toLowerCase()) ||
-      g.address?.toLowerCase().includes(search.toLowerCase())
-  );
-
-  const totalPages = Math.ceil(filtered.length / perPage);
-
-  const paginated = filtered.slice((page - 1) * perPage, page * perPage);
-
   if (!isAuthenticated) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] p-4">
@@ -63,6 +53,15 @@ export const PanelPage = () => {
       </div>
     );
   }
+  const filtered = gyms.filter(
+    (g) =>
+      g.name?.toLowerCase().includes(search.toLowerCase()) ||
+      g.address?.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const totalPages = Math.ceil(filtered.length / perPage);
+
+  const paginated = filtered.slice((page - 1) * perPage, page * perPage);
 
   return (
     <div className="w-[80%] mx-auto py-8 flex flex-col gap-4">

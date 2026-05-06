@@ -50,6 +50,11 @@ router.get("/gym/:gymId", requireAuth, async (req: any, res: any) => {
                     address: true,
                   },
                 },
+                reservations: {
+                  include: {
+                    review: true,
+                  },
+                },
               },
             },
           },
@@ -66,6 +71,20 @@ router.get("/gym/:gymId", requireAuth, async (req: any, res: any) => {
         address: a.gym.address,
       }));
 
+      let totalRating = 0;
+      let reviewCount = 0;
+
+      profile.assignments.forEach((a) => {
+        a.reservations.forEach((r) => {
+          if (r.review) {
+            totalRating += r.review.rating;
+            reviewCount++;
+          }
+        });
+      });
+
+      const averageRating = reviewCount > 0 ? Number((totalRating / reviewCount).toFixed(3)) : 0;
+
       return {
         assignmentId: assignment.id,
         trainerProfileId: profile.id,
@@ -77,6 +96,8 @@ router.get("/gym/:gymId", requireAuth, async (req: any, res: any) => {
         phoneNumber: profile.phoneNumber,
         role: user.role,
         worksAt: worksAt,
+        averageRating: averageRating,
+        reviewCount: reviewCount,
       };
     });
     res.json({ gym: currentGym, trainers });

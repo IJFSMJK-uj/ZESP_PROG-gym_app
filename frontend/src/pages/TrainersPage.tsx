@@ -11,7 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../components/ui/dialog";
-import { MapPin } from "lucide-react";
+import { MapPin, Star, StarHalf } from "lucide-react";
 import { ReviewsList } from "../components/ReviewsList";
 
 interface Trainer {
@@ -25,12 +25,51 @@ interface Trainer {
   phoneNumber: string | null;
   role: string;
   worksAt: { name: string; address: string }[];
+  averageRating: number;
+  reviewCount: number;
 }
 
 interface GymInfo {
   name: string;
   address: string;
 }
+
+const TrainerRating = ({
+  rating,
+  count,
+  size = 14,
+  className = "",
+}: {
+  rating: number;
+  count: number;
+  size?: number;
+  className?: string;
+}) => {
+  if (count === 0)
+    return (
+      <span className={`text-sm text-sinc-500 flex justify-center ${className}`}>Brak ocen</span>
+    );
+
+  const roundedRating = Math.round(rating * 2) / 2;
+
+  return (
+    <div className={`flex items-center gap-1 ${className}`}>
+      <div className="flex items-center">
+        {[1, 2, 3, 4, 5].map((index) => {
+          if (roundedRating >= index) {
+            return <Star key={index} size={size} className="fill-yellow-400 text-yellow-500" />;
+          } else if (roundedRating >= index - 0.5) {
+            return <StarHalf key={index} size={size} className="fill-yellow-400 text-yellow-500" />;
+          } else {
+            return <Star key={index} size={size} className="text-yellow-500" />;
+          }
+        })}
+      </div>
+      <span className="text-sm text-yellow-400 ml-1">{rating}</span>
+      <span className="text-sm text-zinc-400 ml-1">({count})</span>
+    </div>
+  );
+};
 
 export const TrainersPage = () => {
   const { user, isAuthenticated } = useAuth();
@@ -139,6 +178,11 @@ export const TrainersPage = () => {
                   </div>
                   <div>
                     <CardTitle className="text-white text-xl">{getDisplayName(trainer)}</CardTitle>
+                    <TrainerRating
+                      rating={trainer.averageRating}
+                      count={trainer.reviewCount}
+                      size={14}
+                    />
                     <CardDescription className="text-zinc-500">{trainer.email}</CardDescription>
                   </div>
                 </div>
@@ -183,6 +227,14 @@ export const TrainersPage = () => {
                       <DialogTitle className="text-2xl font-bold">
                         {getDisplayName(selectedTrainer)}
                       </DialogTitle>
+
+                      <TrainerRating
+                        rating={selectedTrainer.averageRating}
+                        count={selectedTrainer.reviewCount}
+                        size={16}
+                        className="w-full justify-center"
+                      />
+
                       <DialogDescription className="text-zinc-400">
                         {selectedTrainer.email}
                       </DialogDescription>

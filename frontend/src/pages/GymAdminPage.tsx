@@ -5,42 +5,85 @@ import { gymsService, type OperatingHour } from "../api/gymsService";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
+import { useParams } from "react-router-dom";
+
+import { MapContainer, TileLayer, Marker, useMap } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+
+// godziny
+const HOURS = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, "0") + ":00");
 
 const timeToMinutes = (timeString: string) => {
-  if (!timeString) return 0;
-  const [hours, minutes] = timeString.split(":").map(Number);
-  return hours * 60 + minutes;
+  const [hours] = timeString.split(":").map(Number);
+  return hours * 60;
 };
 
 const minutesToTime = (minutes: number) => {
   const h = Math.floor(minutes / 60)
     .toString()
     .padStart(2, "0");
-  const m = (minutes % 60).toString().padStart(2, "0");
-  return `${h}:${m}`;
+  return `${h}:00`;
 };
 
 const DAYS_OF_WEEK = [
-  "Niedziela",
   "Poniedziałek",
   "Wtorek",
   "Środa",
   "Czwartek",
   "Piątek",
   "Sobota",
+  "Niedziela",
 ];
+
+const FlyTo = ({ lat, lng }: any) => {
+  const map = useMap();
+
+  useEffect(() => {
+    if (lat && lng) {
+      map.flyTo([lat, lng], 15);
+    }
+  }, [lat, lng]);
+
+  return null;
+};
+
+const normalizePhone = (phone: string) => {
+  let digits = phone.replace(/\D/g, ""); // usuń wszystko poza cyframi
+
+  if (digits.startsWith("48")) {
+    digits = digits.slice(2); // usuń prefix 48
+  }
+
+  return digits;
+};
 
 export const GymAdminPage = () => {
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
+  const { gymId } = useParams();
 
   const [role, setRole] = useState("");
   const [gymName, setGymName] = useState("");
-  const [address, setAddress] = useState("");
-  const [additionalInfo, setAdditionalInfo] = useState("");
 
-  const [schedule, setSchedule] = useState<{ dayOfWeek: number; open: string; close: string }[]>(
-    DAYS_OF_WEEK.map((_, index) => ({ dayOfWeek: index, open: "", close: "" }))
+  const [tab, setTab] = useState<"settings" | "stats">("settings");
+  const [stats, setStats] = useState<any>(null);
+  const [statsLoading, setStatsLoading] = useState(false);
+
+  const [address, setAddress] = useState("");
+  const [email, setEmail] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [additionalInfo, setAdditionalInfo] = useState("");
+  const [description, setDescription] = useState("");
+
+  const [lat, setLat] = useState<number | null>(null);
+  const [lng, setLng] = useState<number | null>(null);
+
+  const [schedule, setSchedule] = useState(
+    DAYS_OF_WEEK.map((_, index) => ({
+      dayOfWeek: index,
+      open: "",
+      close: "",
+    }))
   );
 
   const [loading, setLoading] = useState(true);
@@ -48,67 +91,145 @@ export const GymAdminPage = () => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
+  const [statsError, setStatsError] = useState("");
+
+  const loadStats = async () => {
+    if (!gymId) return;
+
+    setStatsLoading(true);
+    setStatsError("");
+
+    try {
+      const res = await gymsService.getGymStats(Number(gymId));
+      setStats(res);
+    } catch {
+      setStatsError("Błąd ładowania statystyk");
+    } finally {
+      setStatsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (tab === "stats") {
+      loadStats();
+    }
+  }, [tab]);
+
   useEffect(() => {
     const init = async () => {
-      if (!token) {
-        setLoading(false);
-        return;
-      }
-
       try {
         const profile = await authService.getProfile();
-        if (profile.error) {
-          setError(profile.error);
-          setLoading(false);
-          return;
-        }
-
         setRole(profile.role || "");
 
         if (profile.role !== "GYM_MANAGER") {
-          setLoading(false);
+          navigate("/");
           return;
         }
 
-        if (!profile.gym) {
-          setError("Konto siłowni nie jest powiązane z żadną siłownią.");
-          setLoading(false);
+        // const gym = await gymsService.getGymById(profile.gym.id);
+
+        if (!gymId) {
+          setError("Brak ID siłowni");
           return;
         }
 
-        const gym = await gymsService.getGymById(profile.gym.id);
-        if (gym.error) {
-          setError(gym.error);
-          setLoading(false);
-          return;
-        }
+        const gym = await gymsService.getGymById(gymId);
 
         setGymName(gym.name || "");
         setAddress(gym.address || "");
+        setEmail(gym.email || "");
+        setPhoneNumber(gym.phoneNumber || "");
         setAdditionalInfo(gym.additionalInfo || "");
+        setDescription(gym.description || "");
 
-        if (gym.operatingHours && gym.operatingHours.length > 0) {
-          const loadedSchedule = DAYS_OF_WEEK.map((_, index) => {
-            const dayData = gym.operatingHours.find((h: any) => h.dayOfWeek === index);
-            return dayData
+        setLat(gym.lat || null);
+        setLng(gym.lng || null);
+
+        if (gym.operatingHours) {
+          const loaded = DAYS_OF_WEEK.map((_, index) => {
+            const d = gym.operatingHours.find((h: any) => h.dayOfWeek === index + 1);
+            return d
               ? {
                   dayOfWeek: index,
-                  open: minutesToTime(dayData.openTime),
-                  close: minutesToTime(dayData.closeTime),
+                  open: minutesToTime(d.openTime),
+                  close: minutesToTime(d.closeTime),
                 }
               : { dayOfWeek: index, open: "", close: "" };
           });
-          setSchedule(loadedSchedule);
+          setSchedule(loaded);
         }
       } catch {
-        setError("Nie udało się pobrać danych siłowni");
+        setError("Błąd ładowania");
       } finally {
         setLoading(false);
       }
     };
 
     init();
-  }, [token]);
+  }, [gymId]);
+
+  const handleSearchAddress = async () => {
+    setError("");
+
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&q=${encodeURIComponent(address)}`
+      );
+
+      const data = await res.json();
+
+      if (data.length > 0) {
+        const first = data[0];
+
+        const newLat = parseFloat(first.lat);
+        const newLng = parseFloat(first.lon);
+
+        setLat(newLat);
+        setLng(newLng);
+
+        if (first.address) {
+          const a = first.address;
+
+          const shortAddress = [a.road, a.house_number, a.postcode, a.city || a.town || a.village]
+            .filter(Boolean)
+            .join(", ");
+
+          if (shortAddress.length > 0) {
+            setAddress(shortAddress);
+          } else {
+            setAddress(first.display_name);
+          }
+        } else {
+          setAddress(first.display_name);
+        }
+      } else {
+        setError("Nie znaleziono adresu");
+        setSuccess("");
+      }
+    } catch {
+      setError("Błąd wyszukiwania");
+    }
+  };
+
+  // marker
+  const fetchAddressFromCoords = async (lat: number, lng: number) => {
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`
+      );
+      const data = await res.json();
+
+      if (data.display_name) {
+        const a = data.address;
+
+        const shortAddress = [a.road, a.house_number, a.postcode, a.city || a.town || a.village]
+          .filter(Boolean)
+          .join(", ");
+
+        setAddress(shortAddress);
+      }
+    } catch {}
+  };
 
   const handleScheduleChange = (dayIndex: number, field: "open" | "close", value: string) => {
     setSchedule((prev) =>
@@ -116,151 +237,290 @@ export const GymAdminPage = () => {
     );
   };
 
+  const validate = () => {
+    setError("");
+    setSuccess("");
+    // wymagane pola
+    if (!address) {
+      setError("Adres jest wymagany");
+      return false;
+    }
+
+    if (!email) {
+      setError("Email jest wymagany");
+      return false;
+    }
+
+    if (!phoneNumber) {
+      setError("Numer telefonu jest wymagany");
+      return false;
+    }
+
+    // EMAIL
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError("Nieprawidłowy email");
+      return false;
+    }
+
+    // TELEFON
+    const normalized = normalizePhone(phoneNumber);
+
+    if (!/^[0-9]{9}$/.test(normalized)) {
+      setError("Nieprawidłowy numer telefonu (np. 123456789 lub +48 123 456 789)");
+      return false;
+    }
+
+    return true;
+  };
+
+  // SAVE
   const handleSave = async () => {
     setError("");
     setSuccess("");
+
+    if (!validate()) return;
+
     setSaving(true);
 
-    const operatingHoursToSave: OperatingHour[] = schedule
-      .filter((day) => day.open !== "" && day.close !== "")
-      .map((day) => ({
-        dayOfWeek: day.dayOfWeek,
-        openTime: timeToMinutes(day.open),
-        closeTime: timeToMinutes(day.close),
+    const operatingHours: OperatingHour[] = schedule
+      .filter((d) => d.open && d.close)
+      .map((d) => ({
+        dayOfWeek: d.dayOfWeek + 1,
+        openTime: timeToMinutes(d.open),
+        closeTime: timeToMinutes(d.close),
       }));
 
     try {
-      const data = await gymsService.updateMyGym({
+      // const res = await gymsService.updateMyGym({
+      //   address,
+      //   email,
+      //   phoneNumber,
+      //   additionalInfo,
+      //   description,
+      //   lat,
+      //   lng,
+      //   operatingHours,
+      // });
+
+      const res = await gymsService.updateGym(Number(gymId), {
         address,
-        operatingHours: operatingHoursToSave,
+        email,
+        phoneNumber,
         additionalInfo,
+        description,
+        lat,
+        lng,
+        operatingHours,
       });
 
-      if (data.error) {
-        setError(data.error);
-      } else {
-        setSuccess("Dane siłowni zostały zaktualizowane pomyślnie.");
-      }
+      if (res.error) setError(res.error);
+      else setSuccess("Zapisano!");
     } catch {
-      setError("Błąd sieci. Spróbuj ponownie.");
+      setError("Błąd zapisu");
     } finally {
       setSaving(false);
     }
   };
 
-  if (!token) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] p-4">
-        <p className="text-lg text-white mb-4">Musisz się zalogować, aby zarządzać siłownią.</p>
-        <Button variant="outline" onClick={() => navigate("/auth")} className="cursor-pointer">
-          Przejdź do logowania
-        </Button>
-      </div>
-    );
-  }
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <p className="text-white">Ładowanie danych siłowni...</p>
-      </div>
-    );
-  }
-
-  if (role !== "GYM_MANAGER") {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] p-4">
-        <p className="text-lg text-red-400 mb-4 text-center">
-          Tylko konto siłowni ma dostęp do tej strony.
-        </p>
-        <Button variant="outline" onClick={() => navigate("/")} className="cursor-pointer">
-          Powrót
-        </Button>
-      </div>
-    );
-  }
+  if (loading) return <p className="text-white text-center mt-10">Ładowanie...</p>;
 
   return (
     <div className="p-8 flex justify-center">
       <div className="w-full max-w-2xl flex flex-col gap-6">
-        <Card className="bg-black border border-zinc-800 rounded-3xl">
+        <Card className="bg-black border border-zinc-800 rounded-3xl mb-10">
           <CardHeader>
-            <CardTitle>Ustawienia siłowni</CardTitle>
-            <CardDescription>
-              Zarządzaj godzinami otwarcia i lokalizacją siłowni
-              {gymName ? `: ${gymName}` : ""}.
-            </CardDescription>
+            <CardTitle>Siłownia</CardTitle>
+            <CardDescription>{gymName}</CardDescription>
           </CardHeader>
+          <div className="flex gap-2 ml-2">
+            <Button
+              variant={tab === "settings" ? "default" : "outline"}
+              onClick={() => setTab("settings")}
+            >
+              Ustawienia
+            </Button>
+
+            <Button
+              variant={tab === "stats" ? "default" : "outline"}
+              onClick={() => setTab("stats")}
+            >
+              Statystyki
+            </Button>
+          </div>
           <CardContent className="flex flex-col gap-5">
-            {error && (
-              <div className="text-sm text-red-300 p-3 bg-red-500/10 rounded-xl">{error}</div>
-            )}
-            {success && (
-              <div className="text-sm text-emerald-300 p-3 bg-emerald-500/10 rounded-xl">
-                {success}
-              </div>
-            )}
+            {/* ===== SETTINGS ===== */}
+            {tab === "settings" && (
+              <>
+                {error && <div className="text-red-400">{error}</div>}
+                {success && <div className="text-green-400">{success}</div>}
 
-            <div className="space-y-2">
-              <label className="text-xs uppercase text-zinc-400">Adres</label>
-              <Input
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-                placeholder="np. ul. Sportowa 1, Warszawa"
-                className="w-full border-zinc-700 bg-zinc-950 text-zinc-100 focus:border-sky-500 transition-colors"
-              />
-            </div>
+                {/* ADDRESS */}
+                <div className="flex gap-2">
+                  <Input
+                    value={address}
+                    onChange={(e) => {
+                      setAddress(e.target.value);
+                      setError("");
+                    }}
+                  />
+                  <Button onClick={handleSearchAddress}>Szukaj</Button>
+                </div>
 
-            <div className="space-y-4">
-              <label className="text-xs uppercase text-zinc-400">Godziny otwarcia</label>
-              <div className="flex flex-col gap-3">
-                {schedule.map((day) => (
-                  <div
-                    key={day.dayOfWeek}
-                    className="grid grid-cols-[100px_1fr_1fr] items-center gap-4 p-3 bg-zinc-900 border border-zinc-800 rounded-xl"
+                {/* MAP */}
+                <div className="h-[300px] w-full rounded-xl overflow-hidden">
+                  <MapContainer
+                    center={lat && lng ? [lat, lng] : [50.0647, 19.945]}
+                    zoom={13}
+                    className="h-full w-full z-0"
                   >
-                    <span className="text-sm text-zinc-300">{DAYS_OF_WEEK[day.dayOfWeek]}</span>
-                    <Input
-                      type="time"
+                    <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                    <FlyTo lat={lat} lng={lng} />
+
+                    {lat && lng && (
+                      <Marker
+                        position={[lat, lng]}
+                        draggable={true}
+                        eventHandlers={{
+                          dragend: (e) => {
+                            const pos = e.target.getLatLng();
+                            setLat(pos.lat);
+                            setLng(pos.lng);
+                            setError("");
+                            fetchAddressFromCoords(pos.lat, pos.lng);
+                          },
+                        }}
+                      />
+                    )}
+                  </MapContainer>
+                </div>
+
+                <Input
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Email"
+                />
+
+                <Input
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
+                  placeholder="Telefon"
+                />
+
+                <textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Opis siłowni..."
+                  className="p-3 bg-zinc-900 text-white rounded-xl border border-zinc-700 min-h-[120px]"
+                />
+
+                {/* HOURS */}
+                {schedule.map((day) => (
+                  <div key={day.dayOfWeek} className="flex gap-3 items-center">
+                    <span className="w-32 text-white">{DAYS_OF_WEEK[day.dayOfWeek]}</span>
+
+                    <select
                       value={day.open}
                       onChange={(e) => handleScheduleChange(day.dayOfWeek, "open", e.target.value)}
-                      className="border-zinc-700 bg-zinc-950 text-zinc-100 focus:border-sky-500 transition-colors"
-                    />
-                    <Input
-                      type="time"
+                      className="bg-zinc-900 text-white p-2 px-8 rounded"
+                    >
+                      <option value="">--</option>
+                      {HOURS.map((h) => (
+                        <option key={h} value={h}>
+                          {h}
+                        </option>
+                      ))}
+                    </select>
+
+                    <select
                       value={day.close}
                       onChange={(e) => handleScheduleChange(day.dayOfWeek, "close", e.target.value)}
-                      className="border-zinc-700 bg-zinc-950 text-zinc-100 focus:border-sky-500 transition-colors"
-                    />
+                      className="bg-zinc-900 text-white p-2 px-8 rounded"
+                    >
+                      <option value="">--</option>
+                      {HOURS.map((h) => (
+                        <option key={h} value={h}>
+                          {h}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 ))}
+
+                <div className="flex gap-3">
+                  <Button
+                    className="flex-1 px-2 py-5 text-xl bg-sky-500 hover:bg-sky-600 text-white"
+                    onClick={handleSave}
+                    disabled={saving}
+                  >
+                    {saving ? "Zapisywanie..." : "Zapisz"}
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    className="flex-1 px-2 py-5 text-xl"
+                    onClick={() => navigate("/dashboard")}
+                  >
+                    Powrót
+                  </Button>
+                </div>
+              </>
+            )}
+
+            {/* ===== STATS ===== */}
+            {tab === "stats" && (
+              <div className="flex flex-col gap-4 text-white">
+                {statsLoading ? (
+                  <p>Ładowanie statystyk...</p>
+                ) : statsError ? (
+                  <p className="text-red-400">{statsError}</p>
+                ) : stats ? (
+                  <>
+                    <div>Wszystkie rezerwacje</div>
+                    <div className="flex gap-4">
+                      <div className="p-4 bg-zinc-900 rounded-xl">
+                        <p>Przyszłe</p>
+                        <p className="text-xl">{stats.confirmed}</p>
+                      </div>
+
+                      <div className="p-4 bg-zinc-900 rounded-xl">
+                        <p>Anulowane</p>
+                        <p className="text-xl">{stats.cancelled}</p>
+                      </div>
+
+                      <div className="p-4 bg-zinc-900 rounded-xl">
+                        <p>Wykonane</p>
+                        <p className="text-xl">{stats.done}</p>
+                      </div>
+                    </div>
+
+                    <div>
+                      <h3 className="text-lg font-bold mb-2">Obłożenie trenerów</h3>
+
+                      {stats.trainers.map((t: any) => (
+                        <div
+                          key={t.id}
+                          className="flex justify-between p-2 border-b border-zinc-800"
+                        >
+                          <span>
+                            {t.firstName} {t.lastName}
+                          </span>
+                          <div className="flex justify-between p-2 border-b border-zinc-800">
+                            <div className="flex gap-3 text-xs">
+                              <span className="text-green-400">Wykonane: {t.done}</span>
+                              <span className="text-yellow-400">Przyszłe: {t.confirmed}</span>
+                              <span className="text-red-400">Anulowane: {t.cancelled}</span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <p>Brak danych</p>
+                )}
               </div>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-xs uppercase text-zinc-400">
-                Dodatkowe informacje (wyjątki, święta, przerwy)
-              </label>
-              <textarea
-                value={additionalInfo}
-                onChange={(e) => setAdditionalInfo(e.target.value)}
-                placeholder="np. W święta państwowe siłownia jest nieczynna."
-                className="w-full min-h-[100px] p-3 rounded-md border border-zinc-700 bg-zinc-950 text-zinc-100 focus:border-sky-500 transition-colors outline-none resize-y"
-              />
-            </div>
-
-            <div className="flex gap-3 pt-4">
-              <Button onClick={handleSave} disabled={saving} className="flex-1 cursor-pointer">
-                {saving ? "Zapisywanie..." : "Zapisz zmiany"}
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => navigate("/profile")}
-                className="cursor-pointer"
-              >
-                Anuluj
-              </Button>
-            </div>
+            )}
           </CardContent>
         </Card>
       </div>

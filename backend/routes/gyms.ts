@@ -55,11 +55,19 @@ router.patch("/me", requireAuth, async (req: any, res: any) => {
     }
 
     const gymId = user.managedGyms[0].id;
-    const { address, operatingHours, additionalInfo } = req.body;
+    const { address, operatingHours, additionalInfo, description, lat, lng, email, phoneNumber } =
+      req.body;
 
     const dataToUpdate: any = {};
+
     if (address !== undefined) dataToUpdate.address = address;
     if (additionalInfo !== undefined) dataToUpdate.additionalInfo = additionalInfo;
+    if (description !== undefined) dataToUpdate.description = description;
+
+    if (lat !== undefined) dataToUpdate.lat = lat;
+    if (lng !== undefined) dataToUpdate.lng = lng;
+    if (email !== undefined) dataToUpdate.email = email;
+    if (phoneNumber !== undefined) dataToUpdate.phoneNumber = phoneNumber;
 
     if (operatingHours && Array.isArray(operatingHours)) {
       dataToUpdate.operatingHours = {
@@ -89,6 +97,93 @@ router.patch("/me", requireAuth, async (req: any, res: any) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Nie udało się zaktualizować danych siłowni" });
+  }
+});
+
+router.get("/:id/stats", requireAuth, async (req: any, res: any) => {
+  try {
+    const gymId = Number(req.params.id);
+
+    if (!gymId) {
+      return res.status(400).json({ error: "Brak ID siłowni" });
+    }
+
+    const now = new Date();
+
+    // Staty
+    const reservations = await prisma.trainerReservation.findMany({
+      where: {
+        assignment: {
+          gymId: gymId,
+        },
+      },
+      select: {
+        status: true,
+        date: true,
+      },
+    });
+
+    let confirmed = 0;
+    let cancelled = 0;
+    let done = 0;
+
+    reservations.forEach((r) => {
+      if (r.status === "CONFIRMED" && r.date >= now) confirmed++;
+      if (r.status === "CANCELLED") cancelled++;
+      if (r.status === "DONE") done++;
+    });
+
+    // Trenerzy
+    const trainers = await prisma.trainerAssignment.findMany({
+      where: {
+        gymId: gymId,
+      },
+      include: {
+        trainerProfile: {
+          select: {
+            firstName: true,
+            lastName: true,
+          },
+        },
+        reservations: {
+          select: {
+            status: true,
+            date: true,
+          },
+        },
+      },
+    });
+
+    const formattedTrainers = trainers.map((t) => {
+      let confirmed = 0;
+      let cancelled = 0;
+      let done = 0;
+
+      t.reservations.forEach((r) => {
+        if (r.status === "CONFIRMED" && r.date >= now) confirmed++;
+        if (r.status === "CANCELLED") cancelled++;
+        if (r.status === "DONE") done++;
+      });
+
+      return {
+        id: t.id,
+        firstName: t.trainerProfile?.firstName || "",
+        lastName: t.trainerProfile?.lastName || "",
+        confirmed,
+        cancelled,
+        done,
+      };
+    });
+
+    return res.json({
+      confirmed,
+      cancelled,
+      done,
+      trainers: formattedTrainers,
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: "Błąd serwera" });
   }
 });
 
@@ -154,6 +249,74 @@ router.put("/:id", requireAuth, async (req: any, res: any) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Nie udało się przypisać siłowni" });
+  }
+});
+
+router.patch("/:id", requireAuth, async (req: any, res: any) => {
+  const gymId = parseInt(req.params.id);
+
+  if (isNaN(gymId)) {
+    return res.status(400).json({ error: "Nieprawidłowe ID siłowni" });
+  }
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.userId },
+      include: { managedGyms: true },
+    });
+
+    if (!user || user.role !== Role.GYM_MANAGER) {
+      return res.status(403).json({ error: "Brak uprawnień" });
+    }
+
+    const isManager = user.managedGyms.some((g) => g.id === gymId);
+
+    if (!isManager) {
+      return res.status(403).json({ error: "Nie zarządzasz tą siłownią" });
+    }
+
+    const { address, additionalInfo, description, lat, lng, email, phoneNumber, operatingHours } =
+      req.body;
+
+    const dataToUpdate: any = {};
+
+    if (address !== undefined) dataToUpdate.address = address;
+    if (additionalInfo !== undefined) dataToUpdate.additionalInfo = additionalInfo;
+    if (description !== undefined) dataToUpdate.description = description;
+    if (lat !== undefined) dataToUpdate.lat = lat;
+    if (lng !== undefined) dataToUpdate.lng = lng;
+    if (email !== undefined) dataToUpdate.email = email;
+    if (phoneNumber !== undefined) dataToUpdate.phoneNumber = phoneNumber;
+
+    // Godziny
+    if (operatingHours && Array.isArray(operatingHours)) {
+      dataToUpdate.operatingHours = {
+        deleteMany: {}, // usuń stare
+        create: operatingHours.map((hour: any) => ({
+          dayOfWeek: hour.dayOfWeek,
+          openTime: hour.openTime,
+          closeTime: hour.closeTime,
+        })),
+      };
+    }
+
+    if (Object.keys(dataToUpdate).length === 0) {
+      return res.status(400).json({ error: "Brak danych do aktualizacji" });
+    }
+
+    const updatedGym = await prisma.gym.update({
+      where: { id: gymId },
+      data: dataToUpdate,
+      include: { operatingHours: true },
+    });
+
+    res.json({
+      message: "Zaktualizowano siłownię",
+      gym: updatedGym,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Nie udało się zaktualizować danych siłowni" });
   }
 });
 

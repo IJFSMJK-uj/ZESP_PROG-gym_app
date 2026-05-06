@@ -21,9 +21,11 @@ export const adminService = {
     id: number,
     d: { name: string; address: string; lat?: string; lng?: string }
   ) =>
-    fetch(`${API}/gyms/${id}`, { method: "PUT", headers: h(token), body: JSON.stringify(d) }).then(
-      (r) => r.json()
-    ),
+    fetch(`${API}/gyms/${id}`, {
+      method: "PATCH",
+      headers: h(token),
+      body: JSON.stringify(d),
+    }).then((r) => r.json()),
   deleteGym: (token: string | null, id: number) =>
     fetch(`${API}/gyms/${id}`, { method: "DELETE", headers: h(token) }).then((r) => r.json()),
 

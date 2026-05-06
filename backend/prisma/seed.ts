@@ -16,23 +16,35 @@ const GYMS_DATA = [
   {
     name: "Gym Central Wadowicka",
     address: "ul. Wadowicka 6, Kraków",
-    lat: 50.038,
-    lng: 19.9499,
-    managerEmails: ["manager.krakow@gymapp.pl"],
+    lat: 50.033215,
+    lng: 19.9380322,
+    email: "wadowicka@gymapp.pl",
+    phoneNumber: "123 456 789",
+    description:
+      "Gym Central Wadowicka to nowoczesna siłownia w Krakowie o powierzchni 1360 m². Od 2077 roku oferujemy treningi w standardzie premium na Wadowickiej. Do dyspozycji klubowiczów jest bezpłatny parking, wiata na rowery, darmowe Wi-Fi oraz bogata oferta zajęć fitness w cenie karnetu. Na 1360 m² powierzchni znajduje się 10 profesjonalnych stref treningowych, w tym dedykowana strefa kobiet, unikalna strefa Oldschool, przestrzeń cross fitness oraz strefa treningu personalnego. Nowoczesny sprzęt i wsparcie wykwalifikowanej kadry instruktorskiej gwarantują najwyższy komfort ćwiczeń.",
+    managerEmails: ["manager@gymapp.pl"],
   },
   {
     name: "Gym Central Norymberska",
     address: "ul. Norymberska 10, Kraków",
-    lat: 50.0647,
-    lng: 19.945,
+    lat: 50.0314314,
+    lng: 19.9095811,
+    email: "norymberska@gymapp.pl",
+    phoneNumber: "987 654 321",
+    description:
+      "Gym Central Norymberska to jedna z największych i najbardziej spektakularnych siłowni w Krakowie, oferująca aż 4000 m² nowoczesnej powierzchni. W klubie czeka na Ciebie potężna przestrzeń wolnych ciężarów oraz dedykowana strefa ABS & Stretching (100 m²), idealna do pracy nad mobilnością i stabilizacją korpusu. Fani tradycyjnego podejścia docenią klimatyczną sekcję Oldschool. Po intensywnym treningu zapraszamy do regeneracji w saunie. Na miejscu zapewniamy darmowe Wi-Fi oraz duży, bezpłatny parking bezpośrednio przed wejściem.",
     managerEmails: ["manager.krakow@gymapp.pl"],
   },
   {
     name: "Empty Gym Wieliczka",
     address: "ul. Szpitalna 1, Wieliczka",
-    lat: 49.9884,
-    lng: 20.0652,
-    managerEmails: ["manager.wieliczka@gymapp.pl"], // Siłownia bez trenerów
+    lat: 49.9814,
+    lng: 20.0544729,
+    email: "wieliczka@gymapp.pl",
+    phoneNumber: "555 666 777",
+    description:
+      "Empty Gym Wieliczka to nowoczesna przestrzeń treningowa o powierzchni 1500 m². Klub wyróżnia się otwartą koncepcją wnętrza, która zapewnia pełną swobodę ruchu i doskonały komfort ćwiczeń w każdej z 10 wyspecjalizowanych stref. Wewnątrz czeka na Ciebie przestronna, otwarta strefa wolnych ciężarów. Po treningu zapraszamy do regeneracji w saunie. Zapewniamy darmowe Wi-Fi oraz dostęp do bezpłatnego parkingu.",
+    managerEmails: ["manager@gymapp.pl"],
   },
 ];
 
@@ -136,6 +148,9 @@ async function seedGyms(): Promise<Record<string, number>> {
         address: gymData.address,
         lat: gymData.lat,
         lng: gymData.lng,
+        email: gymData.email,
+        phoneNumber: gymData.phoneNumber,
+        description: gymData.description,
         // Łączymy menadżerów po ich emailach
         managers: {
           connect: gymData.managerEmails.map((email) => ({ email })),
@@ -143,6 +158,23 @@ async function seedGyms(): Promise<Record<string, number>> {
       },
     });
     gymMap[gymData.name] = gym.id; // Zapisujemy ID do słownika (np. "Gym Central Kraków": 1)
+
+    // Godziny
+    await prisma.gymOperatingHours.deleteMany({
+      where: { gymId: gym.id },
+    });
+
+    await prisma.gymOperatingHours.createMany({
+      data: [
+        { gymId: gym.id, dayOfWeek: 1, openTime: 480, closeTime: 1320 },
+        { gymId: gym.id, dayOfWeek: 2, openTime: 480, closeTime: 1320 },
+        { gymId: gym.id, dayOfWeek: 3, openTime: 480, closeTime: 1320 },
+        { gymId: gym.id, dayOfWeek: 4, openTime: 480, closeTime: 1320 },
+        { gymId: gym.id, dayOfWeek: 5, openTime: 480, closeTime: 1320 },
+        { gymId: gym.id, dayOfWeek: 6, openTime: 480, closeTime: 1320 },
+        { gymId: gym.id, dayOfWeek: 7, openTime: 480, closeTime: 1320 },
+      ],
+    });
   }
   return gymMap;
 }

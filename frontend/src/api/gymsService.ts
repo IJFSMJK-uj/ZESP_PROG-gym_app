@@ -60,6 +60,9 @@ export const gymsService = {
     address?: string;
     operatingHours?: OperatingHour[];
     additionalInfo?: string;
+    description?: string;
+    lat?: number | null;
+    lng?: number | null;
   }) {
     const token = localStorage.getItem("token");
     const response = await fetch(`${API_URL}/me`, {
@@ -75,6 +78,45 @@ export const gymsService = {
       const text = await response.text();
       console.error(text);
       return { error: "Nie udało się zaktualizować danych siłowni" };
+    }
+
+    return response.json();
+  },
+
+  async updateGym(id: number, data: any) {
+    const token = localStorage.getItem("token");
+
+    const response = await fetch(`${API_URL}/${id}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      console.error(text);
+      return { error: "Nie udało się zaktualizować danych siłowni" };
+    }
+
+    return response.json();
+  },
+
+  async getGymStats(id: number) {
+    const token = localStorage.getItem("token");
+
+    const response = await fetch(`${API_URL}/${id}/stats`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      console.error(text);
+      return { error: "Nie udało się pobrać statystyk" };
     }
 
     return response.json();

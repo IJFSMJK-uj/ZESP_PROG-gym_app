@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:5174/api/reviews";
+const API_URL = "http://localhost:3001/api/reviews";
 
 export const reviewsService = {
   async getTrainerReviews(trainerId: number) {

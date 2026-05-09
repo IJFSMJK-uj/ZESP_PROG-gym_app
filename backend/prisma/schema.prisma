@@ -81,6 +81,7 @@ model Gym {
   description String?
 
   operatingHours     GymOperatingHours[]
+  groupClasses       GroupClass[]
 
 
   members            MemberProfile[]     @relation("MemberHomeGym")
@@ -102,6 +103,7 @@ model TrainerAssignment {
   // Grafik trenera w ramach konkretnego zatrudnienia (na konkretnej siłowni)
   availabilities TrainerAvailability[]
   reservations   TrainerReservation[]
+  groupClasses   GroupClassInstructor[]
 
   @@unique([trainerProfileId, gymId])
   @@index([trainerProfileId])
@@ -183,6 +185,46 @@ model GymOperatingHours {
   @@unique([gymId, dayOfWeek])
   @@index([gymId])
 }
+
+
+model GroupClass {
+  id Int @id @default(autoincrement())
+
+  gym   Gym @relation(fields: [gymId], references: [id], onDelete: Cascade)
+  gymId Int
+
+  roomId Int?
+
+  name        String
+  description String?
+
+  dayOfWeek Int
+  startTime Int
+  endTime   Int
+  capacity  Int?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  instructors GroupClassInstructor[]
+
+  @@index([gymId, dayOfWeek])
+  @@index([roomId])
+}
+
+model GroupClassInstructor {
+  id Int @id @default(autoincrement())
+
+  groupClass   GroupClass        @relation(fields: [classId], references: [id], onDelete: Cascade)
+  classId      Int
+  assignment   TrainerAssignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  assignmentId Int
+
+  @@unique([classId, assignmentId])
+  @@index([classId])
+  @@index([assignmentId])
+}
+
 
 model TrainerReview {
   id Int @id @default(autoincrement())

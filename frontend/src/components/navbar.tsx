@@ -44,6 +44,51 @@ export const Navbar = () => {
                 Dane
               </Link>
             </>
+          ) : user?.role === "GYM_MANAGER" ? (
+            <>
+              <Link
+                to="/profile"
+                className="text-sm font-semibold text-zinc-400 hover:text-white transition-colors"
+              >
+                Profil
+              </Link>
+              <Link
+                to="/dashboard"
+                className="text-sm font-semibold text-amber-400 hover:text-amber-300 transition-colors"
+              >
+                Panel
+              </Link>
+              <Link
+                to="/group-classes"
+                className="text-sm font-semibold text-blue-400 hover:text-blue-300 transition-colors"
+              >
+                Zajęcia grupowe
+              </Link>
+              <Link
+                to="/dashboard"
+                className="text-sm font-semibold text-zinc-400 hover:text-white transition-colors"
+              >
+                Panel
+              </Link>
+              <Link
+                to="/gyms"
+                className="text-sm font-semibold text-zinc-400 hover:text-white transition-colors"
+              >
+                Mapa siłowni
+              </Link>
+              <Link
+                to="/trainers"
+                className="text-sm font-semibold text-zinc-400 hover:text-white transition-colors"
+              >
+                Trenerzy
+              </Link>
+              <Link
+                to="/contact"
+                className="text-sm font-semibold text-zinc-400 hover:text-white transition-colors"
+              >
+                Dla siłowni
+              </Link>
+            </>
           ) : (
             <>
               <Link

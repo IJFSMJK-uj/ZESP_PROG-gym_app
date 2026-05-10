@@ -25,6 +25,7 @@ import { ChangePasswordPage } from "./pages/ChangePasswordPage";
 import { ForgotPasswordPage } from "./pages/ForgotPasswordPage";
 import { PanelPage } from "./pages/PanelPage";
 import { AdminDashboardPage } from "./pages/AdminDashboardPage";
+import { GroupClassesPage } from "./pages/GroupClassesPage";
 
 function App() {
   return (
@@ -59,6 +60,7 @@ function App() {
               <Route path="/change-password" element={<ChangePasswordPage />} />
               <Route path="/forgot-password" element={<ForgotPasswordPage />} />
               <Route path="/dashboard" element={<PanelPage />} />
+              <Route path="/group-classes" element={<GroupClassesPage />} />
               <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
             </Routes>
           </main>

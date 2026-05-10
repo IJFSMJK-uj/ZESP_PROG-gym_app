@@ -196,7 +196,7 @@ router.get("/:id", requireAuth, async (req: any, res: any) => {
   try {
     const gym = await prisma.gym.findUnique({
       where: { id: gymId },
-      include: { operatingHours: true },
+      include: { operatingHours: true, rooms: { orderBy: { name: "asc" } } },
     });
 
     if (!gym) {
@@ -207,6 +207,91 @@ router.get("/:id", requireAuth, async (req: any, res: any) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Nie znaleziono siłowni" });
+  }
+});
+
+// ─── SALE ─────────────────────────────────────────────────────────────────────
+
+const requireGymManager = async (req: any, res: any, gymId: number) => {
+  const user = await prisma.user.findUnique({
+    where: { id: req.userId },
+    include: { managedGyms: { select: { id: true } } },
+  });
+  if (!user || user.role !== Role.GYM_MANAGER)
+    return res.status(403).json({ error: "Brak uprawnień" });
+  if (!user.managedGyms.some((g) => g.id === gymId))
+    return res.status(403).json({ error: "Nie zarządzasz tą siłownią" });
+  return null;
+};
+
+router.get("/:gymId/rooms", requireAuth, async (req: any, res: any) => {
+  const gymId = parseInt(req.params.gymId);
+  if (isNaN(gymId)) return res.status(400).json({ error: "Nieprawidłowe ID" });
+  const denied = await requireGymManager(req, res, gymId);
+  if (denied !== null) return;
+  try {
+    const rooms = await prisma.gymRoom.findMany({
+      where: { gymId },
+      orderBy: { name: "asc" },
+    });
+    res.json(rooms);
+  } catch {
+    res.status(500).json({ error: "Błąd pobierania sal" });
+  }
+});
+
+router.post("/:gymId/rooms", requireAuth, async (req: any, res: any) => {
+  const gymId = parseInt(req.params.gymId);
+  if (isNaN(gymId)) return res.status(400).json({ error: "Nieprawidłowe ID" });
+  const denied = await requireGymManager(req, res, gymId);
+  if (denied !== null) return;
+  const { name, capacity } = req.body;
+  if (!name?.trim()) return res.status(400).json({ error: "Nazwa sali jest wymagana" });
+  try {
+    const room = await prisma.gymRoom.create({
+      data: { gymId, name: name.trim(), capacity: capacity ? parseInt(capacity) : null },
+    });
+    res.status(201).json(room);
+  } catch {
+    res.status(500).json({ error: "Błąd tworzenia sali" });
+  }
+});
+
+router.patch("/:gymId/rooms/:roomId", requireAuth, async (req: any, res: any) => {
+  const gymId = parseInt(req.params.gymId);
+  const roomId = parseInt(req.params.roomId);
+  if (isNaN(gymId) || isNaN(roomId)) return res.status(400).json({ error: "Nieprawidłowe ID" });
+  const denied = await requireGymManager(req, res, gymId);
+  if (denied !== null) return;
+  const { name, capacity } = req.body;
+  if (!name?.trim()) return res.status(400).json({ error: "Nazwa sali jest wymagana" });
+  try {
+    const room = await prisma.gymRoom.update({
+      where: { id: roomId },
+      data: {
+        name: name.trim(),
+        capacity: capacity !== undefined ? (capacity ? parseInt(capacity) : null) : undefined,
+      },
+    });
+    res.json(room);
+  } catch (e: any) {
+    if (e?.code === "P2025") return res.status(404).json({ error: "Nie znaleziono sali" });
+    res.status(500).json({ error: "Błąd aktualizacji sali" });
+  }
+});
+
+router.delete("/:gymId/rooms/:roomId", requireAuth, async (req: any, res: any) => {
+  const gymId = parseInt(req.params.gymId);
+  const roomId = parseInt(req.params.roomId);
+  if (isNaN(gymId) || isNaN(roomId)) return res.status(400).json({ error: "Nieprawidłowe ID" });
+  const denied = await requireGymManager(req, res, gymId);
+  if (denied !== null) return;
+  try {
+    await prisma.gymRoom.delete({ where: { id: roomId } });
+    res.json({ message: "Sala usunięta" });
+  } catch (e: any) {
+    if (e?.code === "P2025") return res.status(404).json({ error: "Nie znaleziono sali" });
+    res.status(500).json({ error: "Błąd usuwania sali" });
   }
 });
 

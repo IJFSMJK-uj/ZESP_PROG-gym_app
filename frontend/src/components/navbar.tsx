@@ -54,21 +54,15 @@ export const Navbar = () => {
               </Link>
               <Link
                 to="/dashboard"
-                className="text-sm font-semibold text-amber-400 hover:text-amber-300 transition-colors"
+                className="text-sm font-semibold text-zinc-400 hover:text-white transition-colors"
               >
                 Panel
               </Link>
               <Link
                 to="/group-classes"
-                className="text-sm font-semibold text-blue-400 hover:text-blue-300 transition-colors"
-              >
-                Zajęcia grupowe
-              </Link>
-              <Link
-                to="/dashboard"
                 className="text-sm font-semibold text-zinc-400 hover:text-white transition-colors"
               >
-                Panel
+                Zajęcia grupowe
               </Link>
               <Link
                 to="/gyms"

@@ -1,5 +1,12 @@
 const API_URL = "http://localhost:3001/api/gyms";
 
+export interface GymRoom {
+  id: number;
+  gymId: number;
+  name: string;
+  capacity: number | null;
+}
+
 export interface OperatingHour {
   dayOfWeek: number;
   openTime: number;
@@ -101,6 +108,51 @@ export const gymsService = {
       return { error: "Nie udało się zaktualizować danych siłowni" };
     }
 
+    return response.json();
+  },
+
+  async getRooms(gymId: number) {
+    const token = localStorage.getItem("token");
+    const response = await fetch(`${API_URL}/${gymId}/rooms`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!response.ok) return { error: "Nie udało się pobrać sal" };
+    return response.json();
+  },
+
+  async createRoom(gymId: number, data: { name: string; capacity?: number | null }) {
+    const token = localStorage.getItem("token");
+    const response = await fetch(`${API_URL}/${gymId}/rooms`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) return { error: (await response.json()).error || "Błąd tworzenia sali" };
+    return response.json();
+  },
+
+  async updateRoom(
+    gymId: number,
+    roomId: number,
+    data: { name: string; capacity?: number | null }
+  ) {
+    const token = localStorage.getItem("token");
+    const response = await fetch(`${API_URL}/${gymId}/rooms/${roomId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) return { error: (await response.json()).error || "Błąd aktualizacji sali" };
+    return response.json();
+  },
+
+  async deleteRoom(gymId: number, roomId: number) {
+    const token = localStorage.getItem("token");
+    const response = await fetch(`${API_URL}/${gymId}/rooms/${roomId}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!response.ok) return { error: (await response.json()).error || "Błąd usuwania sali" };
     return response.json();
   },
 

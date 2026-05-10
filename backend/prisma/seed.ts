@@ -267,6 +267,214 @@ async function seedMembers(passwordHash: string, gymMap: Record<string, number>)
   }
 }
 
+const ROOMS_DATA: Record<string, { name: string; capacity: number | null }[]> = {
+  "Gym Central Wadowicka": [
+    { name: "Sala fitness", capacity: 20 },
+    { name: "Sala crossfit", capacity: 12 },
+    { name: "Sala kardio", capacity: 15 },
+  ],
+  "Gym Central Norymberska": [
+    { name: "Sala A", capacity: 25 },
+    { name: "Sala B", capacity: 20 },
+    { name: "Sala spinningowa", capacity: 18 },
+  ],
+  "Empty Gym Wieliczka": [
+    { name: "Sala główna", capacity: 30 },
+    { name: "Sala jogi", capacity: 15 },
+  ],
+};
+
+async function seedRooms(
+  gymMap: Record<string, number>
+): Promise<Record<string, Record<string, number>>> {
+  console.log("⚙️ Creating gym rooms...");
+  // roomMap["Gym Central Wadowicka"]["Sala fitness"] = roomId
+  const roomMap: Record<string, Record<string, number>> = {};
+
+  for (const [gymName, rooms] of Object.entries(ROOMS_DATA)) {
+    const gymId = gymMap[gymName];
+    if (!gymId) continue;
+
+    await prisma.gymRoom.deleteMany({ where: { gymId } });
+
+    roomMap[gymName] = {};
+    for (const room of rooms) {
+      const created = await prisma.gymRoom.create({
+        data: { gymId, name: room.name, capacity: room.capacity },
+      });
+      roomMap[gymName][room.name] = created.id;
+    }
+  }
+  return roomMap;
+}
+
+async function seedGroupClasses(
+  gymMap: Record<string, number>,
+  roomMap: Record<string, Record<string, number>>
+) {
+  console.log("⚙️ Creating group classes...");
+
+  await prisma.groupClassInstructor.deleteMany({});
+  await prisma.groupClass.deleteMany({});
+
+  // Pobierz TrainerAssignment dla każdej siłowni
+  const getAssignment = async (trainerEmail: string, gymName: string) => {
+    const gymId = gymMap[gymName];
+    const user = await prisma.user.findUnique({
+      where: { email: trainerEmail },
+      include: { trainerProfile: { include: { assignments: true } } },
+    });
+    return user?.trainerProfile?.assignments.find((a) => a.gymId === gymId) ?? null;
+  };
+
+  // ── Gym Central Wadowicka ──
+  const wadId = gymMap["Gym Central Wadowicka"];
+  const wadRooms = roomMap["Gym Central Wadowicka"] ?? {};
+  const janWad = await getAssignment("trener.jan@gymapp.pl", "Gym Central Wadowicka");
+  const pawelWad = await getAssignment("trener.pawel@gymapp.pl", "Gym Central Wadowicka");
+
+  const wadClasses = [
+    {
+      gymId: wadId,
+      roomId: wadRooms["Sala fitness"] ?? null,
+      name: "Power Fitness",
+      description: "Intensywny trening siłowy dla każdego poziomu.",
+      dayOfWeek: 1,
+      startTime: 8 * 60,
+      endTime: 9 * 60,
+      capacity: 20,
+      isActive: true,
+      instructorAssignmentIds: janWad ? [janWad.id] : [],
+    },
+    {
+      gymId: wadId,
+      roomId: wadRooms["Sala crossfit"] ?? null,
+      name: "CrossFit",
+      description: "Trening funkcjonalny o wysokiej intensywności.",
+      dayOfWeek: 2,
+      startTime: 9 * 60,
+      endTime: 10 * 60,
+      capacity: 12,
+      isActive: true,
+      instructorAssignmentIds: pawelWad ? [pawelWad.id] : [],
+    },
+    {
+      gymId: wadId,
+      roomId: wadRooms["Sala fitness"] ?? null,
+      name: "Stretching & Mobility",
+      description: "Rozciąganie i poprawa mobilności.",
+      dayOfWeek: 3,
+      startTime: 18 * 60,
+      endTime: 19 * 60,
+      capacity: 20,
+      isActive: true,
+      instructorAssignmentIds: pawelWad ? [pawelWad.id] : [],
+    },
+    {
+      gymId: wadId,
+      roomId: wadRooms["Sala kardio"] ?? null,
+      name: "Cardio Blast",
+      description: "Spalanie kalorii w rytmie muzyki.",
+      dayOfWeek: 5,
+      startTime: 17 * 60,
+      endTime: 18 * 60,
+      capacity: 15,
+      isActive: true,
+      instructorAssignmentIds: [],
+    },
+  ];
+
+  // ── Gym Central Norymberska ──
+  const norId = gymMap["Gym Central Norymberska"];
+  const norRooms = roomMap["Gym Central Norymberska"] ?? {};
+  const janNor = await getAssignment("trener.jan@gymapp.pl", "Gym Central Norymberska");
+  const annaNor = await getAssignment("trener.anna@gymapp.pl", "Gym Central Norymberska");
+
+  const norClasses = [
+    {
+      gymId: norId,
+      roomId: norRooms["Sala A"] ?? null,
+      name: "Joga dla początkujących",
+      description: "Łagodna joga dla osób zaczynających przygodę z treningiem.",
+      dayOfWeek: 2,
+      startTime: 8 * 60,
+      endTime: 9 * 60,
+      capacity: 25,
+      isActive: true,
+      instructorAssignmentIds: annaNor ? [annaNor.id] : [],
+    },
+    {
+      gymId: norId,
+      roomId: norRooms["Sala spinningowa"] ?? null,
+      name: "Spinning",
+      description: "Dynamiczny trening rowerowy.",
+      dayOfWeek: 4,
+      startTime: 7 * 60,
+      endTime: 8 * 60,
+      capacity: 18,
+      isActive: true,
+      instructorAssignmentIds: janNor ? [janNor.id] : [],
+    },
+    {
+      gymId: norId,
+      roomId: norRooms["Sala B"] ?? null,
+      name: "Body Pump",
+      description: "Trening z obciążeniami przy muzyce.",
+      dayOfWeek: 6,
+      startTime: 10 * 60,
+      endTime: 11 * 60,
+      capacity: 20,
+      isActive: true,
+      instructorAssignmentIds: annaNor ? [annaNor.id] : [],
+    },
+  ];
+
+  // ── Empty Gym Wieliczka ──
+  const wielId = gymMap["Empty Gym Wieliczka"];
+  const wielRooms = roomMap["Empty Gym Wieliczka"] ?? {};
+
+  const wielClasses = [
+    {
+      gymId: wielId,
+      roomId: wielRooms["Sala jogi"] ?? null,
+      name: "Hatha Joga",
+      description: "Klasyczna joga łącząca asany z oddechem.",
+      dayOfWeek: 3,
+      startTime: 9 * 60,
+      endTime: 10 * 60,
+      capacity: 15,
+      isActive: true,
+      instructorAssignmentIds: [],
+    },
+    {
+      gymId: wielId,
+      roomId: wielRooms["Sala główna"] ?? null,
+      name: "Zumba",
+      description: "Taneczny trening cardio w latynoskim rytmie.",
+      dayOfWeek: 5,
+      startTime: 18 * 60,
+      endTime: 19 * 60,
+      capacity: 30,
+      isActive: true,
+      instructorAssignmentIds: [],
+    },
+  ];
+
+  for (const cls of [...wadClasses, ...norClasses, ...wielClasses]) {
+    const { instructorAssignmentIds, ...classData } = cls;
+    await prisma.groupClass.create({
+      data: {
+        ...classData,
+        instructors: {
+          create: instructorAssignmentIds.map((assignmentId) => ({
+            assignment: { connect: { id: assignmentId } },
+          })),
+        },
+      },
+    });
+  }
+}
+
 async function seedReservations(gymMap: Record<string, number>) {
   console.log("⚙️ Creating training reservations...");
 
@@ -384,6 +592,8 @@ async function main() {
   const gymMap = await seedGyms();
   await seedTrainers(passwordHash, gymMap);
   await seedMembers(passwordHash, gymMap);
+  const roomMap = await seedRooms(gymMap);
+  await seedGroupClasses(gymMap, roomMap);
   await seedReservations(gymMap);
   await seedReviews();
 

@@ -82,7 +82,7 @@ model Gym {
 
   operatingHours     GymOperatingHours[]
   groupClasses       GroupClass[]
-
+  rooms              GymRoom[]
 
   members            MemberProfile[]     @relation("MemberHomeGym")
   trainerAssignments TrainerAssignment[]
@@ -187,12 +187,25 @@ model GymOperatingHours {
 }
 
 
+model GymRoom {
+  id       Int    @id @default(autoincrement())
+  gym      Gym    @relation(fields: [gymId], references: [id], onDelete: Cascade)
+  gymId    Int
+  name     String
+  capacity Int?
+
+  groupClasses GroupClass[]
+
+  @@index([gymId])
+}
+
 model GroupClass {
   id Int @id @default(autoincrement())
 
   gym   Gym @relation(fields: [gymId], references: [id], onDelete: Cascade)
   gymId Int
 
+  room   GymRoom? @relation(fields: [roomId], references: [id], onDelete: SetNull)
   roomId Int?
 
   name        String

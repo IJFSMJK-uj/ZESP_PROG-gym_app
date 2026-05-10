@@ -25,6 +25,7 @@ type ValidateResult =
         capacity: number | null;
         isActive: boolean;
         instructorIds: number[];
+        roomId: number | null;
       };
     };
 
@@ -42,6 +43,11 @@ const parseId = (value: unknown): number | null => {
   }
 
   return parsed;
+};
+
+const ensureRoomBelongsToGym = async (roomId: number, gymId: number): Promise<boolean> => {
+  const room = await prisma.gymRoom.findUnique({ where: { id: roomId } });
+  return room?.gymId === gymId;
 };
 
 const ensureManagerOwnsGym = async (userId: number, gymId: number): Promise<boolean> => {
@@ -158,6 +164,11 @@ const validateClassData = (body: Record<string, unknown>): ValidateResult => {
     ? body.instructorIds.map((id) => toNumber(id)).filter((id): id is number => id !== null)
     : [];
 
+  const roomId =
+    body.roomId === null || body.roomId === undefined || body.roomId === ""
+      ? null
+      : parseId(body.roomId);
+
   if (!name) {
     return {
       error: "Nazwa zajęć jest wymagana",
@@ -199,6 +210,7 @@ const validateClassData = (body: Record<string, unknown>): ValidateResult => {
       isActive:
         body.isActive === undefined ? true : body.isActive === true || body.isActive === "true",
       instructorIds,
+      roomId,
     },
   };
 };
@@ -226,6 +238,7 @@ router.get("/gyms/:gymId/schedule", requireAuth, async (req: AuthRequest, res: R
         gymId,
       },
       include: {
+        room: true,
         instructors: {
           include: {
             assignment: {
@@ -291,7 +304,7 @@ router.post("/gyms/:gymId/schedule", requireAuth, async (req: AuthRequest, res: 
       });
     }
 
-    const { instructorIds, ...classData } = parsed.data;
+    const { instructorIds, roomId, ...classData } = parsed.data;
 
     if (instructorIds.length > 0) {
       const assignments = await prisma.trainerAssignment.findMany({
@@ -323,9 +336,17 @@ router.post("/gyms/:gymId/schedule", requireAuth, async (req: AuthRequest, res: 
       }
     }
 
+    if (roomId !== null) {
+      const roomValid = await ensureRoomBelongsToGym(roomId, gymId);
+      if (!roomValid) {
+        return res.status(400).json({ error: "Sala nie należy do tej siłowni" });
+      }
+    }
+
     const groupClass = await prisma.groupClass.create({
       data: {
         gymId,
+        roomId: roomId ?? null,
         ...classData,
         instructors: {
           create: instructorIds.map((assignmentId) => ({
@@ -338,6 +359,7 @@ router.post("/gyms/:gymId/schedule", requireAuth, async (req: AuthRequest, res: 
         },
       },
       include: {
+        room: true,
         instructors: {
           include: {
             assignment: {
@@ -413,7 +435,7 @@ router.patch(
         });
       }
 
-      const { instructorIds, ...classData } = parsed.data;
+      const { instructorIds, roomId, ...classData } = parsed.data;
 
       if (instructorIds.length > 0) {
         const assignments = await prisma.trainerAssignment.findMany({
@@ -446,10 +468,17 @@ router.patch(
         }
       }
 
+      if (roomId !== null) {
+        const roomValid = await ensureRoomBelongsToGym(roomId, gymId);
+        if (!roomValid) {
+          return res.status(400).json({ error: "Sala nie należy do tej siłowni" });
+        }
+      }
+
       const updatedClass = await prisma.$transaction(async (tx) => {
         await tx.groupClassInstructor.deleteMany({
           where: {
-            groupClassId: classId,
+            classId,
           },
         });
 
@@ -459,6 +488,7 @@ router.patch(
           },
           data: {
             ...classData,
+            roomId: roomId ?? null,
             instructors: {
               create: instructorIds.map((assignmentId) => ({
                 assignment: {

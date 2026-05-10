@@ -16,10 +16,17 @@ export interface GroupClassInstructor {
   };
 }
 
+export interface GroupClassRoom {
+  id: number;
+  name: string;
+  capacity: number | null;
+}
+
 export interface GroupClassScheduleItem {
   id: number;
   gymId: number;
   roomId: number | null;
+  room: GroupClassRoom | null;
   name: string;
   description: string | null;
   dayOfWeek: number;
@@ -32,7 +39,7 @@ export interface GroupClassScheduleItem {
 
 export type GroupClassSchedulePayload = Omit<
   GroupClassScheduleItem,
-  "id" | "gymId" | "roomId" | "instructors"
+  "id" | "gymId" | "room" | "instructors"
 > & {
   instructorIds: number[];
 };

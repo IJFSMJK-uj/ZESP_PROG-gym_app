@@ -580,7 +580,63 @@ async function seedReviews() {
     });
   }
 }
+async function seedStandardEquipment() {
+  console.log("Seedowanie słownika maszyn standardowych...");
 
+  const standardMachines = [
+    { name: "Sztanga olimpijska", imageUrl: "/uploads/standard_equip/barbells.webp" },
+    {
+      name: "Liny treningowe (Battle Ropes)",
+      imageUrl: "/uploads/standard_equip/battle-ropes.webp",
+    },
+    {
+      name: "Brama krzyżowa (Cable Crossover)",
+      imageUrl: "/uploads/standard_equip/cable-crossover.webp",
+    },
+    { name: "Hantle", imageUrl: "/uploads/standard_equip/dumbbells.webp" },
+    { name: "Orbitrek (Elliptical)", imageUrl: "/uploads/standard_equip/elliptical-trainer.webp" },
+    { name: "Atlas funkcjonalny", imageUrl: "/uploads/standard_equip/functional-trainer.webp" },
+    { name: "Odważniki Kettlebell", imageUrl: "/uploads/standard_equip/Kettlebells.webp" },
+    {
+      name: "Maszyna na dwugłowy uda (Leg Curl)",
+      imageUrl: "/uploads/standard_equip/leg-curl.webp",
+    },
+    {
+      name: "Maszyna na czworogłowy uda (Leg Extension)",
+      imageUrl: "/uploads/standard_equip/leg-extension.webp",
+    },
+    { name: "Drążek do podciągania", imageUrl: "/uploads/standard_equip/Pull-up-bar.webp" },
+    { name: "Uchwyty do pompek", imageUrl: "/uploads/standard_equip/push-up-bars.webp" },
+    { name: "Maszyna do dipów i pompek", imageUrl: "/uploads/standard_equip/push-up-machine.webp" },
+    {
+      name: "Gumy oporowe (Resistance Bands)",
+      imageUrl: "/uploads/standard_equip/resistant_band.webp",
+    },
+    {
+      name: "Ergometr wioślarski (Wioślarz)",
+      imageUrl: "/uploads/standard_equip/rowing-machine.webp",
+    },
+    { name: "Suwnica Smitha", imageUrl: "/uploads/standard_equip/smith-machine.webp" },
+    { name: "Klatka / Stojak do przysiadów", imageUrl: "/uploads/standard_equip/squat-rack.webp" },
+    { name: "Schody treningowe", imageUrl: "/uploads/standard_equip/stair-climber.webp" },
+    { name: "Rower stacjonarny", imageUrl: "/uploads/standard_equip/stationary-bike.webp" },
+    { name: "Ławka treningowa", imageUrl: "/uploads/standard_equip/training-bench.webp" },
+    { name: "Bieżnia", imageUrl: "/uploads/standard_equip/treadmill.webp" },
+  ];
+
+  for (const machine of standardMachines) {
+    await prisma.standardEquipment.upsert({
+      where: { name: machine.name },
+      update: { imageUrl: machine.imageUrl },
+      create: {
+        name: machine.name,
+        imageUrl: machine.imageUrl,
+      },
+    });
+  }
+
+  console.log("Słownik maszyn został zaktualizowany!");
+}
 async function main() {
   console.log("⚙️ Seeding database...");
 
@@ -588,6 +644,7 @@ async function main() {
   const passwordHash = await bcrypt.hash("password", 10);
 
   await seedAdmins(passwordHash);
+  await seedStandardEquipment();
   await seedManagers(passwordHash);
   const gymMap = await seedGyms();
   await seedTrainers(passwordHash, gymMap);

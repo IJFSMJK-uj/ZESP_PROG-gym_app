@@ -23,6 +23,14 @@ router.get("/gyms", requireAuth, requireAdmin, async (_req, res: any) => {
   try {
     const gyms = await prisma.gym.findMany({
       orderBy: { id: "asc" },
+      include: {
+        _count: {
+          select: {
+            members: true,
+            trainerAssignments: true,
+          },
+        },
+      },
     });
     res.json(gyms);
   } catch {
@@ -112,6 +120,16 @@ router.get("/users", requireAuth, requireAdmin, async (_req, res: any) => {
         role: true,
         createdAt: true,
         managedGyms: { select: { id: true, name: true } },
+        memberProfile: true,
+        trainerProfile: {
+          include: {
+            assignments: {
+              include: {
+                gym: true,
+              },
+            },
+          },
+        },
       },
     });
     res.json(users);

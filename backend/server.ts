@@ -8,6 +8,7 @@ import trainerAvailabilityRoutes from "./routes/trainerAvailability";
 import trainerScheduleRoutes from "./routes/trainerSchedule";
 import groupClassesRoutes from "./routes/groupClasses";
 import adminRoutes from "./routes/admin";
+import path from "path";
 import reviewsRoutes from "./routes/reviews";
 
 const app = express();
@@ -32,6 +33,7 @@ app.use("/api/trainer-schedule", trainerScheduleRoutes);
 app.use("/api/group-classes", groupClassesRoutes);
 app.use("/api/reviews", reviewsRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // START SERWERA
 app.listen(BACKEND_PORT, () => {

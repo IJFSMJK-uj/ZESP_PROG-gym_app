@@ -10,7 +10,6 @@ import iconUrl from "leaflet/dist/images/marker-icon.png";
 import iconShadow from "leaflet/dist/images/marker-shadow.png";
 import "leaflet/dist/leaflet.css";
 
-// fix ikonek — wklej przed komponentem
 L.Marker.prototype.options.icon = L.icon({
   iconUrl,
   shadowUrl: iconShadow,
@@ -51,6 +50,7 @@ interface Gym {
   address: string;
   lat?: number;
   lng?: number;
+  mainImage?: string;
 }
 
 export const SelectGymPage = () => {
@@ -142,7 +142,6 @@ export const SelectGymPage = () => {
       <div className="w-80 flex-shrink-0 overflow-y-auto border-r border-zinc-800 bg-black">
         <div className="p-4 border-b border-zinc-800">
           <h2 className="text-white font-bold text-lg">Siłownie</h2>
-          {/* <p className="text-zinc-400 text-xs mt-1">{visibleGyms.length} dostępnych</p> */}
         </div>
         <div className="flex flex-col gap-2 p-3">
           <div className="p-3">
@@ -192,6 +191,19 @@ export const SelectGymPage = () => {
                   : "border-zinc-800 bg-zinc-900 hover:border-zinc-600"
               }`}
             >
+              {/* ZDJĘCIE W LEWYM MENU */}
+              {gym.mainImage ? (
+                <img 
+                  src={gym.mainImage} 
+                  alt={gym.name} 
+                  className="w-full h-24 object-cover rounded-md mb-2 border border-zinc-700"
+                />
+              ) : (
+                <div className="w-full h-24 bg-zinc-800 rounded-md mb-2 flex items-center justify-center border border-zinc-700">
+                  <span className="text-zinc-500 text-xs">Brak zdjęcia</span>
+                </div>
+              )}
+              
               <p className="text-white font-medium text-sm">{gym.name}</p>
               <p className="text-zinc-400 text-xs mt-1">{gym.address}</p>
               <Link
@@ -220,14 +232,27 @@ export const SelectGymPage = () => {
           {gyms
             .filter((gym) => gym.lat && gym.lng)
             .map((gym) => (
-              <Marker key={gym.id} position={[gym.lat!, gym.lng!]}>
+             <Marker key={gym.id} position={[gym.lat!, gym.lng!]}>
                 <Popup>
-                  <div className="flex flex-col gap-1 min-w-[150px]">
+                  <div className="flex flex-col gap-1 min-w-[150px] max-w-[200px]">
+                    {/* ZDJĘCIE W POP-UPIE MAPY */}
+                    {gym.mainImage ? (
+                      <img 
+                        src={gym.mainImage} 
+                        alt={gym.name} 
+                        className="w-full h-20 object-cover rounded mb-1 border border-gray-300"
+                      />
+                    ) : (
+                      <div className="w-full h-20 bg-gray-200 rounded flex items-center justify-center mb-1 border border-gray-300">
+                        <span className="text-gray-500 text-xs">Brak zdjęcia</span>
+                      </div>
+                    )}
+                    
                     <strong>{gym.name}</strong>
                     <span className="text-xs text-gray-500">{gym.address}</span>
                     <button
                       onClick={() => navigate(`/gyms/${gym.id}`)}
-                      className="mt-1 bg-sky-500 text-white text-xs px-3 py-1 rounded cursor-pointer"
+                      className="mt-1 bg-sky-500 text-white text-xs px-3 py-1 rounded cursor-pointer hover:bg-sky-600"
                     >
                       Zobacz szczegóły →
                     </button>

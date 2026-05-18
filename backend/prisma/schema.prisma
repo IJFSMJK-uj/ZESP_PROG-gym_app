@@ -88,6 +88,26 @@ model Gym {
   trainerAssignments TrainerAssignment[]
   managers           User[]              @relation("ManagedGyms")
   invites            GymInviteTrainer[]
+  mainImage      String?
+  gallery        String[]
+  equipment      GymEquipment[]
+}
+
+model StandardEquipment {
+  id          Int     @id @default(autoincrement())
+  name        String  @unique
+  imageUrl    String?
+}
+
+model GymEquipment {
+  id          Int     @id @default(autoincrement())
+  
+  gym         Gym     @relation(fields: [gymId], references: [id], onDelete: Cascade)
+  gymId       Int
+  
+  name        String 
+  imageUrl    String? 
+  description String? 
 }
 
 model TrainerAssignment {

@@ -37,5 +37,9 @@
     "**/*.{ts,tsx,js,jsx,json,css,md}": [
       "prettier --write"
     ]
+  },
+  "dependencies": {
+    "multer": "^2.1.1",
+    "yet-another-react-lightbox": "^3.32.0"
   }
 }

@@ -16,6 +16,8 @@ export const AuthPage = () => {
   const [success, setSuccess] = useState("");
   const { login } = useAuth();
   const navigate = useNavigate();
+  const [showResend, setShowResend] = useState(false);
+  const [resendSuccess, setResendSuccess] = useState("");
 
   const handleAuth = async (type: "login" | "register") => {
     setError("");
@@ -36,10 +38,11 @@ export const AuthPage = () => {
         if (res.token && res.user) {
           login(res.token, res.user);
           navigate("/");
-        } else if (res.error?.includes("Potwierdź")) {
-          setError(res.error);
         } else {
           setError(res.error || "Nieprawidłowe dane logowania");
+          if (res.error?.includes("zweryfikowane") || res.error?.includes("Potwierdź")) {
+            setShowResend(true);
+          }
         }
       } else if (type === "register") {
         if (res.userId) {
@@ -52,6 +55,27 @@ export const AuthPage = () => {
       }
     } catch (err) {
       console.error("Błąd sieci:", err);
+      setError("Problem z połączeniem");
+    }
+  };
+
+  const handleResend = async () => {
+    setError("");
+    setResendSuccess("");
+    try {
+      const res = await fetch("http://localhost:3001/api/auth/resend-verification", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      if (data.error) {
+        setError(data.error);
+      } else {
+        setResendSuccess(data.message);
+        setShowResend(false);
+      }
+    } catch {
       setError("Problem z połączeniem");
     }
   };
@@ -88,6 +112,23 @@ export const AuthPage = () => {
             {error && (
               <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs text-center">
                 {error}
+              </div>
+            )}
+
+            {showResend && (
+              <div className="mb-4 text-center">
+                <button
+                  onClick={handleResend}
+                  className="text-sky-400 hover:text-sky-300 text-xs underline cursor-pointer"
+                >
+                  Wyślij link weryfikacyjny ponownie
+                </button>
+              </div>
+            )}
+
+            {resendSuccess && (
+              <div className="mb-4 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs text-center">
+                {resendSuccess}
               </div>
             )}
 

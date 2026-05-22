@@ -100,6 +100,42 @@ router.get("/verify-email", async (req, res) => {
   res.json({ success: true });
 });
 
+// resend verification email
+router.post("/resend-verification", async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return res.status(400).json({ error: "Podaj adres email" });
+  }
+
+  try {
+    const user = await prisma.user.findUnique({ where: { email } });
+
+    if (!user) {
+      return res.json({ message: "Jeśli konto istnieje, link został wysłany." });
+    }
+
+    if (user.isEmailVerified) {
+      return res.status(400).json({ error: "Ten adres email jest już potwierdzony." });
+    }
+
+    const verificationToken = crypto.randomBytes(32).toString("hex");
+    const verificationTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { verificationToken, verificationTokenExpiry },
+    });
+
+    await sendVerificationEmail(email, verificationToken);
+
+    res.json({ message: "Link weryfikacyjny został wysłany ponownie." });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Błąd serwera" });
+  }
+});
+
 // login
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;

@@ -98,7 +98,7 @@ export const Navbar = () => {
                 Rezerwacje
               </Link>
               <Link
-                to="/dashboard"
+                to={user?.gymId ? `/gyms/${user.gymId}` : "/gyms"}
                 className="text-sm font-semibold text-zinc-400 hover:text-white transition-colors"
               >
                 Panel

@@ -102,4 +102,12 @@ export const groupClassesService = {
 
     return readResponse(response, "Nie udało się usunąć zajęć");
   },
+
+  async getGymClasses(gymId: number | string) {
+    const response = await fetch(`${API_URL}/gyms/${gymId}/classes`, {
+      headers: authHeaders(),
+    });
+
+    return readResponse(response, "Nie udało się pobrać zajęć");
+  },
 };

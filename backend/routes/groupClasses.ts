@@ -278,6 +278,58 @@ router.get("/gyms/:gymId/schedule", requireAuth, async (req: AuthRequest, res: R
   }
 });
 
+router.get("/gyms/:gymId/classes", requireAuth, async (req: AuthRequest, res: Response) => {
+  const gymId = parseId(req.params.gymId);
+
+  if (!gymId) {
+    return res.status(400).json({
+      error: "Nieprawidłowe ID siłowni",
+    });
+  }
+
+  try {
+    const classes = await prisma.groupClass.findMany({
+      where: {
+        gymId,
+        isActive: true,
+      },
+      include: {
+        room: true,
+        instructors: {
+          include: {
+            assignment: {
+              include: {
+                trainerProfile: {
+                  select: {
+                    firstName: true,
+                    lastName: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      orderBy: [
+        {
+          dayOfWeek: "asc",
+        },
+        {
+          startTime: "asc",
+        },
+      ],
+    });
+
+    return res.json(classes);
+  } catch (error) {
+    console.error(error);
+
+    return res.status(500).json({
+      error: "Nie udało się pobrać zajęć",
+    });
+  }
+});
+
 router.post("/gyms/:gymId/schedule", requireAuth, async (req: AuthRequest, res: Response) => {
   const gymId = parseId(req.params.gymId);
 

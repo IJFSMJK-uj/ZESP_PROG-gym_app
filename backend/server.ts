@@ -10,6 +10,7 @@ import groupClassesRoutes from "./routes/groupClasses";
 import adminRoutes from "./routes/admin";
 import path from "path";
 import reviewsRoutes from "./routes/reviews";
+import "./cron/reminders";
 
 const app = express();
 const BACKEND_PORT = 3001;

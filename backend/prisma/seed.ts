@@ -512,6 +512,8 @@ async function seedReservations(gymMap: Record<string, number>) {
   const now = new Date();
   const pastDate = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000); // 2 days ago
 
+  const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+
   const reservationsToCreate = [
     {
       userId: members[0].user.id,
@@ -520,6 +522,7 @@ async function seedReservations(gymMap: Record<string, number>) {
       startHour: 10,
       endHour: 11,
       status: "DONE" as const,
+      reviewPromptSent: true,
     },
     {
       userId: members[1]?.user.id || members[0].user.id,
@@ -528,6 +531,7 @@ async function seedReservations(gymMap: Record<string, number>) {
       startHour: 11,
       endHour: 12,
       status: "DONE" as const,
+      reviewPromptSent: true,
     },
     {
       userId: members[0].user.id,
@@ -536,6 +540,25 @@ async function seedReservations(gymMap: Record<string, number>) {
       startHour: 12,
       endHour: 13,
       status: "DONE" as const,
+      reviewPromptSent: true,
+    },
+    {
+      userId: members[0].user.id, // klient.adam@gymapp.pl
+      assignmentId: trainers[0].id,
+      date: tomorrow,
+      startHour: now.getHours() - 2,
+      endHour: now.getHours() - 1,
+      status: "CONFIRMED" as const,
+      reminderSent: false,
+    },
+    {
+      userId: members[0].user.id, // klient.adam@gymapp.pl
+      assignmentId: trainers[0].id,
+      date: pastDate,
+      startHour: 20,
+      endHour: 21,
+      status: "DONE" as const,
+      reviewPromptSent: false,
     },
   ];
 

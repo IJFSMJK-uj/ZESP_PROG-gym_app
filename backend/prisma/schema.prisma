@@ -80,34 +80,34 @@ model Gym {
   phoneNumber String?
   description String?
 
-  operatingHours     GymOperatingHours[]
-  groupClasses       GroupClass[]
-  rooms              GymRoom[]
+  operatingHours GymOperatingHours[]
+  groupClasses   GroupClass[]
+  rooms          GymRoom[]
 
   members            MemberProfile[]     @relation("MemberHomeGym")
   trainerAssignments TrainerAssignment[]
   managers           User[]              @relation("ManagedGyms")
   invites            GymInviteTrainer[]
-  mainImage      String?
-  gallery        String[]
-  equipment      GymEquipment[]
+  mainImage          String?
+  gallery            String[]
+  equipment          GymEquipment[]
 }
 
 model StandardEquipment {
-  id          Int     @id @default(autoincrement())
-  name        String  @unique
-  imageUrl    String?
+  id       Int     @id @default(autoincrement())
+  name     String  @unique
+  imageUrl String?
 }
 
 model GymEquipment {
-  id          Int     @id @default(autoincrement())
-  
-  gym         Gym     @relation(fields: [gymId], references: [id], onDelete: Cascade)
-  gymId       Int
-  
-  name        String 
-  imageUrl    String? 
-  description String? 
+  id Int @id @default(autoincrement())
+
+  gym   Gym @relation(fields: [gymId], references: [id], onDelete: Cascade)
+  gymId Int
+
+  name        String
+  imageUrl    String?
+  description String?
 }
 
 model TrainerAssignment {
@@ -119,7 +119,7 @@ model TrainerAssignment {
   gym   Gym @relation(fields: [gymId], references: [id], onDelete: Cascade)
   gymId Int
 
-  createdAt      DateTime              @default(now())
+  createdAt      DateTime               @default(now())
   // Grafik trenera w ramach konkretnego zatrudnienia (na konkretnej siłowni)
   availabilities TrainerAvailability[]
   reservations   TrainerReservation[]
@@ -166,6 +166,9 @@ model TrainerReservation {
   createdAt DateTime       @default(now())
   review    TrainerReview?
 
+  reminderSent     Boolean @default(false)
+  reviewPromptSent Boolean @default(false)
+
   @@index([assignmentId, date])
   @@index([userId])
 }
@@ -205,7 +208,6 @@ model GymOperatingHours {
   @@unique([gymId, dayOfWeek])
   @@index([gymId])
 }
-
 
 model GymRoom {
   id       Int    @id @default(autoincrement())
@@ -257,7 +259,6 @@ model GroupClassInstructor {
   @@index([classId])
   @@index([assignmentId])
 }
-
 
 model TrainerReview {
   id Int @id @default(autoincrement())

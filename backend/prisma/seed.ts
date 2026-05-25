@@ -182,10 +182,23 @@ async function seedGyms(): Promise<Record<string, number>> {
 async function seedTrainers(passwordHash: string, gymMap: Record<string, number>) {
   console.log("⚙️ Creating trainers & schedules...");
   for (const trainerData of TRAINERS_DATA) {
-    // Tworzymy Usera i TrainerProfile
     const user = await prisma.user.upsert({
       where: { email: trainerData.email },
-      update: {},
+      update: {
+        trainerProfile: {
+          update: {
+            firstName: trainerData.firstName,
+            lastName: trainerData.lastName,
+            bio: trainerData.bio,
+            phoneNumber: trainerData.phoneNumber,
+            profileImageUrl: trainerData.profileImageUrl,
+            socialFacebook: trainerData.socialFacebook,
+            socialInstagram: trainerData.socialInstagram,
+            socialDiscord: trainerData.socialDiscord,
+            tags: trainerData.tags,
+          },
+        },
+      },
       create: {
         email: trainerData.email,
         password: passwordHash,
@@ -197,6 +210,11 @@ async function seedTrainers(passwordHash: string, gymMap: Record<string, number>
             lastName: trainerData.lastName,
             bio: trainerData.bio,
             phoneNumber: trainerData.phoneNumber,
+            profileImageUrl: trainerData.profileImageUrl,
+            socialFacebook: trainerData.socialFacebook,
+            socialInstagram: trainerData.socialInstagram,
+            socialDiscord: trainerData.socialDiscord,
+            tags: trainerData.tags,
           },
         },
       },
@@ -603,8 +621,9 @@ async function seedReviews() {
     });
   }
 }
+
 async function seedStandardEquipment() {
-  console.log("Seedowanie słownika maszyn standardowych...");
+  console.log("⚙️ Creating standard gym equipment...");
 
   const standardMachines = [
     { name: "Sztanga olimpijska", imageUrl: "/uploads/standard_equip/barbells.webp" },
@@ -657,13 +676,11 @@ async function seedStandardEquipment() {
       },
     });
   }
-
-  console.log("Słownik maszyn został zaktualizowany!");
 }
+
 async function main() {
   console.log("⚙️ Seeding database...");
 
-  // drugi argument bcrypt.hash - 10, musi być taki sam jak w backend/routes/auth w router.post("register")
   const passwordHash = await bcrypt.hash("password", 10);
 
   await seedAdmins(passwordHash);

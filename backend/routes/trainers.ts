@@ -98,6 +98,11 @@ router.get("/gym/:gymId", requireAuth, async (req: any, res: any) => {
         worksAt: worksAt,
         averageRating: averageRating,
         reviewCount: reviewCount,
+        profilePictureUrl: profile.profileImageUrl || "",
+        socialFacebook: profile.socialFacebook || "",
+        socialInstagram: profile.socialInstagram || "",
+        socialDiscord: profile.socialDiscord || "",
+        tags: profile.tags || "",
       };
     });
     res.json({ gym: currentGym, trainers });

@@ -38,7 +38,16 @@ export const authService = {
     return response.json();
   },
 
-  async updateProfile(data: { email?: string; role?: string }) {
+  async updateProfile(data: {
+    email?: string;
+    username?: string;
+    profilePictureUrl?: string;
+    bio?: string;
+    tags?: string[];
+    facebookUrl?: string;
+    instagramUrl?: string;
+    discordUsername?: string;
+  }) {
     const response = await fetch(`${API_URL}/profile`, {
       method: "PUT",
       headers: {

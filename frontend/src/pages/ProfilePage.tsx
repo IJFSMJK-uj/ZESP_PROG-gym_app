@@ -15,6 +15,13 @@ export const ProfilePage = () => {
   const [role, setRole] = useState("MEMBER");
   const [gym, setGym] = useState<any>(null);
 
+  const [profilePictureUrl, setProfilePictureUrl] = useState("");
+  const [bio, setBio] = useState("");
+  const [tags, setTags] = useState("");
+  const [facebookUrl, setFacebookUrl] = useState("");
+  const [instagramUrl, setInstagramUrl] = useState("");
+  const [discordUsername, setDiscordUsername] = useState("");
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -33,6 +40,14 @@ export const ProfilePage = () => {
         setUsername(data.username || "");
         setRole(data.role || "MEMBER");
         setGym(data.gym);
+
+        // NOWE: Ładowanie danych trenera z backendu do stanów
+        setProfilePictureUrl(data.profilePictureUrl || "");
+        setBio(data.bio || "");
+        setTags(data.tags ? data.tags.join(", ") : "");
+        setFacebookUrl(data.facebookUrl || "");
+        setInstagramUrl(data.instagramUrl || "");
+        setDiscordUsername(data.discordUsername || "");
       } catch {
         setError("Nie udało się pobrać profilu");
       } finally {
@@ -76,9 +91,22 @@ export const ProfilePage = () => {
     setSuccess("");
     if (!validate()) return;
 
-    const dataToUpdate: { email?: string; username?: string } = {};
+    const dataToUpdate: any = {};
     if (editingEmail) dataToUpdate.email = email;
     if (editingUsername) dataToUpdate.username = username;
+
+    if (role === "TRAINER") {
+      dataToUpdate.profilePictureUrl = profilePictureUrl;
+      dataToUpdate.bio = bio;
+      // Zamiana stringa "joga, crossfit" na tablicę ["joga", "crossfit"]
+      dataToUpdate.tags = tags
+        .split(",")
+        .map((t) => t.trim())
+        .filter((t) => t !== "");
+      dataToUpdate.facebookUrl = facebookUrl;
+      dataToUpdate.instagramUrl = instagramUrl;
+      dataToUpdate.discordUsername = discordUsername;
+    }
 
     if (Object.keys(dataToUpdate).length === 0) {
       setError("Kliknij w pole które chcesz zmienić");
@@ -262,37 +290,93 @@ export const ProfilePage = () => {
             </div>
           )}
 
-          {/* {role === "GYM_MANAGER" && (
-            <div className="space-y-2">
-              <label className="text-xs uppercase text-zinc-400">Ustawienia siłowni</label>
-              <Link
-                to="/gym/admin"
-                className="flex items-center justify-between w-full p-3 rounded-xl bg-zinc-900 border border-zinc-700 hover:border-sky-500 transition-colors cursor-pointer"
-              >
-                <div>
-                  <p className="text-white font-medium">Godziny otwarcia i adres</p>
-                  <p className="text-zinc-400 text-xs">
-                    Zarządzaj lokalizacją i godzinami pracy siłowni
-                  </p>
-                </div>
-                <span className="text-sky-400 text-xs">Edytuj</span>
-              </Link>
-            </div>
-          )} */}
-
+          {/* SEKCJA TRENERA */}
           {role === "TRAINER" && (
-            <div className="space-y-2">
-              <label className="text-xs uppercase text-zinc-400">Dostępność trenera</label>
-              <Link
-                to="/trainer/availability"
-                className="flex items-center justify-between w-full p-3 rounded-xl bg-zinc-900 border border-zinc-700 hover:border-sky-500 transition-colors cursor-pointer"
-              >
-                <div>
-                  <p className="text-white font-medium">Ustaw godziny dostępności</p>
-                  <p className="text-zinc-400 text-xs">Dodaj dni i godziny pracy</p>
+            <div className="space-y-4 pt-4 border-t border-zinc-800">
+              <h3 className="text-sm font-semibold text-zinc-300 uppercase tracking-wider">
+                Twój Profil Trenera
+              </h3>
+
+              {/* ZDJĘCIE PROFILOWE */}
+              <div className="space-y-2">
+                <label className="text-xs uppercase text-zinc-400">URL Zdjęcia profilowego</label>
+                <Input
+                  placeholder="https://..."
+                  className="w-full border-zinc-700 bg-zinc-950 text-zinc-400"
+                  value={profilePictureUrl}
+                  onChange={(e) => setProfilePictureUrl(e.target.value)}
+                />
+              </div>
+
+              {/* DOSTĘPNOŚĆ */}
+              <div className="space-y-2">
+                <label className="text-xs uppercase text-zinc-400">Twoje godziny pracy</label>
+                <Link
+                  to="/trainer/availability"
+                  className="flex items-center justify-between w-full p-3 rounded-xl bg-zinc-900 border border-zinc-700 hover:border-sky-500 transition-colors cursor-pointer"
+                >
+                  <div>
+                    <p className="text-white font-medium">Ustaw godziny dostępności</p>
+                    <p className="text-zinc-400 text-xs">Dodaj dni i godziny pracy</p>
+                  </div>
+                  <span className="text-sky-400 text-xs">Przejdź</span>
+                </Link>
+              </div>
+
+              {/* BIO */}
+              <div className="space-y-2">
+                <label className="text-xs uppercase text-zinc-400">Opis (Bio)</label>
+                <textarea
+                  className="w-full p-3 rounded-xl bg-zinc-950 border border-zinc-700 text-zinc-400 text-sm min-h-[100px] outline-none focus:border-zinc-600 transition-colors"
+                  placeholder="Napisz kilka słów o sobie..."
+                  value={bio}
+                  onChange={(e) => setBio(e.target.value)}
+                />
+              </div>
+
+              {/* TAGI */}
+              <div className="space-y-2">
+                <label className="text-xs uppercase text-zinc-400">
+                  Tagi (oddzielone przecinkiem)
+                </label>
+                <Input
+                  placeholder="np. joga, crossfit, trójbój siłowy"
+                  className="w-full border-zinc-700 bg-zinc-950 text-zinc-400"
+                  value={tags}
+                  onChange={(e) => setTags(e.target.value)}
+                />
+              </div>
+
+              {/* SOCIAL MEDIA */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="space-y-2">
+                  <label className="text-xs uppercase text-zinc-400">Facebook</label>
+                  <Input
+                    placeholder="URL profilu"
+                    className="border-zinc-700 bg-zinc-950 text-zinc-400"
+                    value={facebookUrl}
+                    onChange={(e) => setFacebookUrl(e.target.value)}
+                  />
                 </div>
-                <span className="text-sky-400 text-xs">Przejdź</span>
-              </Link>
+                <div className="space-y-2">
+                  <label className="text-xs uppercase text-zinc-400">Instagram</label>
+                  <Input
+                    placeholder="URL profilu"
+                    className="border-zinc-700 bg-zinc-950 text-zinc-400"
+                    value={instagramUrl}
+                    onChange={(e) => setInstagramUrl(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs uppercase text-zinc-400">Discord</label>
+                  <Input
+                    placeholder="Nazwa użytkownika"
+                    className="border-zinc-700 bg-zinc-950 text-zinc-400"
+                    value={discordUsername}
+                    onChange={(e) => setDiscordUsername(e.target.value)}
+                  />
+                </div>
+              </div>
             </div>
           )}
 

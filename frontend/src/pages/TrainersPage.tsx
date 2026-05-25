@@ -27,6 +27,11 @@ interface Trainer {
   worksAt: { name: string; address: string }[];
   averageRating: number;
   reviewCount: number;
+  profilePictureUrl: string;
+  socialFacebook: string;
+  socialInstagram: string;
+  socialDiscord: string;
+  tags: string[] | string;
 }
 
 interface GymInfo {
@@ -220,8 +225,16 @@ export const TrainersPage = () => {
               <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                 <div className="px-6 pt-6">
                   <DialogHeader className="flex flex-col items-center text-center space-y-4">
-                    <div className="w-30 h-30 rounded-full bg-zinc-900 border-2 border-sky-500 flex items-center justify-center text-sky-400 font-bold text-4xl uppercase shadow-[0_0_20px_rgba(14,165,233,0.3)]">
-                      {(selectedTrainer.firstName || selectedTrainer.email)[0]}
+                    <div className="w-30 h-30 rounded-full bg-zinc-900 border-2 border-sky-500 flex items-center justify-center text-sky-400 font-bold text-4xl uppercase shadow-[0_0_20px_rgba(14,165,233,0.3)] overflow-hidden">
+                      {selectedTrainer.profileImageUrl ? (
+                        <img
+                          src={selectedTrainer.profileImageUrl}
+                          alt="Profile"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        (selectedTrainer.firstName || selectedTrainer.email)[0]
+                      )}
                     </div>
                     <div>
                       <DialogTitle className="text-2xl font-bold">
@@ -238,6 +251,46 @@ export const TrainersPage = () => {
                       <DialogDescription className="text-zinc-400">
                         {selectedTrainer.email}
                       </DialogDescription>
+                    </div>
+                    {selectedTrainer.tags && selectedTrainer.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mt-4">
+                        {selectedTrainer.tags.map((tag, idx) => (
+                          <span
+                            key={idx}
+                            className="px-2 py-1 text-xs rounded-md bg-zinc-800 text-zinc-300 border border-zinc-700"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    <div className="flex gap-4 mt-4">
+                      {selectedTrainer.socialFacebook && (
+                        <a
+                          href={selectedTrainer.socialFacebook}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-zinc-400 hover:text-sky-500"
+                        >
+                          Facebook
+                        </a>
+                      )}
+                      {selectedTrainer.socialInstagram && (
+                        <a
+                          href={selectedTrainer.socialInstagram}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-zinc-400 hover:text-pink-500"
+                        >
+                          Instagram
+                        </a>
+                      )}
+                      {selectedTrainer.socialDiscord && (
+                        <span className="text-zinc-400" title="Discord">
+                          Discord: {selectedTrainer.socialDiscord}
+                        </span>
+                      )}
                     </div>
                   </DialogHeader>
                 </div>

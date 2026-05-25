@@ -207,11 +207,26 @@ router.get("/profile", requireAuth, async (req: any, res) => {
     role: user.role,
     gym,
     managedGyms: user.managedGyms,
+    profilePictureUrl: user.trainerProfile?.profileImageUrl || "",
+    bio: user.trainerProfile?.bio || "",
+    tags: user.trainerProfile?.tags || [],
+    facebookUrl: user.trainerProfile?.socialFacebook || "",
+    instagramUrl: user.trainerProfile?.socialInstagram || "",
+    discordUsername: user.trainerProfile?.socialDiscord || "",
   });
 });
 
 router.put("/profile", requireAuth, async (req: any, res) => {
-  const { email, username } = req.body;
+  const {
+    email,
+    username,
+    profilePictureUrl,
+    bio,
+    tags,
+    facebookUrl,
+    instagramUrl,
+    discordUsername,
+  } = req.body;
 
   try {
     const user = await prisma.user.findUnique({
@@ -248,20 +263,26 @@ router.put("/profile", requireAuth, async (req: any, res) => {
       },
     });
 
-    if (username) {
-      if (user.memberProfile) {
-        await prisma.memberProfile.update({
-          where: { id: user.memberProfile.id },
-          data: { firstName: username },
-        });
-      }
+    if (username && user.memberProfile) {
+      await prisma.memberProfile.update({
+        where: { id: user.memberProfile.id },
+        data: { firstName: username },
+      });
+    }
 
-      if (user.trainerProfile) {
-        await prisma.trainerProfile.update({
-          where: { id: user.trainerProfile.id },
-          data: { firstName: username },
-        });
-      }
+    if (user.trainerProfile) {
+      await prisma.trainerProfile.update({
+        where: { id: user.trainerProfile.id },
+        data: {
+          ...(username !== undefined && { firstName: username }),
+          ...(profilePictureUrl !== undefined && { profileImageUrl: profilePictureUrl }),
+          ...(bio !== undefined && { bio }),
+          ...(tags !== undefined && { tags }),
+          ...(facebookUrl !== undefined && { socialFacebook: facebookUrl }),
+          ...(instagramUrl !== undefined && { socialInstagram: instagramUrl }),
+          ...(discordUsername !== undefined && { socialDiscord: discordUsername }),
+        },
+      });
     }
 
     if (emailChanged && verificationToken) {
@@ -278,6 +299,7 @@ router.put("/profile", requireAuth, async (req: any, res) => {
       emailChanged,
     });
   } catch (e) {
+    console.error("Błąd podczas operacji PUT /profile:", e);
     res.status(400).json({ error: "Błąd aktualizacji danych" });
   }
 });

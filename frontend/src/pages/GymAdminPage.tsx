@@ -49,7 +49,7 @@ const normalizePhone = (phone: string) => {
   return digits;
 };
 
-type GymEquipment = { id: number; name: string; imageUrl?: string; description?: string; };
+type GymEquipment = { id: number; name: string; imageUrl?: string; description?: string };
 type Tab = "settings" | "rooms" | "roomOccupancy" | "stats";
 
 const DAY_SHORT = ["Pon", "Wt", "Śr", "Czw", "Pt", "Sob", "Nd"];
@@ -89,7 +89,9 @@ export const GymAdminPage = () => {
 
   const [standardEquipment, setStandardEquipment] = useState<any[]>([]);
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [selectedStandardLabel, setSelectedStandardLabel] = useState("Własne urządzenie (wpisz ręcznie)");
+  const [selectedStandardLabel, setSelectedStandardLabel] = useState(
+    "Własne urządzenie (wpisz ręcznie)"
+  );
   const [selectedStandardImageUrl, setSelectedStandardImageUrl] = useState<string | null>(null);
 
   const [machineName, setMachineName] = useState("");
@@ -313,7 +315,8 @@ export const GymAdminPage = () => {
   const uploadMainImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !gymId) return;
-    setError(""); setSuccess("");
+    setError("");
+    setSuccess("");
 
     const formData = new FormData();
     formData.append("image", file);
@@ -338,7 +341,8 @@ export const GymAdminPage = () => {
   const deleteMainImage = async () => {
     if (!gymId) return;
     if (!window.confirm("Czy na pewno chcesz usunąć zdjęcie główne siłowni?")) return;
-    setError(""); setSuccess("");
+    setError("");
+    setSuccess("");
 
     try {
       const res = await fetch(`http://localhost:3001/api/gyms/${gymId}/main-image`, {
@@ -359,7 +363,8 @@ export const GymAdminPage = () => {
   const uploadGallery = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || !gymId || files.length === 0) return;
-    setError(""); setSuccess("");
+    setError("");
+    setSuccess("");
 
     const formData = new FormData();
     Array.from(files).forEach((file) => formData.append("gallery", file));
@@ -384,16 +389,17 @@ export const GymAdminPage = () => {
   const deleteGalleryImage = async (url: string) => {
     if (!gymId) return;
     if (!window.confirm("Czy na pewno chcesz usunąć to zdjęcie z galerii?")) return;
-    setError(""); setSuccess("");
+    setError("");
+    setSuccess("");
 
     try {
       const res = await fetch(`http://localhost:3001/api/gyms/${gymId}/gallery`, {
         method: "DELETE",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${getToken()}` 
+          Authorization: `Bearer ${getToken()}`,
         },
-        body: JSON.stringify({ imageUrl: url })
+        body: JSON.stringify({ imageUrl: url }),
       });
       if (res.ok) {
         setSuccess("Zdjęcie zostało usunięte z galerii.");
@@ -413,7 +419,7 @@ export const GymAdminPage = () => {
       setMachineName("");
     } else {
       setSelectedStandardLabel(item.name);
-      setMachineName(item.name); 
+      setMachineName(item.name);
       setSelectedStandardImageUrl(item.imageUrl || null);
     }
     setDropdownOpen(false);
@@ -422,12 +428,13 @@ export const GymAdminPage = () => {
   const handleAddEquipment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!machineName.trim() || !gymId) return;
-    setError(""); setSuccess("");
+    setError("");
+    setSuccess("");
 
     const formData = new FormData();
     formData.append("name", machineName.trim());
     formData.append("description", machineDesc.trim());
-    
+
     if (machineFile) {
       formData.append("image", machineFile);
     } else if (selectedStandardImageUrl) {
@@ -461,8 +468,10 @@ export const GymAdminPage = () => {
 
   const handleDeleteEquipment = async (equipmentId: number, name: string) => {
     if (!gymId) return;
-    if (!window.confirm(`Czy na pewno chcesz trwale usunąć urządzenie "${name}" z tej siłowni?`)) return;
-    setError(""); setSuccess("");
+    if (!window.confirm(`Czy na pewno chcesz trwale usunąć urządzenie "${name}" z tej siłowni?`))
+      return;
+    setError("");
+    setSuccess("");
 
     try {
       const res = await fetch(`http://localhost:3001/api/gyms/${gymId}/equipment/${equipmentId}`, {
@@ -580,25 +589,43 @@ export const GymAdminPage = () => {
               {success && <div className="text-green-400 text-sm">{success}</div>}
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 border-b border-zinc-800 pb-6 text-white mb-2">
-                
                 <div className="flex flex-col gap-3 bg-zinc-900/40 p-4 rounded-2xl border border-zinc-800/60">
                   <p className="text-xs uppercase text-zinc-400 font-bold tracking-wide">
                     Panoramiczne zdjęcie główne klubu
                   </p>
                   <div className="flex flex-col sm:flex-row items-center gap-4">
-                    
                     <div className="relative group w-full sm:w-44 h-24 bg-zinc-950 rounded-xl overflow-hidden border border-zinc-800 flex items-center justify-center text-xs text-zinc-500 shrink-0">
                       {mainImage ? (
                         <>
-                          <img src={mainImage} alt="Główne siłowni" className="w-full h-full object-cover" />
+                          <img
+                            src={mainImage}
+                            alt="Główne siłowni"
+                            className="w-full h-full object-cover"
+                          />
                           <div className="absolute inset-0 bg-black/70 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                            <button 
+                            <button
                               type="button"
                               onClick={deleteMainImage}
                               className="p-2 bg-red-600/80 rounded-full text-white hover:bg-red-600 transition-colors cursor-pointer shadow-lg"
                               title="Usuń zdjęcie"
                             >
-                              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <path d="M3 6h18"></path>
+                                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                                <line x1="10" y1="11" x2="10" y2="17"></line>
+                                <line x1="14" y1="11" x2="14" y2="17"></line>
+                              </svg>
                             </button>
                           </div>
                         </>
@@ -608,11 +635,24 @@ export const GymAdminPage = () => {
                     </div>
 
                     <div className="flex flex-col gap-2 w-full">
-                      <input type="file" ref={mainImageInputRef} onChange={uploadMainImage} className="hidden" accept="image/*" />
-                      <Button variant="outline" size="sm" onClick={() => mainImageInputRef.current?.click()} className="cursor-pointer w-fit text-xs bg-black border-zinc-700 text-zinc-200">
+                      <input
+                        type="file"
+                        ref={mainImageInputRef}
+                        onChange={uploadMainImage}
+                        className="hidden"
+                        accept="image/*"
+                      />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => mainImageInputRef.current?.click()}
+                        className="cursor-pointer w-fit text-xs bg-black border-zinc-700 text-zinc-200"
+                      >
                         Prześlij zdjęcie główne
                       </Button>
-                      <p className="text-[10px] text-zinc-500">Wyświetlane w wyszukiwarce na mapie oraz w menu bocznym.</p>
+                      <p className="text-[10px] text-zinc-500">
+                        Wyświetlane w wyszukiwarce na mapie oraz w menu bocznym.
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -622,39 +662,71 @@ export const GymAdminPage = () => {
                     <p className="text-xs uppercase text-zinc-400 font-bold tracking-wide">
                       Galeria zdjęć wnętrza klubu
                     </p>
-                    <input type="file" multiple ref={galleryInputRef} onChange={uploadGallery} className="hidden" accept="image/*" />
-                    <Button size="sm" onClick={() => galleryInputRef.current?.click()} className="cursor-pointer text-xs bg-sky-600 hover:bg-sky-500 text-white h-7 px-3">
+                    <input
+                      type="file"
+                      multiple
+                      ref={galleryInputRef}
+                      onChange={uploadGallery}
+                      className="hidden"
+                      accept="image/*"
+                    />
+                    <Button
+                      size="sm"
+                      onClick={() => galleryInputRef.current?.click()}
+                      className="cursor-pointer text-xs bg-sky-600 hover:bg-sky-500 text-white h-7 px-3"
+                    >
                       + Dodaj zdjęcia
                     </Button>
                   </div>
-                  
+
                   {gallery && gallery.length > 0 ? (
                     <div className="grid grid-cols-4 sm:grid-cols-6 gap-2 max-h-20 overflow-y-auto pr-1 mt-2">
                       {gallery.map((url, idx) => (
-                        <div key={idx} className="relative group aspect-square bg-zinc-950 rounded-lg overflow-hidden border border-zinc-800">
-                          <img src={url} alt={`Galeria ${idx}`} className="w-full h-full object-cover" />
+                        <div
+                          key={idx}
+                          className="relative group aspect-square bg-zinc-950 rounded-lg overflow-hidden border border-zinc-800"
+                        >
+                          <img
+                            src={url}
+                            alt={`Galeria ${idx}`}
+                            className="w-full h-full object-cover"
+                          />
                           <div className="absolute inset-0 bg-black/70 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                            <button 
+                            <button
                               type="button"
                               onClick={() => deleteGalleryImage(url)}
                               className="p-1.5 bg-red-600/80 rounded-full text-white hover:bg-red-600 transition-colors cursor-pointer shadow"
                               title="Usuń zdjęcie"
                             >
-                              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="12"
+                                height="12"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <path d="M3 6h18"></path>
+                                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                              </svg>
                             </button>
                           </div>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <p className="text-xs text-zinc-500 italic py-4 text-center">Brak wgranych zdjęć do galerii.</p>
+                    <p className="text-xs text-zinc-500 italic py-4 text-center">
+                      Brak wgranych zdjęć do galerii.
+                    </p>
                   )}
                 </div>
-
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-                
                 <div className="flex flex-col gap-5">
                   <div className="flex flex-col gap-3">
                     <p className="text-xs uppercase text-zinc-500 font-semibold tracking-wide">
@@ -717,12 +789,19 @@ export const GymAdminPage = () => {
                       Wyposażenie i maszyny w obiekcie
                     </p>
 
-                    <form onSubmit={handleAddEquipment} className="bg-zinc-900/30 border border-zinc-800 p-4 rounded-2xl space-y-4">
-                      <p className="text-xs text-zinc-400 font-medium">Rejestruj nowy sprzęt na siłowni</p>
-                      
+                    <form
+                      onSubmit={handleAddEquipment}
+                      className="bg-zinc-900/30 border border-zinc-800 p-4 rounded-2xl space-y-4"
+                    >
+                      <p className="text-xs text-zinc-400 font-medium">
+                        Rejestruj nowy sprzęt na siłowni
+                      </p>
+
                       <div className="space-y-1 relative" ref={dropdownRef}>
-                        <label className="text-[11px] text-zinc-500">Wybierz urządzenie ze słownika szablonów</label>
-                        <div 
+                        <label className="text-[11px] text-zinc-500">
+                          Wybierz urządzenie ze słownika szablonów
+                        </label>
+                        <div
                           onClick={() => setDropdownOpen(!dropdownOpen)}
                           className="w-full bg-black border border-zinc-700 hover:border-zinc-500 rounded-lg p-2.5 text-xs text-zinc-200 cursor-pointer flex justify-between items-center h-9 transition-colors"
                         >
@@ -732,20 +811,28 @@ export const GymAdminPage = () => {
 
                         {dropdownOpen && (
                           <div className="absolute left-0 right-0 mt-1 bg-zinc-950 border border-zinc-800 rounded-lg shadow-xl max-h-56 overflow-y-auto z-50 divide-y divide-zinc-900">
-                            <div 
+                            <div
                               onClick={() => handleSelectStandardEquipment("custom")}
                               className="p-2 text-xs text-zinc-400 hover:bg-zinc-900 cursor-pointer font-medium"
                             >
                               Własne urządzenie (wpisz ręcznie)
                             </div>
                             {standardEquipment.map((item) => (
-                              <div 
+                              <div
                                 key={item.id}
                                 onClick={() => handleSelectStandardEquipment(item)}
                                 className="p-2 text-xs text-white hover:bg-zinc-900 cursor-pointer flex items-center gap-3 transition-colors"
                               >
                                 <div className="w-8 h-8 bg-black rounded overflow-hidden border border-zinc-800 flex-shrink-0 flex items-center justify-center text-[7px] text-zinc-600">
-                                  {item.imageUrl ? <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" /> : "Brak"}
+                                  {item.imageUrl ? (
+                                    <img
+                                      src={item.imageUrl}
+                                      alt={item.name}
+                                      className="w-full h-full object-cover"
+                                    />
+                                  ) : (
+                                    "Brak"
+                                  )}
                                 </div>
                                 <span className="font-medium">{item.name}</span>
                               </div>
@@ -756,22 +843,26 @@ export const GymAdminPage = () => {
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div className="space-y-1">
-                          <label className="text-[11px] text-zinc-500">Nazwa urządzenia (możesz zmienić)</label>
-                          <Input 
-                            type="text" 
+                          <label className="text-[11px] text-zinc-500">
+                            Nazwa urządzenia (możesz zmienić)
+                          </label>
+                          <Input
+                            type="text"
                             required
-                            placeholder="Wpisz nazwę sprzętu" 
-                            value={machineName} 
+                            placeholder="Wpisz nazwę sprzętu"
+                            value={machineName}
                             onChange={(e) => setMachineName(e.target.value)}
                             className="h-8 text-xs border-zinc-700 bg-black text-zinc-100 focus:border-sky-500"
                           />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-[11px] text-zinc-500">Zmień/Dodaj własne zdjęcie</label>
-                          <Input 
+                          <label className="text-[11px] text-zinc-500">
+                            Zmień/Dodaj własne zdjęcie
+                          </label>
+                          <Input
                             id="equipment-file-input"
-                            type="file" 
-                            accept="image/*" 
+                            type="file"
+                            accept="image/*"
                             onChange={(e) => setMachineFile(e.target.files?.[0] || null)}
                             className="h-8 text-xs border-zinc-700 bg-black text-zinc-100 file:text-zinc-300 file:bg-zinc-800"
                           />
@@ -779,50 +870,90 @@ export const GymAdminPage = () => {
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-[11px] text-zinc-500">Krótka specyfikacja / Strefa (opcjonalnie)</label>
-                        <Input 
-                          type="text" 
-                          placeholder="np. Strefa Cardio, obciążenie stosu do 120kg" 
-                          value={machineDesc} 
+                        <label className="text-[11px] text-zinc-500">
+                          Krótka specyfikacja / Strefa (opcjonalnie)
+                        </label>
+                        <Input
+                          type="text"
+                          placeholder="np. Strefa Cardio, obciążenie stosu do 120kg"
+                          value={machineDesc}
                           onChange={(e) => setMachineDesc(e.target.value)}
                           className="h-8 text-xs border-zinc-700 bg-black text-zinc-100 focus:border-sky-500"
                         />
                       </div>
 
-                      <Button type="submit" className="h-8 bg-emerald-600 hover:bg-emerald-500 text-white text-xs cursor-pointer px-4">
+                      <Button
+                        type="submit"
+                        className="h-8 bg-emerald-600 hover:bg-emerald-500 text-white text-xs cursor-pointer px-4"
+                      >
                         Zapisz sprzęt
                       </Button>
                     </form>
 
                     <div className="space-y-2">
-                      <p className="text-xs text-zinc-500 font-medium">Zarejestrowane maszyny ({equipment.length})</p>
+                      <p className="text-xs text-zinc-500 font-medium">
+                        Zarejestrowane maszyny ({equipment.length})
+                      </p>
                       {equipment && equipment.length > 0 ? (
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-1">
                           {equipment.map((eq) => (
-                            <div key={eq.id} className="relative group bg-zinc-900 border border-zinc-800 p-2.5 rounded-xl flex items-center gap-3 overflow-hidden">
+                            <div
+                              key={eq.id}
+                              className="relative group bg-zinc-900 border border-zinc-800 p-2.5 rounded-xl flex items-center gap-3 overflow-hidden"
+                            >
                               <div className="w-10 h-10 bg-black rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center text-[8px] text-zinc-600 border border-zinc-800">
-                                {eq.imageUrl ? <img src={eq.imageUrl} alt={eq.name} className="w-full h-full object-cover" /> : "Brak foto"}
+                                {eq.imageUrl ? (
+                                  <img
+                                    src={eq.imageUrl}
+                                    alt={eq.name}
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  "Brak foto"
+                                )}
                               </div>
                               <div className="min-w-0 flex-1">
-                                <h5 className="text-xs font-semibold text-zinc-200 truncate">{eq.name}</h5>
-                                {eq.description && <p className="text-[10px] text-zinc-400 truncate mt-0.5">{eq.description}</p>}
+                                <h5 className="text-xs font-semibold text-zinc-200 truncate">
+                                  {eq.name}
+                                </h5>
+                                {eq.description && (
+                                  <p className="text-[10px] text-zinc-400 truncate mt-0.5">
+                                    {eq.description}
+                                  </p>
+                                )}
                               </div>
-                              
+
                               <div className="absolute inset-0 bg-black/80 flex items-center justify-end pr-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                                <button 
+                                <button
                                   type="button"
                                   onClick={() => handleDeleteEquipment(eq.id, eq.name)}
                                   className="p-1.5 bg-red-600 hover:bg-red-500 text-white rounded-full transition-colors cursor-pointer shadow-md"
                                   title="Usuń maszynę z siłowni"
                                 >
-                                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="14"
+                                    height="14"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  >
+                                    <path d="M3 6h18"></path>
+                                    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                                    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                                  </svg>
                                 </button>
                               </div>
                             </div>
                           ))}
                         </div>
                       ) : (
-                        <p className="text-xs text-zinc-600 italic">Brak dodanych maszyn. Użyj formularza powyżej.</p>
+                        <p className="text-xs text-zinc-600 italic">
+                          Brak dodanych maszyn. Użyj formularza powyżej.
+                        </p>
                       )}
                     </div>
                   </div>

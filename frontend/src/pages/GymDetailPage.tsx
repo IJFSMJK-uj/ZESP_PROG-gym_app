@@ -23,13 +23,15 @@ L.Marker.prototype.options.icon = L.icon({
 
 const mapDayToIndex = (day: number) => day % 7;
 const minutesToTime = (minutes: number) => {
-  const h = Math.floor(minutes / 60).toString().padStart(2, "0");
+  const h = Math.floor(minutes / 60)
+    .toString()
+    .padStart(2, "0");
   const m = (minutes % 60).toString().padStart(2, "0");
   return `${h}:${m}`;
 };
 
-type OperatingHour = { dayOfWeek: number; openTime: number; closeTime: number; };
-type GymEquipment = { id: number; name: string; imageUrl?: string; description?: string; };
+type OperatingHour = { dayOfWeek: number; openTime: number; closeTime: number };
+type GymEquipment = { id: number; name: string; imageUrl?: string; description?: string };
 
 type Gym = {
   id: number;
@@ -46,15 +48,40 @@ type Gym = {
   operatingHours: OperatingHour[];
 };
 
-const DAYS_OF_WEEK = ["Niedziela", "Poniedziałek", "Wtorek", "Środa", "Czwartek", "Piątek", "Sobota"];
+const DAYS_OF_WEEK = [
+  "Niedziela",
+  "Poniedziałek",
+  "Wtorek",
+  "Środa",
+  "Czwartek",
+  "Piątek",
+  "Sobota",
+];
 
-const GymMap = ({ lat, lng, name, address }: { lat: number; lng: number; name: string; address: string; }) => {
+const GymMap = ({
+  lat,
+  lng,
+  name,
+  address,
+}: {
+  lat: number;
+  lng: number;
+  name: string;
+  address: string;
+}) => {
   return (
     <div className="h-[250px] w-full max-w-xl mx-auto rounded-xl overflow-hidden">
       <MapContainer center={[lat, lng]} zoom={15} className="h-full w-full z-0">
-        <TileLayer attribution="© OpenStreetMap" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+        <TileLayer
+          attribution="© OpenStreetMap"
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
         <Marker position={[lat, lng]}>
-          <Popup><strong>{name}</strong><br />{address}</Popup>
+          <Popup>
+            <strong>{name}</strong>
+            <br />
+            {address}
+          </Popup>
         </Marker>
       </MapContainer>
     </div>
@@ -76,12 +103,11 @@ export const GymDetailPage = () => {
   const mainImageInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
 
-
   const loadGym = async () => {
     try {
       if (!gymId) return;
       const data = await gymsService.getGymById(gymId);
-      
+
       if (data && data.error) {
         setError(data.error);
         setGym(null);
@@ -97,22 +123,30 @@ export const GymDetailPage = () => {
     }
   };
 
-  useEffect(() => { loadGym(); }, [gymId]);
+  useEffect(() => {
+    loadGym();
+  }, [gymId]);
 
   if (!isAuthenticated) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] p-4">
         <p className="text-lg text-white mb-4">Musisz się zalogować, aby zobaczyć tę stronę</p>
-        <Button variant="outline" onClick={() => navigate("/auth")}>Przejdź do logowania</Button>
+        <Button variant="outline" onClick={() => navigate("/auth")}>
+          Przejdź do logowania
+        </Button>
       </div>
     );
   }
 
   const handleSave = async () => {
-    setError(""); setSuccess("");
+    setError("");
+    setSuccess("");
     try {
       const data = await gymsService.selectGym(gym!.id);
-      if (data.error) { setError(data.error); return; }
+      if (data.error) {
+        setError(data.error);
+        return;
+      }
       updateUser({ gymId: gym!.id });
       setSuccess(data.message);
     } catch (err) {
@@ -120,12 +154,12 @@ export const GymDetailPage = () => {
     }
   };
 
-  const getToken = () => localStorage.getItem("token"); 
+  const getToken = () => localStorage.getItem("token");
 
   const uploadMainImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !gymId) return;
-    
+
     const formData = new FormData();
     formData.append("image", file);
 
@@ -135,9 +169,15 @@ export const GymDetailPage = () => {
         headers: { Authorization: `Bearer ${getToken()}` },
         body: formData,
       });
-      if (res.ok) { setSuccess("Zdjęcie główne zaktualizowane"); loadGym(); }
-      else { setError("Błąd wgrywania zdjęcia"); }
-    } catch { setError("Błąd połączenia"); }
+      if (res.ok) {
+        setSuccess("Zdjęcie główne zaktualizowane");
+        loadGym();
+      } else {
+        setError("Błąd wgrywania zdjęcia");
+      }
+    } catch {
+      setError("Błąd połączenia");
+    }
   };
 
   const uploadGallery = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -153,28 +193,40 @@ export const GymDetailPage = () => {
         headers: { Authorization: `Bearer ${getToken()}` },
         body: formData,
       });
-      if (res.ok) { setSuccess("Galeria zaktualizowana"); loadGym(); }
-      else { setError("Błąd wgrywania galerii"); }
-    } catch { setError("Błąd połączenia"); }
+      if (res.ok) {
+        setSuccess("Galeria zaktualizowana");
+        loadGym();
+      } else {
+        setError("Błąd wgrywania galerii");
+      }
+    } catch {
+      setError("Błąd połączenia");
+    }
   };
 
+  if (loading)
+    return (
+      <div className="flex items-center justify-center min-h-[60vh] text-white">Ładowanie...</div>
+    );
 
-  if (loading) return <div className="flex items-center justify-center min-h-[60vh] text-white">Ładowanie...</div>;
-  
-  if (error && !gym) return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh]">
-      <p className="text-red-400 text-xl mb-4">{error}</p>
-      <Button onClick={() => navigate("/gyms")} variant="outline" className="border-zinc-700 text-white hover:bg-zinc-800 cursor-pointer">
-        Powrót do mapy
-      </Button>
-    </div>
-  );
+  if (error && !gym)
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh]">
+        <p className="text-red-400 text-xl mb-4">{error}</p>
+        <Button
+          onClick={() => navigate("/gyms")}
+          variant="outline"
+          className="border-zinc-700 text-white hover:bg-zinc-800 cursor-pointer"
+        >
+          Powrót do mapy
+        </Button>
+      </div>
+    );
 
   if (!gym) return <p className="text-red-500 text-center mt-20">Nie znaleziono siłowni</p>;
 
   return (
     <div className="max-w-5xl mx-auto px-4 pb-20">
-      
       {/* SEKCJA ZDJĘCIA GŁÓWNEGO I NAGŁÓWKA */}
       <div className="relative w-full h-[300px] md:h-[400px] rounded-2xl overflow-hidden mt-10 shadow-2xl shadow-sky-900/20 border border-zinc-800">
         {gym.mainImage ? (
@@ -185,7 +237,9 @@ export const GymDetailPage = () => {
           </div>
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent flex flex-col justify-end p-8 pointer-events-none">
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-2 pointer-events-auto">{gym.name}</h1>
+          <h1 className="text-4xl md:text-5xl font-bold text-white mb-2 pointer-events-auto">
+            {gym.name}
+          </h1>
           <h2 className="text-lg text-sky-400 pointer-events-auto">{gym.address}</h2>
         </div>
       </div>
@@ -195,16 +249,20 @@ export const GymDetailPage = () => {
         <div className="flex justify-between items-end mb-6 border-b border-zinc-800 pb-2">
           <h2 className="text-2xl font-semibold text-white">Galeria</h2>
         </div>
-        
+
         {gym.gallery && gym.gallery.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {gym.gallery.map((imgSrc, idx) => (
-              <div 
-                key={idx} 
+              <div
+                key={idx}
                 className="aspect-square rounded-xl overflow-hidden cursor-pointer border border-zinc-800 hover:border-sky-500 transition-colors bg-zinc-900"
                 onClick={() => setLightboxIndex(idx)}
               >
-                <img src={imgSrc} alt="Galeria" className="w-full h-full object-cover hover:scale-105 transition-transform duration-300" />
+                <img
+                  src={imgSrc}
+                  alt="Galeria"
+                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                />
               </div>
             ))}
           </div>
@@ -226,16 +284,23 @@ export const GymDetailPage = () => {
         <div className="flex justify-between items-end mb-6 border-b border-zinc-800 pb-2">
           <h2 className="text-2xl font-semibold text-white">Wyposażenie i Sprzęt</h2>
         </div>
-        
+
         {gym.equipment && gym.equipment.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {gym.equipment.map((eq) => (
-              <div key={eq.id} className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl flex items-center gap-4">
+              <div
+                key={eq.id}
+                className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl flex items-center gap-4"
+              >
                 <div className="w-16 h-16 bg-black rounded-lg overflow-hidden flex-shrink-0">
                   {eq.imageUrl ? (
                     <img src={eq.imageUrl} alt={eq.name} className="w-full h-full object-cover" />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-[10px] text-zinc-500 border border-zinc-800 text-center">Brak<br/>zdjęcia</div>
+                    <div className="w-full h-full flex items-center justify-center text-[10px] text-zinc-500 border border-zinc-800 text-center">
+                      Brak
+                      <br />
+                      zdjęcia
+                    </div>
                   )}
                 </div>
                 <div>
@@ -263,7 +328,12 @@ export const GymDetailPage = () => {
         {gym.lat && gym.lng ? (
           <div>
             <GymMap lat={gym.lat} lng={gym.lng} name={gym.name} address={gym.address} />
-            <a href={`https://www.google.com/maps/search/?api=1&query=${gym.lat},${gym.lng}`} target="_blank" rel="noreferrer" className="text-sky-400 text-sm mt-4 inline-block hover:underline">
+            <a
+              href={`https://www.google.com/maps/search/?api=1&query=${gym.lat},${gym.lng}`}
+              target="_blank"
+              rel="noreferrer"
+              className="text-sky-400 text-sm mt-4 inline-block hover:underline"
+            >
               Otwórz w Google Maps
             </a>
           </div>
@@ -281,11 +351,18 @@ export const GymDetailPage = () => {
               {[...gym.operatingHours]
                 .sort((a, b) => a.dayOfWeek - b.dayOfWeek)
                 .map((hour) => (
-                <li key={hour.dayOfWeek} className="flex justify-between items-center text-zinc-300 text-sm border-b border-zinc-800/50 pb-2 last:border-0 last:pb-0">
-                  <span className="font-medium">{DAYS_OF_WEEK[mapDayToIndex(hour.dayOfWeek)]}</span>
-                  <span className="text-sky-400">{minutesToTime(hour.openTime)} - {minutesToTime(hour.closeTime)}</span>
-                </li>
-              ))}
+                  <li
+                    key={hour.dayOfWeek}
+                    className="flex justify-between items-center text-zinc-300 text-sm border-b border-zinc-800/50 pb-2 last:border-0 last:pb-0"
+                  >
+                    <span className="font-medium">
+                      {DAYS_OF_WEEK[mapDayToIndex(hour.dayOfWeek)]}
+                    </span>
+                    <span className="text-sky-400">
+                      {minutesToTime(hour.openTime)} - {minutesToTime(hour.closeTime)}
+                    </span>
+                  </li>
+                ))}
             </ul>
           ) : (
             <p className="text-zinc-500 text-center">Brak danych o godzinach otwarcia.</p>
@@ -294,21 +371,35 @@ export const GymDetailPage = () => {
       </div>
 
       <div className="flex flex-col items-center mt-12 mb-10">
-        {error && <div className="text-sm text-red-300 p-3 bg-red-500/10 rounded-xl mb-4 w-full max-w-md text-center">{error}</div>}
-        {success && <div className="text-sm text-emerald-300 p-3 bg-emerald-500/10 rounded-xl mb-4 w-full max-w-md text-center">{success}</div>}
+        {error && (
+          <div className="text-sm text-red-300 p-3 bg-red-500/10 rounded-xl mb-4 w-full max-w-md text-center">
+            {error}
+          </div>
+        )}
+        {success && (
+          <div className="text-sm text-emerald-300 p-3 bg-emerald-500/10 rounded-xl mb-4 w-full max-w-md text-center">
+            {success}
+          </div>
+        )}
 
         <div className="flex flex-wrap gap-4 justify-center">
           {user?.role !== "GYM_MANAGER" && (
-            <Button onClick={handleSave} className="bg-sky-500 hover:bg-sky-600 text-white shadow-lg shadow-sky-500/20 cursor-pointer">
+            <Button
+              onClick={handleSave}
+              className="bg-sky-500 hover:bg-sky-600 text-white shadow-lg shadow-sky-500/20 cursor-pointer"
+            >
               Ustaw jako moją siłownię
             </Button>
           )}
-          <Button onClick={() => navigate("/gyms")} variant="outline" className="border-zinc-700 hover:bg-zinc-800 text-white cursor-pointer">
+          <Button
+            onClick={() => navigate("/gyms")}
+            variant="outline"
+            className="border-zinc-700 hover:bg-zinc-800 text-white cursor-pointer"
+          >
             Powrót do mapy
           </Button>
         </div>
       </div>
-
     </div>
   );
 };

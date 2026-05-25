@@ -52,7 +52,7 @@ const TrainerRating = ({
 }) => {
   if (count === 0)
     return (
-      <span className={`text-sm text-sinc-500 flex justify-center ${className}`}>Brak ocen</span>
+      <span className={`text-sm text-zinc-500 flex justify-start ${className}`}>Brak ocen</span>
     );
 
   const roundedRating = Math.round(rating * 2) / 2;
@@ -174,21 +174,37 @@ export const TrainersPage = () => {
           {trainers.map((trainer) => (
             <Card
               key={trainer.assignmentId}
-              className="bg-zinc-950 border-zinc-800 rounded-2xl hover:border-sky-500/50 hover:shadow-[0_0_15px_rgba(14,165,233,0.15)] transition-all duration-300 pt-8 pb-6"
+              className="bg-zinc-950 border-zinc-800 rounded-2xl hover:border-sky-500/50 hover:shadow-[0_0_15px_rgba(14,165,233,0.15)] transition-all duration-300 pt-8 pb-6 flex flex-col justify-between"
             >
               <CardHeader>
                 <div className="flex items-center gap-4">
-                  <div className="w-18 h-18 rounded-full bg-zinc-800 flex items-center justify-center text-sky-400 font-bold text-xl uppercase">
-                    {(trainer.firstName || trainer.email)[0]}
+                  <div className="w-18 h-18 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-sky-400 font-bold text-xl uppercase overflow-hidden shrink-0">
+                    {trainer.profilePictureUrl ? (
+                      <img
+                        src={`http://localhost:3001${trainer.profilePictureUrl}`}
+                        alt={getDisplayName(trainer)}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = "none";
+                        }}
+                      />
+                    ) : (
+                      (trainer.firstName || trainer.email)[0]
+                    )}
                   </div>
                   <div>
-                    <CardTitle className="text-white text-xl">{getDisplayName(trainer)}</CardTitle>
+                    <CardTitle className="text-white text-xl line-clamp-1">
+                      {getDisplayName(trainer)}
+                    </CardTitle>
                     <TrainerRating
                       rating={trainer.averageRating}
                       count={trainer.reviewCount}
                       size={14}
+                      className="mt-0.5"
                     />
-                    <CardDescription className="text-zinc-500">{trainer.email}</CardDescription>
+                    <CardDescription className="text-zinc-500 text-xs truncate max-w-[150px] sm:max-w-[200px]">
+                      {trainer.email}
+                    </CardDescription>
                   </div>
                 </div>
               </CardHeader>
@@ -197,20 +213,19 @@ export const TrainersPage = () => {
                   <Button
                     variant="link"
                     onClick={() => setSelectedTrainer(trainer)}
-                    className="flex-auto bg-zinc-800 hover:bg-zinc-700 text-white cursor-pointer"
+                    className="flex-auto bg-zinc-800 hover:bg-zinc-700 text-white cursor-pointer text-xs"
                   >
                     Zobacz Profil
                   </Button>
 
                   <Button
                     variant="outline"
-                    className="flex-auto bg-zinc-800 hover:bg-zinc-700 text-white cursor-pointer"
+                    className="flex-auto bg-zinc-800 hover:bg-zinc-700 text-white cursor-pointer text-xs"
                     onClick={() => {
-                      // POPRAWKA: używamy obiektu "trainer" z mapowania, a nie stanu!
                       navigate(`/trainer/${trainer.assignmentId}/schedule`);
                     }}
                   >
-                    Sprawdź dostępność
+                    Dostępność
                   </Button>
                 </div>
               </CardContent>
@@ -218,6 +233,7 @@ export const TrainersPage = () => {
           ))}
         </div>
       )}
+
       <Dialog open={!!selectedTrainer} onOpenChange={(open) => !open && setSelectedTrainer(null)}>
         <DialogContent className="bg-black border border-zinc-800 text-white sm:max-w-md rounded-3xl max-h-[90vh] flex flex-col p-0 overflow-hidden">
           {selectedTrainer && (
@@ -226,9 +242,9 @@ export const TrainersPage = () => {
                 <div className="px-6 pt-6">
                   <DialogHeader className="flex flex-col items-center text-center space-y-4">
                     <div className="w-30 h-30 rounded-full bg-zinc-900 border-2 border-sky-500 flex items-center justify-center text-sky-400 font-bold text-4xl uppercase shadow-[0_0_20px_rgba(14,165,233,0.3)] overflow-hidden">
-                      {selectedTrainer.profileImageUrl ? (
+                      {selectedTrainer.profilePictureUrl ? (
                         <img
-                          src={selectedTrainer.profileImageUrl}
+                          src={`http://localhost:3001${selectedTrainer.profilePictureUrl}`}
                           alt="Profile"
                           className="w-full h-full object-cover"
                         />
@@ -253,8 +269,11 @@ export const TrainersPage = () => {
                       </DialogDescription>
                     </div>
                     {selectedTrainer.tags && selectedTrainer.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-2 mt-4">
-                        {selectedTrainer.tags.map((tag, idx) => (
+                      <div className="flex flex-wrap gap-2 mt-4 justify-center">
+                        {(Array.isArray(selectedTrainer.tags)
+                          ? selectedTrainer.tags
+                          : JSON.parse((selectedTrainer.tags as string) || "[]")
+                        ).map((tag: string, idx: number) => (
                           <span
                             key={idx}
                             className="px-2 py-1 text-xs rounded-md bg-zinc-800 text-zinc-300 border border-zinc-700"
@@ -271,7 +290,7 @@ export const TrainersPage = () => {
                           href={selectedTrainer.socialFacebook}
                           target="_blank"
                           rel="noreferrer"
-                          className="text-zinc-400 hover:text-sky-500"
+                          className="text-zinc-400 hover:text-sky-500 text-sm"
                         >
                           Facebook
                         </a>
@@ -281,13 +300,13 @@ export const TrainersPage = () => {
                           href={selectedTrainer.socialInstagram}
                           target="_blank"
                           rel="noreferrer"
-                          className="text-zinc-400 hover:text-pink-500"
+                          className="text-zinc-400 hover:text-pink-500 text-sm"
                         >
                           Instagram
                         </a>
                       )}
                       {selectedTrainer.socialDiscord && (
-                        <span className="text-zinc-400" title="Discord">
+                        <span className="text-zinc-400 text-sm" title="Discord">
                           Discord: {selectedTrainer.socialDiscord}
                         </span>
                       )}
@@ -300,8 +319,8 @@ export const TrainersPage = () => {
                     <h3 className="text-sm font-semibold text-zinc-300 mb-2 uppercase tracking-wider">
                       O mnie
                     </h3>
-                    <p className="text-sm text-zinc-500 leading-relaxed">
-                      {selectedTrainer.bio || "Ten trener nie dodał jeszcze opisu."}
+                    <p className="text-sm text-zinc-400 leading-relaxed">
+                      {selectedTrainer.bio || "Ten trainer nie dodał jeszcze opisu."}
                     </p>
                   </div>
 
@@ -344,12 +363,12 @@ export const TrainersPage = () => {
                 <Button
                   variant="outline"
                   onClick={() => setSelectedTrainer(null)}
-                  className="flex-auto border-zinc-700 hover:bg-zinc-800 cursor-pointer"
+                  className="flex-auto border-zinc-700 hover:bg-zinc-800 cursor-pointer text-sm"
                 >
                   Zamknij
                 </Button>
                 <Button
-                  className="flex-auto bg-sky-600 hover:bg-sky-500 text-white font-bold cursor-pointer"
+                  className="flex-auto bg-sky-600 hover:bg-sky-500 text-white font-bold cursor-pointer text-sm"
                   onClick={() => {
                     navigate(`/trainer/${selectedTrainer.assignmentId}/schedule`);
                     setSelectedTrainer(null);

@@ -3,10 +3,28 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import prisma from "../lib/prisma";
 import crypto from "crypto";
+import multer from "multer";
+import path from "path";
+import fs from "fs";
 import { sendVerificationEmail, sendPasswordResetEmail } from "../lib/mailer";
 
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || "jwt_x";
+
+const profileStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const dir = path.join(__dirname, "../uploads/profiles");
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    cb(null, dir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    cb(null, "profile-" + uniqueSuffix + path.extname(file.originalname));
+  },
+});
+const uploadProfile = multer({ storage: profileStorage });
 
 export const requireAuth = (req: any, res: any, next: any) => {
   const token = req.headers.authorization?.split(" ")[1];
@@ -361,6 +379,69 @@ router.post("/change-password", async (req, res) => {
     res.json({ message: "Hasło zostało zmienione pomyślnie." });
   } catch (error) {
     res.status(500).json({ error: "Błąd podczas zmiany hasła." });
+  }
+});
+
+router.post(
+  "/profile/image",
+  requireAuth,
+  uploadProfile.single("image"),
+  async (req: any, res: any) => {
+    if (!req.file) return res.status(400).json({ error: "Nie przesłano pliku" });
+
+    try {
+      const user = await prisma.user.findUnique({
+        where: { id: req.userId },
+        include: { trainerProfile: true },
+      });
+
+      if (!user || !user.trainerProfile) {
+        return res.status(404).json({ error: "Brak profilu trenera" });
+      }
+
+      const imageUrl = `/uploads/profiles/${req.file.filename}`;
+
+      if (user.trainerProfile.profileImageUrl) {
+        const oldPath = path.join(__dirname, "..", user.trainerProfile.profileImageUrl);
+        if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+      }
+
+      await prisma.trainerProfile.update({
+        where: { id: user.trainerProfile.id },
+        data: { profileImageUrl: imageUrl },
+      });
+
+      res.json({ message: "Zdjęcie zaktualizowane", profileImageUrl: imageUrl });
+    } catch (error) {
+      res.status(500).json({ error: "Błąd podczas zapisywania zdjęcia" });
+    }
+  }
+);
+
+router.delete("/profile/image", requireAuth, async (req: any, res: any) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.userId },
+      include: { trainerProfile: true },
+    });
+
+    if (!user || !user.trainerProfile) {
+      return res.status(404).json({ error: "Brak profilu trenera" });
+    }
+
+    if (user.trainerProfile.profileImageUrl) {
+      const filePath = path.join(__dirname, "..", user.trainerProfile.profileImageUrl);
+      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+    }
+
+    await prisma.trainerProfile.update({
+      where: { id: user.trainerProfile.id },
+      data: { profileImageUrl: null },
+    });
+
+    res.json({ message: "Zdjęcie profilowe zostało usunięte" });
+  } catch (error) {
+    res.status(500).json({ error: "Błąd podczas usuwania zdjęcia" });
   }
 });
 

@@ -189,6 +189,48 @@ const checkTrainerConflicts = async (
   return `Trener(zy): ${trainerNames} mają już zajęcia w tym terminie`;
 };
 
+const checkRoomConflicts = async (
+  roomId: number,
+  dayOfWeek: number,
+  startTime: number,
+  endTime: number,
+  excludeClassId?: number
+): Promise<string | null> => {
+  const conflict = await prisma.groupClass.findFirst({
+    where: {
+      roomId,
+      dayOfWeek,
+
+      AND: [
+        {
+          startTime: {
+            lt: endTime,
+          },
+        },
+        {
+          endTime: {
+            gt: startTime,
+          },
+        },
+      ],
+
+      ...(excludeClassId
+        ? {
+            NOT: {
+              id: excludeClassId,
+            },
+          }
+        : {}),
+    },
+  });
+
+  if (!conflict) {
+    return null;
+  }
+
+  return "Sala jest już zajęta w tym terminie";
+};
+
 const validateClassData = (body: Record<string, unknown>): ValidateResult => {
   const name = typeof body.name === "string" ? body.name.trim() : "";
 
@@ -567,6 +609,21 @@ router.post("/gyms/:gymId/schedule", requireAuth, async (req: AuthRequest, res: 
     }
 
     if (roomId !== null) {
+      const roomConflict = await checkRoomConflicts(
+        roomId,
+        classData.dayOfWeek,
+        classData.startTime,
+        classData.endTime
+      );
+
+      if (roomConflict) {
+        return res.status(400).json({
+          error: roomConflict,
+        });
+      }
+    }
+
+    if (roomId !== null) {
       const roomValid = await ensureRoomBelongsToGym(roomId, gymId);
       if (!roomValid) {
         return res.status(400).json({ error: "Sala nie należy do tej siłowni" });
@@ -694,6 +751,22 @@ router.patch(
         if (conflictError) {
           return res.status(400).json({
             error: conflictError,
+          });
+        }
+      }
+
+      if (roomId !== null) {
+        const roomConflict = await checkRoomConflicts(
+          roomId,
+          classData.dayOfWeek,
+          classData.startTime,
+          classData.endTime,
+          classId
+        );
+
+        if (roomConflict) {
+          return res.status(400).json({
+            error: roomConflict,
           });
         }
       }

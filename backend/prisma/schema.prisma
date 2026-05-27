@@ -67,6 +67,12 @@ model TrainerProfile {
   bio         String?
   phoneNumber String?
 
+  profileImageUrl String?
+  tags            String[]
+  socialFacebook  String?
+  socialInstagram String?
+  socialDiscord   String?
+
   assignments TrainerAssignment[]
 }
 

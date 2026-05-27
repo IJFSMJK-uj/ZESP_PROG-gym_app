@@ -326,21 +326,19 @@ router.get("/gyms/:gymId/schedule", requireAuth, async (req: AuthRequest, res: R
   }
 });
 
+// GET - grafik dla klienta
 router.get("/gyms/:gymId/classes", requireAuth, async (req: AuthRequest, res: Response) => {
   const gymId = parseId(req.params.gymId);
+  if (!gymId) return res.status(400).json({ error: "Nieprawidłowe ID siłowni" });
 
-  if (!gymId) {
-    return res.status(400).json({
-      error: "Nieprawidłowe ID siłowni",
-    });
-  }
+  const from = req.query.from ? new Date(req.query.from as string) : new Date();
+  const to = req.query.to
+    ? new Date(req.query.to as string)
+    : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
   try {
     const classes = await prisma.groupClass.findMany({
-      where: {
-        gymId,
-        isActive: true,
-      },
+      where: { gymId, isActive: true },
       include: {
         room: true,
         instructors: {
@@ -348,35 +346,136 @@ router.get("/gyms/:gymId/classes", requireAuth, async (req: AuthRequest, res: Re
             assignment: {
               include: {
                 trainerProfile: {
-                  select: {
-                    firstName: true,
-                    lastName: true,
-                  },
+                  select: { firstName: true, lastName: true },
                 },
               },
             },
           },
         },
+        enrollments: {
+          where: {
+            date: { gte: from, lte: to },
+          },
+          select: { userId: true, date: true },
+        },
       },
-      orderBy: [
-        {
-          dayOfWeek: "asc",
-        },
-        {
-          startTime: "asc",
-        },
-      ],
+      orderBy: [{ dayOfWeek: "asc" }, { startTime: "asc" }],
     });
 
-    return res.json(classes);
+    const result = classes.map(({ enrollments, ...cls }) => {
+      const jsTarget = cls.dayOfWeek === 7 ? 0 : cls.dayOfWeek;
+      const now = new Date();
+      const jsDay = now.getDay();
+      let daysUntil = (jsTarget - jsDay + 7) % 7;
+      const currentMinutes = now.getHours() * 60 + now.getMinutes();
+      if (daysUntil === 0 && cls.startTime <= currentMinutes) daysUntil = 7;
+
+      const upcomingDate = new Date(now);
+      upcomingDate.setDate(now.getDate() + daysUntil);
+      upcomingDate.setHours(0, 0, 0, 0);
+
+      const enrollmentsForDate = enrollments.filter((e) => {
+        const eDate = new Date(e.date);
+        return (
+          eDate.getFullYear() === upcomingDate.getFullYear() &&
+          eDate.getMonth() === upcomingDate.getMonth() &&
+          eDate.getDate() === upcomingDate.getDate()
+        );
+      });
+
+      const isEnrolled = enrollmentsForDate.some((e) => e.userId === req.userId);
+
+      return {
+        ...cls,
+        enrolledCount: enrollmentsForDate.length,
+        isEnrolled,
+      };
+    });
+
+    return res.json(result);
   } catch (error) {
     console.error(error);
-
-    return res.status(500).json({
-      error: "Nie udało się pobrać zajęć",
-    });
+    return res.status(500).json({ error: "Nie udało się pobrać grafiku" });
   }
 });
+
+// POST - zapisz się
+router.post(
+  "/gyms/:gymId/classes/:classId/enroll",
+  requireAuth,
+  async (req: AuthRequest, res: Response) => {
+    const gymId = parseId(req.params.gymId);
+    const classId = parseId(req.params.classId);
+    if (!gymId || !classId) return res.status(400).json({ error: "Nieprawidłowe dane" });
+
+    const { date } = req.body;
+    if (!date) return res.status(400).json({ error: "Podaj datę zajęć" });
+
+    const enrollDate = new Date(date);
+    if (isNaN(enrollDate.getTime())) return res.status(400).json({ error: "Nieprawidłowa data" });
+
+    // sprawdź czy zostało mniej niż 48h
+    const hoursUntil = (enrollDate.getTime() - Date.now()) / (1000 * 60 * 60);
+    if (hoursUntil > 48)
+      return res.status(400).json({ error: "Zapisy otwierają się 48h przed zajęciami" });
+    if (hoursUntil < 0)
+      return res.status(400).json({ error: "Nie można zapisać się na minione zajęcia" });
+
+    try {
+      const groupClass = await prisma.groupClass.findFirst({
+        where: { id: classId, gymId, isActive: true },
+        include: { _count: { select: { enrollments: true } } },
+      });
+
+      if (!groupClass) return res.status(404).json({ error: "Nie znaleziono zajęć" });
+
+      if (groupClass.capacity && groupClass._count.enrollments >= groupClass.capacity) {
+        return res.status(400).json({ error: "Brak wolnych miejsc" });
+      }
+
+      await prisma.groupClassEnrollment.create({
+        data: { classId, userId: req.userId, date: enrollDate },
+      });
+
+      return res.status(201).json({ message: "Zapisano na zajęcia" });
+    } catch (error: any) {
+      if (error?.code === "P2002") {
+        return res.status(400).json({ error: "Jesteś już zapisany na te zajęcia" });
+      }
+      console.error(error);
+      return res.status(500).json({ error: "Nie udało się zapisać na zajęcia" });
+    }
+  }
+);
+
+// DELETE - wypisz się
+router.delete(
+  "/gyms/:gymId/classes/:classId/enroll",
+  requireAuth,
+  async (req: AuthRequest, res: Response) => {
+    const gymId = parseId(req.params.gymId);
+    const classId = parseId(req.params.classId);
+    if (!gymId || !classId) return res.status(400).json({ error: "Nieprawidłowe dane" });
+
+    const { date } = req.body;
+    if (!date) return res.status(400).json({ error: "Podaj datę zajęć" });
+
+    try {
+      await prisma.groupClassEnrollment.delete({
+        where: {
+          classId_userId_date: {
+            classId,
+            userId: req.userId,
+            date: new Date(date),
+          },
+        },
+      });
+      return res.json({ message: "Wypisano z zajęć" });
+    } catch {
+      return res.status(404).json({ error: "Nie jesteś zapisany na te zajęcia" });
+    }
+  }
+);
 
 router.post("/gyms/:gymId/schedule", requireAuth, async (req: AuthRequest, res: Response) => {
   const gymId = parseId(req.params.gymId);

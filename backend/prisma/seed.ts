@@ -56,6 +56,11 @@ const TRAINERS_DATA = [
     bio: "Specjalista od trójboju siłowego. Pomogę Ci dźwigać więcej!",
     phoneNumber: "+48 111 222 333",
     worksAt: ["Gym Central Wadowicka", "Gym Central Norymberska"], // Pracuje w dwóch!
+    profileImageUrl: "/uploads/profiles/profile-1779718925481-899452181.jpeg",
+    socialFacebook: "https://www.facebook.com/jan.kowalski",
+    socialInstagram: "https://www.instagram.com/jan.kowalski",
+    socialDiscord: "JanKowalski#1234",
+    tags: ["trójbój siłowy", "siła", "powerlifting"],
   },
   {
     email: "trener.anna@gymapp.pl",
@@ -64,6 +69,11 @@ const TRAINERS_DATA = [
     bio: "Trenerka fitness i dietetyk. Skupiamy się na mobilności.",
     phoneNumber: "+48 444 555 666",
     worksAt: ["Gym Central Norymberska"], // Tylko jedna siłownia
+    profileImageUrl: "/uploads/profiles/profile-1779718860088-265273304.jpeg",
+    socialFacebook: "https://www.facebook.com/anna.nowak",
+    socialInstagram: "https://www.instagram.com/anna.nowak",
+    socialDiscord: "AnnaNowak#1234",
+    tags: ["fitness", "dietetyka", "mobilność"],
   },
   {
     email: "trener.pawel@gymapp.pl",

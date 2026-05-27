@@ -433,6 +433,37 @@ router.post(
         return res.status(400).json({ error: "Brak wolnych miejsc" });
       }
 
+      const enrollDay = enrollDate.getDay() === 0 ? 7 : enrollDate.getDay();
+
+      const reservations = await prisma.trainerReservation.findMany({
+        where: {
+          userId: req.userId,
+          status: "CONFIRMED",
+
+          startHour: {
+            lt: groupClass.endTime / 60,
+          },
+
+          endHour: {
+            gt: groupClass.startTime / 60,
+          },
+        },
+      });
+
+      const conflictingReservation = reservations.find((reservation) => {
+        const reservationDate = new Date(reservation.date);
+
+        const reservationDay = reservationDate.getDay() === 0 ? 7 : reservationDate.getDay();
+
+        return reservationDay === enrollDay;
+      });
+
+      if (conflictingReservation) {
+        return res.status(409).json({
+          error: "Masz już trening indywidualny w tym terminie",
+        });
+      }
+
       await prisma.groupClassEnrollment.create({
         data: { classId, userId: req.userId, date: enrollDate },
       });

@@ -49,6 +49,7 @@ export default function TrainerSchedulePage() {
   const [successKey, setSuccessKey] = useState<string | null>(null);
   const [errorKey, setErrorKey] = useState<string | null>(null);
   const [nextAvailable, setNextAvailable] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const findNextAvailable = (schedule: Record<number, Slot[]>) => {
     for (let day = 0; day < 7; day++) {
@@ -339,9 +340,7 @@ export default function TrainerSchedulePage() {
                           )}
 
                           {errorKey === bookingKey && (
-                            <span className="text-red-400 text-xs mt-1">
-                              Termin został już zarezerwowany
-                            </span>
+                            <span className="text-red-400 text-xs mt-1 ml-3">{errorMessage}</span>
                           )}
 
                           <Button
@@ -374,10 +373,16 @@ export default function TrainerSchedulePage() {
                                   }
                                 );
 
+                                const data = await res.json();
+
                                 if (!res.ok) {
+                                  setErrorMessage(data.error || "Błąd rezerwacji");
                                   setErrorKey(bookingKey);
                                   await fetchSchedule();
-                                  setTimeout(() => setErrorKey(null), 3000);
+                                  setTimeout(() => {
+                                    setErrorKey(null);
+                                    setErrorMessage("");
+                                  }, 3000);
                                   return;
                                 }
 

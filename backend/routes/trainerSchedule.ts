@@ -183,6 +183,32 @@ router.post("/", requireAuth, async (req: any, res) => {
       });
     }
 
+    const reservationDay = reservationDate.getDay() === 0 ? 7 : reservationDate.getDay();
+
+    const conflictingGroupEnrollment = await prisma.groupClassEnrollment.findFirst({
+      where: {
+        userId,
+
+        groupClass: {
+          dayOfWeek: reservationDay,
+
+          startTime: {
+            lt: endHour * 60,
+          },
+
+          endTime: {
+            gt: startHour * 60,
+          },
+        },
+      },
+    });
+
+    if (conflictingGroupEnrollment) {
+      return res.status(409).json({
+        error: "Masz już zajęcia grupowe w tym terminie",
+      });
+    }
+
     const existing = await prisma.trainerReservation.findFirst({
       where: {
         assignmentId: assignmentIdNum,

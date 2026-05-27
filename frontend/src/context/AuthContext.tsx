@@ -17,6 +17,11 @@ export interface User {
     lastName: string | null;
     bio: string | null;
     phoneNumber: string | null;
+    profileImageUrl: string | null;
+    tags: string[];
+    socialFacebook: string | null;
+    socialInstagram: string | null;
+    socialDiscord: string | null;
   };
 }
 

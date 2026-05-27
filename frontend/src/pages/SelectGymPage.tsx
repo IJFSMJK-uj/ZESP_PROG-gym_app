@@ -193,9 +193,9 @@ export const SelectGymPage = () => {
             >
               {/* ZDJĘCIE W LEWYM MENU */}
               {gym.mainImage ? (
-                <img 
-                  src={gym.mainImage} 
-                  alt={gym.name} 
+                <img
+                  src={gym.mainImage}
+                  alt={gym.name}
                   className="w-full h-24 object-cover rounded-md mb-2 border border-zinc-700"
                 />
               ) : (
@@ -203,7 +203,7 @@ export const SelectGymPage = () => {
                   <span className="text-zinc-500 text-xs">Brak zdjęcia</span>
                 </div>
               )}
-              
+
               <p className="text-white font-medium text-sm">{gym.name}</p>
               <p className="text-zinc-400 text-xs mt-1">{gym.address}</p>
               <Link
@@ -232,14 +232,14 @@ export const SelectGymPage = () => {
           {gyms
             .filter((gym) => gym.lat && gym.lng)
             .map((gym) => (
-             <Marker key={gym.id} position={[gym.lat!, gym.lng!]}>
+              <Marker key={gym.id} position={[gym.lat!, gym.lng!]}>
                 <Popup>
                   <div className="flex flex-col gap-1 min-w-[150px] max-w-[200px]">
                     {/* ZDJĘCIE W POP-UPIE MAPY */}
                     {gym.mainImage ? (
-                      <img 
-                        src={gym.mainImage} 
-                        alt={gym.name} 
+                      <img
+                        src={gym.mainImage}
+                        alt={gym.name}
                         className="w-full h-20 object-cover rounded mb-1 border border-gray-300"
                       />
                     ) : (
@@ -247,7 +247,7 @@ export const SelectGymPage = () => {
                         <span className="text-gray-500 text-xs">Brak zdjęcia</span>
                       </div>
                     )}
-                    
+
                     <strong>{gym.name}</strong>
                     <span className="text-xs text-gray-500">{gym.address}</span>
                     <button

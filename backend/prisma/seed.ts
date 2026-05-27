@@ -56,6 +56,11 @@ const TRAINERS_DATA = [
     bio: "Specjalista od trójboju siłowego. Pomogę Ci dźwigać więcej!",
     phoneNumber: "+48 111 222 333",
     worksAt: ["Gym Central Wadowicka", "Gym Central Norymberska"], // Pracuje w dwóch!
+    profileImageUrl: "/uploads/profiles/profile-1779718925481-899452181.jpeg",
+    socialFacebook: "https://www.facebook.com/jan.kowalski",
+    socialInstagram: "https://www.instagram.com/jan.kowalski",
+    socialDiscord: "JanKowalski#1234",
+    tags: ["trójbój siłowy", "siła", "powerlifting"],
   },
   {
     email: "trener.anna@gymapp.pl",
@@ -64,6 +69,11 @@ const TRAINERS_DATA = [
     bio: "Trenerka fitness i dietetyk. Skupiamy się na mobilności.",
     phoneNumber: "+48 444 555 666",
     worksAt: ["Gym Central Norymberska"], // Tylko jedna siłownia
+    profileImageUrl: "/uploads/profiles/profile-1779718860088-265273304.jpeg",
+    socialFacebook: "https://www.facebook.com/anna.nowak",
+    socialInstagram: "https://www.instagram.com/anna.nowak",
+    socialDiscord: "AnnaNowak#1234",
+    tags: ["fitness", "dietetyka", "mobilność"],
   },
   {
     email: "trener.pawel@gymapp.pl",
@@ -182,10 +192,23 @@ async function seedGyms(): Promise<Record<string, number>> {
 async function seedTrainers(passwordHash: string, gymMap: Record<string, number>) {
   console.log("⚙️ Creating trainers & schedules...");
   for (const trainerData of TRAINERS_DATA) {
-    // Tworzymy Usera i TrainerProfile
     const user = await prisma.user.upsert({
       where: { email: trainerData.email },
-      update: {},
+      update: {
+        trainerProfile: {
+          update: {
+            firstName: trainerData.firstName,
+            lastName: trainerData.lastName,
+            bio: trainerData.bio,
+            phoneNumber: trainerData.phoneNumber,
+            profileImageUrl: trainerData.profileImageUrl,
+            socialFacebook: trainerData.socialFacebook,
+            socialInstagram: trainerData.socialInstagram,
+            socialDiscord: trainerData.socialDiscord,
+            tags: trainerData.tags,
+          },
+        },
+      },
       create: {
         email: trainerData.email,
         password: passwordHash,
@@ -197,6 +220,11 @@ async function seedTrainers(passwordHash: string, gymMap: Record<string, number>
             lastName: trainerData.lastName,
             bio: trainerData.bio,
             phoneNumber: trainerData.phoneNumber,
+            profileImageUrl: trainerData.profileImageUrl,
+            socialFacebook: trainerData.socialFacebook,
+            socialInstagram: trainerData.socialInstagram,
+            socialDiscord: trainerData.socialDiscord,
+            tags: trainerData.tags,
           },
         },
       },
@@ -603,8 +631,9 @@ async function seedReviews() {
     });
   }
 }
+
 async function seedStandardEquipment() {
-  console.log("Seedowanie słownika maszyn standardowych...");
+  console.log("⚙️ Creating standard gym equipment...");
 
   const standardMachines = [
     { name: "Sztanga olimpijska", imageUrl: "/uploads/standard_equip/barbells.webp" },
@@ -657,13 +686,11 @@ async function seedStandardEquipment() {
       },
     });
   }
-
-  console.log("Słownik maszyn został zaktualizowany!");
 }
+
 async function main() {
   console.log("⚙️ Seeding database...");
 
-  // drugi argument bcrypt.hash - 10, musi być taki sam jak w backend/routes/auth w router.post("register")
   const passwordHash = await bcrypt.hash("password", 10);
 
   await seedAdmins(passwordHash);

@@ -120,6 +120,54 @@ const checkTrainerConflicts = async (
     },
   });
 
+  const reservationConflicts = await prisma.trainerReservation.findMany({
+    where: {
+      assignmentId: {
+        in: instructorIds,
+      },
+
+      status: "CONFIRMED",
+    },
+
+    include: {
+      assignment: {
+        include: {
+          trainerProfile: true,
+        },
+      },
+    },
+  });
+
+  const conflictingReservations = reservationConflicts.filter((reservation) => {
+    const reservationDate = new Date(reservation.date);
+
+    const reservationDay = reservationDate.getDay() === 0 ? 7 : reservationDate.getDay();
+
+    return (
+      reservationDay === dayOfWeek &&
+      reservation.startHour * 60 < endTime &&
+      reservation.endHour * 60 > startTime
+    );
+  });
+
+  if (conflictingReservations.length > 0) {
+    const trainerNames = conflictingReservations
+      .map((conflict) => {
+        const profile = conflict.assignment?.trainerProfile;
+
+        if (!profile) {
+          return null;
+        }
+
+        return `${profile.firstName} ${profile.lastName}`;
+      })
+      .filter((name): name is string => Boolean(name))
+      .filter((name, index, array) => array.indexOf(name) === index)
+      .join(", ");
+
+    return `Trener/Trenerzy: ${trainerNames} mają już trening indywidualny w tym terminie`;
+  }
+
   if (conflicts.length === 0) {
     return null;
   }

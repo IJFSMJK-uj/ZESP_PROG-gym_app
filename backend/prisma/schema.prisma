@@ -39,6 +39,8 @@ model User {
   cancelledReservations TrainerReservation[] @relation("CancelledReservations")
   createdInvites        GymInviteTrainer[]   @relation("CreatedInvites")
   usedInvites           GymInviteTrainer[]   @relation("UsedInvites")
+
+  groupClassEnrollments GroupClassEnrollment[]
 }
 
 model MemberProfile {
@@ -243,8 +245,28 @@ model GroupClass {
 
   instructors GroupClassInstructor[]
 
+  enrollments GroupClassEnrollment[]
+
   @@index([gymId, dayOfWeek])
   @@index([roomId])
+}
+
+model GroupClassEnrollment {
+  id Int @id @default(autoincrement())
+
+  groupClass   GroupClass @relation(fields: [classId], references: [id], onDelete: Cascade)
+  classId      Int
+
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId Int
+
+  date      DateTime
+
+  createdAt DateTime @default(now())
+
+  @@unique([classId, userId, date])
+  @@index([classId])
+  @@index([userId])
 }
 
 model GroupClassInstructor {

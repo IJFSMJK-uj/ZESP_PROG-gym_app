@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { authService } from "../api/authService";
 import { useAuth } from "../context/AuthContext";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
+import { Trash2, ImagePlus } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 
 export const ProfilePage = () => {
@@ -14,6 +15,14 @@ export const ProfilePage = () => {
   const [editingUsername, setEditingUsername] = useState(false);
   const [role, setRole] = useState("MEMBER");
   const [gym, setGym] = useState<any>(null);
+
+  const [profilePictureUrl, setProfilePictureUrl] = useState("");
+  const profileImageInputRef = useRef<HTMLInputElement>(null);
+  const [bio, setBio] = useState("");
+  const [tags, setTags] = useState("");
+  const [facebookUrl, setFacebookUrl] = useState("");
+  const [instagramUrl, setInstagramUrl] = useState("");
+  const [discordUsername, setDiscordUsername] = useState("");
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -33,6 +42,13 @@ export const ProfilePage = () => {
         setUsername(data.username || "");
         setRole(data.role || "MEMBER");
         setGym(data.gym);
+
+        setProfilePictureUrl(data.profilePictureUrl || "");
+        setBio(data.bio || "");
+        setTags(data.tags ? data.tags.join(", ") : "");
+        setFacebookUrl(data.facebookUrl || "");
+        setInstagramUrl(data.instagramUrl || "");
+        setDiscordUsername(data.discordUsername || "");
       } catch {
         setError("Nie udało się pobrać profilu");
       } finally {
@@ -76,9 +92,21 @@ export const ProfilePage = () => {
     setSuccess("");
     if (!validate()) return;
 
-    const dataToUpdate: { email?: string; username?: string } = {};
+    const dataToUpdate: any = {};
     if (editingEmail) dataToUpdate.email = email;
     if (editingUsername) dataToUpdate.username = username;
+
+    if (role === "TRAINER") {
+      dataToUpdate.profilePictureUrl = profilePictureUrl;
+      dataToUpdate.bio = bio;
+      dataToUpdate.tags = tags
+        .split(",")
+        .map((t) => t.trim())
+        .filter((t) => t !== "");
+      dataToUpdate.facebookUrl = facebookUrl;
+      dataToUpdate.instagramUrl = instagramUrl;
+      dataToUpdate.discordUsername = discordUsername;
+    }
 
     if (Object.keys(dataToUpdate).length === 0) {
       setError("Kliknij w pole które chcesz zmienić");
@@ -123,6 +151,54 @@ export const ProfilePage = () => {
       setError("Nie udało się wysłać prośby o zmianę hasła.");
     } finally {
       setResetLoading(false);
+    }
+  };
+
+  const handleUploadProfileImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("image", file);
+
+    setError("");
+    setSuccess("");
+    try {
+      const res = await fetch("http://localhost:3001/api/auth/profile/image", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        body: formData,
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setProfilePictureUrl(data.profileImageUrl);
+        setSuccess("Zdjęcie profilowe zostało pomyślnie zaktualizowane.");
+      } else {
+        setError("Błąd podczas wgrywania zdjęcia profilowego.");
+      }
+    } catch {
+      setError("Błąd połączenia z serwerem.");
+    }
+  };
+
+  const handleDeleteProfileImage = async () => {
+    if (!window.confirm("Czy na pewno chcesz usunąć swoje zdjęcie profilowe?")) return;
+    setError("");
+    setSuccess("");
+    try {
+      const res = await fetch("http://localhost:3001/api/auth/profile/image", {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
+      if (res.ok) {
+        setProfilePictureUrl(""); // Wyczyść podgląd
+        setSuccess("Zdjęcie profilowe zostało usunięte.");
+      } else {
+        setError("Błąd podczas usuwania zdjęcia.");
+      }
+    } catch {
+      setError("Błąd połączenia z serwerem.");
     }
   };
 
@@ -262,37 +338,139 @@ export const ProfilePage = () => {
             </div>
           )}
 
-          {/* {role === "GYM_MANAGER" && (
-            <div className="space-y-2">
-              <label className="text-xs uppercase text-zinc-400">Ustawienia siłowni</label>
-              <Link
-                to="/gym/admin"
-                className="flex items-center justify-between w-full p-3 rounded-xl bg-zinc-900 border border-zinc-700 hover:border-sky-500 transition-colors cursor-pointer"
-              >
-                <div>
-                  <p className="text-white font-medium">Godziny otwarcia i adres</p>
-                  <p className="text-zinc-400 text-xs">
-                    Zarządzaj lokalizacją i godzinami pracy siłowni
-                  </p>
-                </div>
-                <span className="text-sky-400 text-xs">Edytuj</span>
-              </Link>
-            </div>
-          )} */}
-
+          {/* SEKCJA TRENERA */}
           {role === "TRAINER" && (
-            <div className="space-y-2">
-              <label className="text-xs uppercase text-zinc-400">Dostępność trenera</label>
-              <Link
-                to="/trainer/availability"
-                className="flex items-center justify-between w-full p-3 rounded-xl bg-zinc-900 border border-zinc-700 hover:border-sky-500 transition-colors cursor-pointer"
-              >
-                <div>
-                  <p className="text-white font-medium">Ustaw godziny dostępności</p>
-                  <p className="text-zinc-400 text-xs">Dodaj dni i godziny pracy</p>
+            <div className="space-y-4 pt-4 border-t border-zinc-800">
+              <h3 className="text-sm font-semibold text-zinc-300 uppercase tracking-wider">
+                Twój Profil Trenera
+              </h3>
+
+              {/* ZDJĘCIE PROFILOWE */}
+              <div className="flex flex-col gap-3 bg-zinc-900/40 p-4 rounded-2xl border border-zinc-800/60">
+                <p className="text-xs uppercase text-zinc-400 font-bold tracking-wide">
+                  Zdjęcie profilowe
+                </p>
+                <div className="flex flex-col sm:flex-row items-center gap-4">
+                  {/* Okrągły podgląd zdjęcia z ukrytym przyciskiem usuwania */}
+                  <div className="relative group w-24 h-24 bg-zinc-950 rounded-full overflow-hidden border border-zinc-700 flex items-center justify-center text-xs text-zinc-500 shrink-0">
+                    {profilePictureUrl ? (
+                      <>
+                        <img
+                          src={profilePictureUrl}
+                          alt="Profil trenera"
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-black/70 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                          <button
+                            type="button"
+                            onClick={handleDeleteProfileImage}
+                            className="p-2 bg-red-600/80 rounded-full text-white hover:bg-red-600 transition-colors cursor-pointer shadow-lg"
+                            title="Usuń zdjęcie"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </>
+                    ) : (
+                      "Brak"
+                    )}
+                  </div>
+
+                  {/* Panel zarządzania plikiem */}
+                  <div className="flex flex-col gap-2 w-full items-center sm:items-start">
+                    <input
+                      type="file"
+                      ref={profileImageInputRef}
+                      onChange={handleUploadProfileImage}
+                      className="hidden"
+                      accept="image/*"
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      type="button"
+                      onClick={() => profileImageInputRef.current?.click()}
+                      className="cursor-pointer w-fit text-xs bg-black border-zinc-700 text-zinc-200 hover:bg-zinc-800"
+                    >
+                      <ImagePlus size={14} className="mr-1.5" />
+                      {profilePictureUrl ? "Zmień zdjęcie" : "Dodaj zdjęcie"}
+                    </Button>
+                    <p className="text-[10px] text-zinc-500 text-center sm:text-left">
+                      Będzie widoczne na wizytówce i w rezerwacjach dla klientów.
+                    </p>
+                  </div>
                 </div>
-                <span className="text-sky-400 text-xs">Przejdź</span>
-              </Link>
+              </div>
+
+              {/* DOSTĘPNOŚĆ */}
+              <div className="space-y-2">
+                <label className="text-xs uppercase text-zinc-400">Twoje godziny pracy</label>
+                <Link
+                  to="/trainer/availability"
+                  className="flex items-center justify-between w-full p-3 rounded-xl bg-zinc-900 border border-zinc-700 hover:border-sky-500 transition-colors cursor-pointer"
+                >
+                  <div>
+                    <p className="text-white font-medium">Ustaw godziny dostępności</p>
+                    <p className="text-zinc-400 text-xs">Dodaj dni i godziny pracy</p>
+                  </div>
+                  <span className="text-sky-400 text-xs">Przejdź</span>
+                </Link>
+              </div>
+
+              {/* BIO */}
+              <div className="space-y-2">
+                <label className="text-xs uppercase text-zinc-400">Opis (Bio)</label>
+                <textarea
+                  className="w-full p-3 rounded-xl bg-zinc-950 border border-zinc-700 text-zinc-400 text-sm min-h-[100px] outline-none focus:border-zinc-600 transition-colors"
+                  placeholder="Napisz kilka słów o sobie..."
+                  value={bio}
+                  onChange={(e) => setBio(e.target.value)}
+                />
+              </div>
+
+              {/* TAGI */}
+              <div className="space-y-2">
+                <label className="text-xs uppercase text-zinc-400">
+                  Tagi (oddzielone przecinkiem)
+                </label>
+                <Input
+                  placeholder="np. joga, crossfit, trójbój siłowy"
+                  className="w-full border-zinc-700 bg-zinc-950 text-zinc-400"
+                  value={tags}
+                  onChange={(e) => setTags(e.target.value)}
+                />
+              </div>
+
+              {/* SOCIAL MEDIA */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="space-y-2">
+                  <label className="text-xs uppercase text-zinc-400">Facebook</label>
+                  <Input
+                    placeholder="URL profilu"
+                    className="border-zinc-700 bg-zinc-950 text-zinc-400"
+                    value={facebookUrl}
+                    onChange={(e) => setFacebookUrl(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs uppercase text-zinc-400">Instagram</label>
+                  <Input
+                    placeholder="URL profilu"
+                    className="border-zinc-700 bg-zinc-950 text-zinc-400"
+                    value={instagramUrl}
+                    onChange={(e) => setInstagramUrl(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs uppercase text-zinc-400">Discord</label>
+                  <Input
+                    placeholder="Nazwa użytkownika"
+                    className="border-zinc-700 bg-zinc-950 text-zinc-400"
+                    value={discordUsername}
+                    onChange={(e) => setDiscordUsername(e.target.value)}
+                  />
+                </div>
+              </div>
             </div>
           )}
 

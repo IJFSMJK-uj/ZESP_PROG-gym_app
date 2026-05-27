@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import { Link } from "react-router-dom";
@@ -29,13 +29,20 @@ const FlyTo = ({ coords }: { coords: [number, number] | null }) => {
 const BoundsWatcher = ({
   onBoundsChange,
   onMoveEnd,
+  onMoveStart,
 }: {
   onBoundsChange: (bounds: LatLngBounds) => void;
   onMoveEnd: () => void;
+  onMoveStart: () => void;
 }) => {
   const map = useMapEvents({
+    movestart: () => {
+      map.closePopup();
+      onMoveStart();
+    },
     moveend: () => {
       onBoundsChange(map.getBounds());
+      //map.closePopup();
       onMoveEnd();
     },
     zoomend: () => onBoundsChange(map.getBounds()),
@@ -67,6 +74,8 @@ export const SelectGymPage = () => {
   const [isMapMoving, setIsMapMoving] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
 
+  const isProgrammaticMove = useRef(false);
+
   const isSearching = search.trim().length > 0 || isMapMoving;
 
   useEffect(() => {
@@ -90,7 +99,7 @@ export const SelectGymPage = () => {
 
   const handleGymClick = (gym: Gym) => {
     setSelectedGymId(gym.id);
-    setIsMapMoving(true);
+    isProgrammaticMove.current = true;
     setShowDropdown(false);
     setSearch("");
     if (gym.lat && gym.lng) setFlyTo([gym.lat, gym.lng]);
@@ -227,26 +236,56 @@ export const SelectGymPage = () => {
           />
 
           <FlyTo coords={flyTo} />
-          <BoundsWatcher onBoundsChange={setBounds} onMoveEnd={() => setIsMapMoving(false)} />
+          {/* <BoundsWatcher
+            onBoundsChange={setBounds}
+            onMoveEnd={() => {
+              setIsMapMoving(false);
+
+              if (!isProgrammaticMove.current) {
+                setSelectedGymId(null);
+              }
+
+              isProgrammaticMove.current = false;
+            }}
+          /> */}
+
+          <BoundsWatcher
+            onBoundsChange={setBounds}
+            onMoveStart={() => {
+              setSelectedGymId(null);
+            }}
+            onMoveEnd={() => {
+              setIsMapMoving(false);
+              isProgrammaticMove.current = false;
+            }}
+          />
 
           {gyms
             .filter((gym) => gym.lat && gym.lng)
             .map((gym) => (
-              <Marker key={gym.id} position={[gym.lat!, gym.lng!]}>
+              <Marker
+                key={gym.id}
+                position={[gym.lat!, gym.lng!]}
+                eventHandlers={{
+                  click: () => {
+                    setSelectedGymId(gym.id);
+                  },
+                }}
+              >
                 <Popup>
                   <div className="flex flex-col gap-1 min-w-[150px] max-w-[200px]">
                     {/* ZDJĘCIE W POP-UPIE MAPY */}
-                    {gym.mainImage ? (
-                      <img
-                        src={gym.mainImage}
-                        alt={gym.name}
+                    {/* {gym.mainImage ? (
+                      <img 
+                        src={gym.mainImage} 
+                        alt={gym.name} 
                         className="w-full h-20 object-cover rounded mb-1 border border-gray-300"
                       />
                     ) : (
                       <div className="w-full h-20 bg-gray-200 rounded flex items-center justify-center mb-1 border border-gray-300">
                         <span className="text-gray-500 text-xs">Brak zdjęcia</span>
                       </div>
-                    )}
+                    )} */}
 
                     <strong>{gym.name}</strong>
                     <span className="text-xs text-gray-500">{gym.address}</span>

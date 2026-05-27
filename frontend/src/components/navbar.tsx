@@ -103,6 +103,14 @@ export const Navbar = () => {
               >
                 Panel
               </Link>
+              {user?.gymId && (
+                <Link
+                  to={`/gyms/${user.gymId}/classes`}
+                  className="text-sm font-semibold text-zinc-400 hover:text-white transition-colors"
+                >
+                  Zajęcia grupowe
+                </Link>
+              )}
               <Link
                 to="/gyms"
                 className="text-sm font-semibold text-zinc-400 hover:text-white transition-colors"

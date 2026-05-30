@@ -44,6 +44,29 @@ export type GroupClassSchedulePayload = Omit<
   instructorIds: number[];
 };
 
+export interface ClassParticipant {
+  firstName: string | null;
+  lastName: string | null;
+  email: string;
+}
+
+export interface EnrollmentCountEntry {
+  classId: number;
+  nextDate: string;
+  count: number;
+}
+
+export interface ClassParticipantsData {
+  className: string;
+  date: string;
+  startTime: number;
+  endTime: number;
+  room: GroupClassRoom | null;
+  capacity: number | null;
+  instructors: { firstName: string | null; lastName: string | null }[];
+  participants: ClassParticipant[];
+}
+
 export const getNextClassDate = (dayOfWeek: number): Date => {
   const today = new Date();
   const currentDay = today.getDay() === 0 ? 7 : today.getDay();
@@ -156,5 +179,21 @@ export const groupClassesService = {
       body: JSON.stringify({ date: date.toISOString() }),
     });
     return readResponse(response, "Nie udało się wypisać z zajęć");
+  },
+
+  async getEnrollmentCounts(gymId: number | string, date: Date) {
+    const response = await fetch(
+      `${API_URL}/gyms/${gymId}/schedule/enrollment-counts?date=${date.toISOString()}`,
+      { headers: authHeaders() }
+    );
+    return readResponse(response, "Nie udało się pobrać liczby uczestników");
+  },
+
+  async getClassParticipants(gymId: number | string, classId: number, date: Date) {
+    const response = await fetch(
+      `${API_URL}/gyms/${gymId}/schedule/${classId}/participants?date=${date.toISOString()}`,
+      { headers: authHeaders() }
+    );
+    return readResponse(response, "Nie udało się pobrać uczestników");
   },
 };

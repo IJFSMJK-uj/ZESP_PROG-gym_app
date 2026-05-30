@@ -142,6 +142,36 @@ router.post("/", requireAuth, async (req: any, res) => {
 
     const trainerAssignmentIds = user.trainerProfile.assignments.map((a) => a.id);
 
+    const classDayOfWeek = dayOfWeek === 0 ? 7 : dayOfWeek;
+
+    const conflictingGroupClass = await prisma.groupClassInstructor.findFirst({
+      where: {
+        assignmentId: {
+          in: trainerAssignmentIds,
+        },
+
+        groupClass: {
+          dayOfWeek: classDayOfWeek,
+
+          startTime: {
+            lt: endMinute,
+          },
+
+          endTime: {
+            gt: startMinute,
+          },
+
+          isActive: true,
+        },
+      },
+    });
+
+    if (conflictingGroupClass) {
+      return res.status(409).json({
+        error: "Masz już zajęcia grupowe w tym terminie",
+      });
+    }
+
     const overlap = await prisma.trainerAvailability.findFirst({
       where: {
         assignmentId: { in: trainerAssignmentIds },

@@ -120,6 +120,54 @@ const checkTrainerConflicts = async (
     },
   });
 
+  const reservationConflicts = await prisma.trainerReservation.findMany({
+    where: {
+      assignmentId: {
+        in: instructorIds,
+      },
+
+      status: "CONFIRMED",
+    },
+
+    include: {
+      assignment: {
+        include: {
+          trainerProfile: true,
+        },
+      },
+    },
+  });
+
+  const conflictingReservations = reservationConflicts.filter((reservation) => {
+    const reservationDate = new Date(reservation.date);
+
+    const reservationDay = reservationDate.getDay() === 0 ? 7 : reservationDate.getDay();
+
+    return (
+      reservationDay === dayOfWeek &&
+      reservation.startHour * 60 < endTime &&
+      reservation.endHour * 60 > startTime
+    );
+  });
+
+  if (conflictingReservations.length > 0) {
+    const trainerNames = conflictingReservations
+      .map((conflict) => {
+        const profile = conflict.assignment?.trainerProfile;
+
+        if (!profile) {
+          return null;
+        }
+
+        return `${profile.firstName} ${profile.lastName}`;
+      })
+      .filter((name): name is string => Boolean(name))
+      .filter((name, index, array) => array.indexOf(name) === index)
+      .join(", ");
+
+    return `Trener/Trenerzy: ${trainerNames} mają już trening indywidualny w tym terminie`;
+  }
+
   if (conflicts.length === 0) {
     return null;
   }
@@ -139,6 +187,48 @@ const checkTrainerConflicts = async (
     .join(", ");
 
   return `Trener(zy): ${trainerNames} mają już zajęcia w tym terminie`;
+};
+
+const checkRoomConflicts = async (
+  roomId: number,
+  dayOfWeek: number,
+  startTime: number,
+  endTime: number,
+  excludeClassId?: number
+): Promise<string | null> => {
+  const conflict = await prisma.groupClass.findFirst({
+    where: {
+      roomId,
+      dayOfWeek,
+
+      AND: [
+        {
+          startTime: {
+            lt: endTime,
+          },
+        },
+        {
+          endTime: {
+            gt: startTime,
+          },
+        },
+      ],
+
+      ...(excludeClassId
+        ? {
+            NOT: {
+              id: excludeClassId,
+            },
+          }
+        : {}),
+    },
+  });
+
+  if (!conflict) {
+    return null;
+  }
+
+  return "Sala jest już zajęta w tym terminie";
 };
 
 const validateClassData = (body: Record<string, unknown>): ValidateResult => {
@@ -385,6 +475,37 @@ router.post(
         return res.status(400).json({ error: "Brak wolnych miejsc" });
       }
 
+      const enrollDay = enrollDate.getDay() === 0 ? 7 : enrollDate.getDay();
+
+      const reservations = await prisma.trainerReservation.findMany({
+        where: {
+          userId: req.userId,
+          status: "CONFIRMED",
+
+          startHour: {
+            lt: groupClass.endTime / 60,
+          },
+
+          endHour: {
+            gt: groupClass.startTime / 60,
+          },
+        },
+      });
+
+      const conflictingReservation = reservations.find((reservation) => {
+        const reservationDate = new Date(reservation.date);
+
+        const reservationDay = reservationDate.getDay() === 0 ? 7 : reservationDate.getDay();
+
+        return reservationDay === enrollDay;
+      });
+
+      if (conflictingReservation) {
+        return res.status(409).json({
+          error: "Masz już trening indywidualny w tym terminie",
+        });
+      }
+
       await prisma.groupClassEnrollment.create({
         data: { classId, userId: req.userId, date: enrollDate },
       });
@@ -483,6 +604,21 @@ router.post("/gyms/:gymId/schedule", requireAuth, async (req: AuthRequest, res: 
       if (conflictError) {
         return res.status(400).json({
           error: conflictError,
+        });
+      }
+    }
+
+    if (roomId !== null) {
+      const roomConflict = await checkRoomConflicts(
+        roomId,
+        classData.dayOfWeek,
+        classData.startTime,
+        classData.endTime
+      );
+
+      if (roomConflict) {
+        return res.status(400).json({
+          error: roomConflict,
         });
       }
     }
@@ -615,6 +751,22 @@ router.patch(
         if (conflictError) {
           return res.status(400).json({
             error: conflictError,
+          });
+        }
+      }
+
+      if (roomId !== null) {
+        const roomConflict = await checkRoomConflicts(
+          roomId,
+          classData.dayOfWeek,
+          classData.startTime,
+          classData.endTime,
+          classId
+        );
+
+        if (roomConflict) {
+          return res.status(400).json({
+            error: roomConflict,
           });
         }
       }

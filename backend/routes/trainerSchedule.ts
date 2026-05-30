@@ -41,6 +41,18 @@ router.get("/:assignmentId", requireAuth, async (req: any, res) => {
     const assignmentId = parseInt(req.params.assignmentId);
     if (isNaN(assignmentId)) return res.status(400).json({ error: "Nieprawidłowy ID assignment" });
 
+    const groupClasses = await prisma.groupClassInstructor.findMany({
+      where: {
+        assignmentId,
+        groupClass: {
+          isActive: true,
+        },
+      },
+      include: {
+        groupClass: true,
+      },
+    });
+
     const assignment = await prisma.trainerAssignment.findUnique({
       where: { id: assignmentId },
       include: {
@@ -79,10 +91,21 @@ router.get("/:assignmentId", requireAuth, async (req: any, res) => {
           const rDate = new Date(r.date);
           return rDate.getDay() === a.dayOfWeek && r.startHour === slot.startHour;
         });
+
+        const isGroupClass = groupClasses.some((gc) => {
+          const groupClass = gc.groupClass;
+
+          return (
+            groupClass.dayOfWeek === (a.dayOfWeek === 0 ? 7 : a.dayOfWeek) &&
+            groupClass.startTime <= slot.startHour * 60 &&
+            groupClass.endTime > slot.startHour * 60
+          );
+        });
+
         result[a.dayOfWeek].push({
           startHour: slot.startHour,
           endHour: slot.endHour,
-          available: !isReserved,
+          available: !isReserved && !isGroupClass,
           gym: assignment.gym || null,
         });
       });
@@ -107,6 +130,85 @@ router.post("/", requireAuth, async (req: any, res) => {
     const userId = req.userId;
     const { assignmentId, date, startHour, endHour } = req.body;
     const assignmentIdNum = Number(assignmentId);
+
+    const reservationDate = new Date(date);
+    const jsDay = reservationDate.getDay();
+    const dayOfWeek = jsDay === 0 ? 7 : jsDay;
+
+    const conflictingGroupClass = await prisma.groupClassInstructor.findFirst({
+      where: {
+        assignmentId: assignmentIdNum,
+
+        groupClass: {
+          isActive: true,
+          dayOfWeek,
+
+          startTime: {
+            lt: endHour * 60,
+          },
+
+          endTime: {
+            gt: startHour * 60,
+          },
+        },
+      },
+    });
+
+    if (conflictingGroupClass) {
+      return res.status(409).json({
+        error: "Trener prowadzi wtedy zajęcia grupowe",
+      });
+    }
+
+    const conflictingReservation = await prisma.trainerReservation.findFirst({
+      where: {
+        userId,
+        status: "CONFIRMED",
+
+        date: new Date(date),
+
+        startHour: {
+          lt: endHour,
+        },
+
+        endHour: {
+          gt: startHour,
+        },
+      },
+    });
+
+    if (conflictingReservation) {
+      return res.status(409).json({
+        error: "Masz już rezerwację w tym terminie",
+      });
+    }
+
+    const reservationDay = reservationDate.getDay() === 0 ? 7 : reservationDate.getDay();
+
+    const conflictingGroupEnrollment = await prisma.groupClassEnrollment.findFirst({
+      where: {
+        userId,
+
+        groupClass: {
+          dayOfWeek: reservationDay,
+
+          startTime: {
+            lt: endHour * 60,
+          },
+
+          endTime: {
+            gt: startHour * 60,
+          },
+        },
+      },
+    });
+
+    if (conflictingGroupEnrollment) {
+      return res.status(409).json({
+        error: "Masz już zajęcia grupowe w tym terminie",
+      });
+    }
+
     const existing = await prisma.trainerReservation.findFirst({
       where: {
         assignmentId: assignmentIdNum,
@@ -115,6 +217,7 @@ router.post("/", requireAuth, async (req: any, res) => {
         status: "CONFIRMED",
       },
     });
+
     if (existing) return res.status(409).json({ error: "Slot taken" });
 
     const reservation = await prisma.trainerReservation.create({

@@ -259,6 +259,44 @@ router.get("/client/me", requireAuth, async (req: any, res) => {
   }
 });
 
+router.get("/group-classes/me", requireAuth, async (req: any, res) => {
+  try {
+    const userId = req.userId;
+
+    const enrollments = await prisma.groupClassEnrollment.findMany({
+      where: {
+        userId,
+      },
+      include: {
+        groupClass: {
+          include: {
+            gym: true,
+            room: true,
+            instructors: {
+              include: {
+                assignment: {
+                  include: {
+                    trainerProfile: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      orderBy: {
+        date: "desc",
+      },
+    });
+
+    res.json(enrollments);
+  } catch (err) {
+    res.status(500).json({
+      error: "Server error",
+    });
+  }
+});
+
 router.get("/trainer/me/reservations", requireAuth, async (req: any, res) => {
   try {
     await autoUpdateReservations();

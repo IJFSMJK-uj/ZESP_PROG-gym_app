@@ -167,16 +167,17 @@ export const SelectGymPage = () => {
                 setSearch(e.target.value);
                 setShowDropdown(true);
               }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  const foundGym = filteredGyms[0];
+              // onKeyDown={(e) => {
+              //   if (e.key === "Enter") {
+              //     const foundGym = filteredGyms[0];
 
-                  if (foundGym?.lat && foundGym?.lng) {
-                    setFlyTo([foundGym.lat, foundGym.lng]);
-                    setSelectedGymId(foundGym.id);
-                  }
-                }
-              }}
+              //     if (foundGym?.lat && foundGym?.lng) {
+              //       setFlyTo([foundGym.lat, foundGym.lng]);
+              //       setSelectedGymId(foundGym.id);
+              //       setShowDropdown(false);
+              //     }
+              //   }
+              // }}
               className="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-700 text-white text-sm outline-none focus:border-sky-500"
             />
             {showDropdown && normalizedSearch && filteredGyms.length > 0 && (

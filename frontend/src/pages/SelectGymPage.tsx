@@ -105,7 +105,12 @@ export const SelectGymPage = () => {
     if (gym.lat && gym.lng) setFlyTo([gym.lat, gym.lng]);
   };
 
-  const filteredGyms = gyms.filter((gym) => gym.name.toLowerCase().includes(search.toLowerCase()));
+  const normalizedSearch = search.trim().toLowerCase();
+
+  const filteredGyms = gyms.filter((gym) => {
+    const searchableText = `${gym.name} ${gym.address}`.toLowerCase();
+    return searchableText.includes(normalizedSearch);
+  });
 
   const visibleGyms = !isSearching
     ? gyms.filter((gym) =>
@@ -156,27 +161,26 @@ export const SelectGymPage = () => {
           <div className="p-3">
             <input
               type="text"
-              placeholder="Szukaj siłowni..."
+              placeholder="Szukaj po nazwie lub lokalizacji..."
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
                 setShowDropdown(true);
               }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  const foundGym = gyms.find((gym) =>
-                    gym.name.toLowerCase().includes(search.toLowerCase())
-                  );
+              // onKeyDown={(e) => {
+              //   if (e.key === "Enter") {
+              //     const foundGym = filteredGyms[0];
 
-                  if (foundGym?.lat && foundGym?.lng) {
-                    setFlyTo([foundGym.lat, foundGym.lng]);
-                    setSelectedGymId(foundGym.id);
-                  }
-                }
-              }}
+              //     if (foundGym?.lat && foundGym?.lng) {
+              //       setFlyTo([foundGym.lat, foundGym.lng]);
+              //       setSelectedGymId(foundGym.id);
+              //       setShowDropdown(false);
+              //     }
+              //   }
+              // }}
               className="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-700 text-white text-sm outline-none focus:border-sky-500"
             />
-            {showDropdown && search && filteredGyms.length > 0 && (
+            {showDropdown && normalizedSearch && filteredGyms.length > 0 && (
               <div className="bg-zinc-900 border border-zinc-700 rounded-lg mt-2 max-h-60 overflow-y-auto">
                 {filteredGyms.map((gym) => (
                   <div
@@ -184,7 +188,8 @@ export const SelectGymPage = () => {
                     onClick={() => handleGymClick(gym)}
                     className="px-3 py-2 text-sm text-white cursor-pointer hover:bg-zinc-800"
                   >
-                    {gym.name}
+                    <p>{gym.name}</p>
+                    <p className="text-xs text-zinc-400">{gym.address}</p>
                   </div>
                 ))}
               </div>

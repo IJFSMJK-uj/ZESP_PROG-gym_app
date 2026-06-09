@@ -5,11 +5,14 @@ import {
   groupClassesService,
   type GroupClassScheduleItem,
   type GroupClassSchedulePayload,
+  type ClassParticipantsData,
+  type EnrollmentCountEntry,
 } from "../api/groupClassesService";
 import { gymsService, type GymRoom } from "../api/gymsService";
 import { trainersService } from "../api/trainersService";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
+import { generateParticipantPdf } from "../utils/generateParticipantPdf";
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, "0") + ":00");
 
@@ -53,6 +56,10 @@ export const GroupClassesPage = () => {
   const [groupClassesError, setGroupClassesError] = useState("");
   const [groupClassesSuccess, setGroupClassesSuccess] = useState("");
   const [editingClassId, setEditingClassId] = useState<number | null>(null);
+  const [enrollmentCounts, setEnrollmentCounts] = useState<Record<number, EnrollmentCountEntry>>(
+    {}
+  );
+  const [participantLoadingId, setParticipantLoadingId] = useState<number | null>(null);
 
   const [trainers, setTrainers] = useState<any[]>([]);
   const [trainersLoading, setTrainersLoading] = useState(false);
@@ -104,6 +111,7 @@ export const GroupClassesPage = () => {
       loadGroupClasses();
       loadTrainers();
       loadRooms();
+      loadEnrollmentCounts();
     }
   }, [selectedGymId]);
 
@@ -129,6 +137,22 @@ export const GroupClassesPage = () => {
     if (!selectedGymId) return;
     const res = await gymsService.getRooms(selectedGymId);
     if (!res.error) setRooms(res);
+  };
+
+  const loadEnrollmentCounts = async () => {
+    if (!selectedGymId) return;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    try {
+      const res: EnrollmentCountEntry[] = await groupClassesService.getEnrollmentCounts(
+        selectedGymId,
+        today
+      );
+      if (!Array.isArray(res)) return;
+      setEnrollmentCounts(Object.fromEntries(res.map((e) => [e.classId, e])));
+    } catch {
+      // counts are non-critical, ignore errors
+    }
   };
 
   const loadGroupClasses = async () => {
@@ -249,6 +273,38 @@ export const GroupClassesPage = () => {
       loadGroupClasses();
     } catch {
       setGroupClassesError("Nie udało się usunąć zajęć");
+    }
+  };
+
+  const getNextOccurrence = (dayOfWeek: number): Date => {
+    const jsTarget = dayOfWeek === 7 ? 0 : dayOfWeek;
+    const current = new Date();
+    current.setHours(0, 0, 0, 0);
+    const daysUntil = (jsTarget - current.getDay() + 7) % 7;
+    current.setDate(current.getDate() + daysUntil);
+    return current;
+  };
+
+  const handleDownloadPdf = async (item: GroupClassScheduleItem) => {
+    if (!selectedGymId) return;
+    setParticipantLoadingId(item.id);
+    setGroupClassesError("");
+    try {
+      const nextDate = getNextOccurrence(item.dayOfWeek);
+      const data: ClassParticipantsData = await groupClassesService.getClassParticipants(
+        selectedGymId,
+        item.id,
+        nextDate
+      );
+      if ((data as any).error) {
+        setGroupClassesError((data as any).error);
+        return;
+      }
+      await generateParticipantPdf(data, selectedGym?.name ?? "");
+    } catch {
+      setGroupClassesError("Nie udało się pobrać listy uczestników");
+    } finally {
+      setParticipantLoadingId(null);
     }
   };
 
@@ -498,58 +554,76 @@ export const GroupClassesPage = () => {
                         {day}
                       </h3>
                       <div className="flex flex-col gap-2">
-                        {items.map((item) => (
-                          <div
-                            key={item.id}
-                            className="flex items-center justify-between gap-4 bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3"
-                          >
-                            <div className="flex flex-col gap-0.5 flex-1 min-w-0">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <span className="font-medium text-zinc-100">
-                                  {minutesToTime(item.startTime)}–{minutesToTime(item.endTime)}
-                                </span>
-                                <span className="text-zinc-300">{item.name}</span>
-                                {!item.isActive && (
-                                  <span className="text-xs text-zinc-600 italic">nieaktywne</span>
-                                )}
-                              </div>
-                              <div className="flex items-center gap-3 flex-wrap text-xs text-zinc-500">
-                                {item.room && (
-                                  <span className="inline-flex items-center gap-1 text-sky-400/80">
-                                    {item.room.name}
-                                    {item.room.capacity ? ` · ${item.room.capacity} os.` : ""}
+                        {items.map((item) => {
+                          const countEntry = enrollmentCounts[item.id];
+                          const isDownloading = participantLoadingId === item.id;
+                          return (
+                            <div
+                              key={item.id}
+                              className="flex items-center justify-between gap-4 bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3"
+                            >
+                              <div className="flex flex-col gap-0.5 flex-1 min-w-0">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="font-medium text-zinc-100">
+                                    {minutesToTime(item.startTime)}–{minutesToTime(item.endTime)}
                                   </span>
-                                )}
-                                {item.instructors?.length > 0 && (
-                                  <span>
-                                    {item.instructors
-                                      .map(
-                                        (instr) =>
-                                          `${instr.assignment.trainerProfile.firstName} ${instr.assignment.trainerProfile.lastName}`
-                                      )
-                                      .join(", ")}
-                                  </span>
-                                )}
-                                {item.capacity && <span>limit {item.capacity} miejsc</span>}
+                                  <span className="text-zinc-300">{item.name}</span>
+                                  {!item.isActive && (
+                                    <span className="text-xs text-zinc-600 italic">nieaktywne</span>
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-3 flex-wrap text-xs text-zinc-500">
+                                  {item.room && (
+                                    <span className="inline-flex items-center gap-1 text-sky-400/80">
+                                      {item.room.name}
+                                      {item.room.capacity ? ` · ${item.room.capacity} os.` : ""}
+                                    </span>
+                                  )}
+                                  {item.instructors?.length > 0 && (
+                                    <span>
+                                      {item.instructors
+                                        .map(
+                                          (instr) =>
+                                            `${instr.assignment.trainerProfile.firstName} ${instr.assignment.trainerProfile.lastName}`
+                                        )
+                                        .join(", ")}
+                                    </span>
+                                  )}
+                                  {countEntry != null ? (
+                                    <span className="text-emerald-400/80">
+                                      {countEntry.count}
+                                      {item.capacity ? ` / ${item.capacity}` : ""} zapisanych
+                                    </span>
+                                  ) : (
+                                    item.capacity && <span>limit {item.capacity} miejsc</span>
+                                  )}
+                                </div>
                               </div>
-                            </div>
 
-                            <div className="flex gap-2 shrink-0">
-                              <button
-                                onClick={() => handleEditGroupClass(item)}
-                                className="text-xs text-zinc-400 hover:text-white cursor-pointer border border-zinc-700 hover:border-zinc-500 rounded-full px-3 py-1 transition-colors"
-                              >
-                                edytuj
-                              </button>
-                              <button
-                                onClick={() => handleDeleteGroupClass(item.id)}
-                                className="text-xs text-red-500/60 hover:text-red-400 cursor-pointer border border-red-900/40 hover:border-red-700/60 rounded-full px-3 py-1 transition-colors"
-                              >
-                                usuń
-                              </button>
+                              <div className="flex gap-2 shrink-0">
+                                <button
+                                  onClick={() => handleDownloadPdf(item)}
+                                  disabled={isDownloading}
+                                  className="text-xs text-zinc-400 hover:text-white cursor-pointer border border-zinc-700 hover:border-zinc-500 rounded-full px-3 py-1 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                  {isDownloading ? "..." : "lista uczestników"}
+                                </button>
+                                <button
+                                  onClick={() => handleEditGroupClass(item)}
+                                  className="text-xs text-zinc-400 hover:text-white cursor-pointer border border-zinc-700 hover:border-zinc-500 rounded-full px-3 py-1 transition-colors"
+                                >
+                                  edytuj
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteGroupClass(item.id)}
+                                  className="text-xs text-red-500/60 hover:text-red-400 cursor-pointer border border-red-900/40 hover:border-red-700/60 rounded-full px-3 py-1 transition-colors"
+                                >
+                                  usuń
+                                </button>
+                              </div>
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     </div>
                   )

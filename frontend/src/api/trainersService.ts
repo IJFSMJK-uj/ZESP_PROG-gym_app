@@ -9,13 +9,24 @@ const getHeaders = () => {
 };
 
 export const trainersService = {
-  async getTrainersByGym(gymId: number | null) {
-    const response = await fetch(`${API_URL}/gym/${gymId}`, {
+  async getTrainersByGym(
+    gymId: number | null,
+    search: string = "",
+    sortBy: string = "rating",
+    sortOrder: string = "desc"
+  ) {
+    const queryParams = new URLSearchParams({
+      search,
+      sortBy,
+      sortOrder,
+    });
+
+    const response = await fetch(`${API_URL}/gym/${gymId}?${queryParams.toString()}`, {
       headers: getHeaders(),
     });
 
     if (!response.ok) {
-      console.error("BŁąd pobierania trenerów");
+      console.error("Błąd pobierania trenerów");
       return { error: "Nie udało się pobrać trenerów" };
     }
 

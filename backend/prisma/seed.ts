@@ -27,6 +27,8 @@ const GYMS_DATA = [
     description:
       "Gym Central Wadowicka to nowoczesna siłownia w Krakowie o powierzchni 1360 m². Od 2077 roku oferujemy treningi w standardzie premium na Wadowickiej. Do dyspozycji klubowiczów jest bezpłatny parking, wiata na rowery, darmowe Wi-Fi oraz bogata oferta zajęć fitness w cenie karnetu. Na 1360 m² powierzchni znajduje się 10 profesjonalnych stref treningowych, w tym dedykowana strefa kobiet, unikalna strefa Oldschool, przestrzeń cross fitness oraz strefa treningu personalnego. Nowoczesny sprzęt i wsparcie wykwalifikowanej kadry instruktorskiej gwarantują najwyższy komfort ćwiczeń.",
     managerEmails: ["manager@gymapp.pl"],
+    mainImage: "/uploads/wadowicka-main.webp",
+    gallery: ["/uploads/wadowicka-gal1.jpg"],
   },
   {
     name: "Gym Central Norymberska",
@@ -38,6 +40,12 @@ const GYMS_DATA = [
     description:
       "Gym Central Norymberska to jedna z największych i najbardziej spektakularnych siłowni w Krakowie, oferująca aż 4000 m² nowoczesnej powierzchni. W klubie czeka na Ciebie potężna przestrzeń wolnych ciężarów oraz dedykowana strefa ABS & Stretching (100 m²), idealna do pracy nad mobilnością i stabilizacją korpusu. Fani tradycyjnego podejścia docenią klimatyczną sekcję Oldschool. Po intensywnym treningu zapraszamy do regeneracji w saunie. Na miejscu zapewniamy darmowe Wi-Fi oraz duży, bezpłatny parking bezpośrednio przed wejściem.",
     managerEmails: ["manager.krakow@gymapp.pl"],
+    mainImage: "/uploads/norymberska-main.jpg",
+    gallery: [
+      "/uploads/norymberska-gal1.webp",
+      "/uploads/norymberska-gal2.jpg",
+      "/uploads/norymberska-gal3.webp",
+    ],
   },
   {
     name: "Empty Gym Wieliczka",
@@ -49,6 +57,12 @@ const GYMS_DATA = [
     description:
       "Empty Gym Wieliczka to nowoczesna przestrzeń treningowa o powierzchni 1500 m². Klub wyróżnia się otwartą koncepcją wnętrza, która zapewnia pełną swobodę ruchu i doskonały komfort ćwiczeń w każdej z 10 wyspecjalizowanych stref. Wewnątrz czeka na Ciebie przestronna, otwarta strefa wolnych ciężarów. Po treningu zapraszamy do regeneracji w saunie. Zapewniamy darmowe Wi-Fi oraz dostęp do bezpłatnego parkingu.",
     managerEmails: ["manager@gymapp.pl"],
+    mainImage: "/uploads/wieliczka-main.webp",
+    gallery: [
+      "/uploads/wieliczka-gal1.jpg",
+      "/uploads/wieliczka-gal2.jpg",
+      "/uploads/wieliczka-gal3.jpg",
+    ],
   },
   {
     name: "Gym Central Warszawa Mokotów",
@@ -95,6 +109,75 @@ const GYMS_DATA = [
     managerEmails: ["manager.poznan@gymapp.pl"],
   },
 ];
+
+async function seedGyms(): Promise<Record<string, number>> {
+  console.log("⚙️ Creating gyms and seeding equipment...");
+  const gymMap: Record<string, number> = {};
+
+  const standardMachines = await prisma.standardEquipment.findMany();
+
+  for (const gymData of GYMS_DATA) {
+    const gym = await prisma.gym.upsert({
+      where: { name: gymData.name },
+      update: {
+        address: gymData.address,
+        lat: gymData.lat,
+        lng: gymData.lng,
+        description: gymData.description,
+        phoneNumber: gymData.phoneNumber,
+        email: gymData.email,
+      },
+      create: {
+        name: gymData.name,
+        address: gymData.address,
+        lat: gymData.lat,
+        lng: gymData.lng,
+        email: gymData.email,
+        phoneNumber: gymData.phoneNumber,
+        description: gymData.description,
+        mainImage: gymData.mainImage,
+        gallery: gymData.gallery,
+        managers: {
+          connect: gymData.managerEmails.map((email) => ({ email })),
+        },
+      },
+    });
+    gymMap[gymData.name] = gym.id;
+
+    await prisma.gymEquipment.deleteMany({
+      where: { gymId: gym.id },
+    });
+
+    const equipmentToCreate = standardMachines.slice(0, 5).map((machine) => ({
+      gymId: gym.id,
+      name: machine.name,
+      imageUrl: machine.imageUrl,
+    }));
+
+    if (equipmentToCreate.length > 0) {
+      await prisma.gymEquipment.createMany({
+        data: equipmentToCreate,
+      });
+    }
+
+    await prisma.gymOperatingHours.deleteMany({
+      where: { gymId: gym.id },
+    });
+
+    await prisma.gymOperatingHours.createMany({
+      data: [
+        { gymId: gym.id, dayOfWeek: 1, openTime: 480, closeTime: 1320 },
+        { gymId: gym.id, dayOfWeek: 2, openTime: 480, closeTime: 1320 },
+        { gymId: gym.id, dayOfWeek: 3, openTime: 480, closeTime: 1320 },
+        { gymId: gym.id, dayOfWeek: 4, openTime: 480, closeTime: 1320 },
+        { gymId: gym.id, dayOfWeek: 5, openTime: 480, closeTime: 1320 },
+        { gymId: gym.id, dayOfWeek: 6, openTime: 480, closeTime: 1320 },
+        { gymId: gym.id, dayOfWeek: 7, openTime: 480, closeTime: 1320 },
+      ],
+    });
+  }
+  return gymMap;
+}
 
 const TRAINERS_DATA = [
   {
@@ -233,60 +316,6 @@ async function seedManagers(passwordHash: string) {
       },
     });
   }
-}
-
-async function seedGyms(): Promise<Record<string, number>> {
-  console.log("⚙️ Creating gyms...");
-  const gymMap: Record<string, number> = {};
-
-  for (const gymData of GYMS_DATA) {
-    const gym = await prisma.gym.upsert({
-      where: { name: gymData.name },
-      update: {
-        address: gymData.address,
-        lat: gymData.lat,
-        lng: gymData.lng,
-        email: gymData.email,
-        phoneNumber: gymData.phoneNumber,
-        description: gymData.description,
-        managers: {
-          set: gymData.managerEmails.map((email) => ({ email })),
-        },
-      },
-      create: {
-        name: gymData.name,
-        address: gymData.address,
-        lat: gymData.lat,
-        lng: gymData.lng,
-        email: gymData.email,
-        phoneNumber: gymData.phoneNumber,
-        description: gymData.description,
-        // Łączymy menadżerów po ich emailach
-        managers: {
-          connect: gymData.managerEmails.map((email) => ({ email })),
-        },
-      },
-    });
-    gymMap[gymData.name] = gym.id; // Zapisujemy ID do słownika (np. "Gym Central Kraków": 1)
-
-    // Godziny
-    await prisma.gymOperatingHours.deleteMany({
-      where: { gymId: gym.id },
-    });
-
-    await prisma.gymOperatingHours.createMany({
-      data: [
-        { gymId: gym.id, dayOfWeek: 1, openTime: 480, closeTime: 1320 },
-        { gymId: gym.id, dayOfWeek: 2, openTime: 480, closeTime: 1320 },
-        { gymId: gym.id, dayOfWeek: 3, openTime: 480, closeTime: 1320 },
-        { gymId: gym.id, dayOfWeek: 4, openTime: 480, closeTime: 1320 },
-        { gymId: gym.id, dayOfWeek: 5, openTime: 480, closeTime: 1320 },
-        { gymId: gym.id, dayOfWeek: 6, openTime: 480, closeTime: 1320 },
-        { gymId: gym.id, dayOfWeek: 7, openTime: 480, closeTime: 1320 },
-      ],
-    });
-  }
-  return gymMap;
 }
 
 async function seedTrainers(passwordHash: string, gymMap: Record<string, number>) {

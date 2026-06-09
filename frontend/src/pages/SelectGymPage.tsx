@@ -280,17 +280,17 @@ export const SelectGymPage = () => {
                 <Popup>
                   <div className="flex flex-col gap-1 min-w-[150px] max-w-[200px]">
                     {/* ZDJĘCIE W POP-UPIE MAPY */}
-                    {/* {gym.mainImage ? (
-                      <img 
-                        src={gym.mainImage} 
-                        alt={gym.name} 
+                    {gym.mainImage ? (
+                      <img
+                        src={gym.mainImage}
+                        alt={gym.name}
                         className="w-full h-20 object-cover rounded mb-1 border border-gray-300"
                       />
                     ) : (
                       <div className="w-full h-20 bg-gray-200 rounded flex items-center justify-center mb-1 border border-gray-300">
                         <span className="text-gray-500 text-xs">Brak zdjęcia</span>
                       </div>
-                    )} */}
+                    )}
 
                     <strong>{gym.name}</strong>
                     <span className="text-xs text-gray-500">{gym.address}</span>

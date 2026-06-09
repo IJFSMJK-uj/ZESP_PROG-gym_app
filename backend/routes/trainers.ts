@@ -19,6 +19,9 @@ const requireAuth = (req: any, res: any, next: any) => {
 
 router.get("/gym/:gymId", requireAuth, async (req: any, res: any) => {
   const gymId = parseInt(req.params.gymId);
+  const search = req.query.search ? String(req.query.search).toLowerCase() : "";
+  const sortBy = req.query.sortBy || "rating";
+  const sortOrder = req.query.sortOrder || "desc";
 
   if (isNaN(gymId)) {
     return res.status(400).json({ error: "Nieprawidłowe ID siłowni" });
@@ -31,30 +34,34 @@ router.get("/gym/:gymId", requireAuth, async (req: any, res: any) => {
     });
 
     if (!currentGym) {
-      return res.result(404).json({ error: "Siłownia nie istnieje" });
+      return res.status(404).json({ error: "Siłownia nie istnieje" });
     }
 
-    const assignments = await prisma.trainerAssignment.findMany({
-      where: { gymId: gymId },
+    const whereClause: any = { gymId: gymId };
+
+    if (search) {
+      whereClause.trainerProfile = {
+        OR: [
+          { firstName: { contains: search, mode: "insensitive" } },
+          { lastName: { contains: search, mode: "insensitive" } },
+          { bio: { contains: search, mode: "insensitive" } },
+          { socialFacebook: { contains: search, mode: "insensitive" } },
+          { socialInstagram: { contains: search, mode: "insensitive" } },
+          { socialDiscord: { contains: search, mode: "insensitive" } },
+        ],
+      };
+    }
+
+    let assignments = await prisma.trainerAssignment.findMany({
+      where: whereClause,
       include: {
         trainerProfile: {
           include: {
-            user: {
-              select: { id: true, email: true, role: true },
-            },
+            user: { select: { id: true, email: true, role: true } },
             assignments: {
               include: {
-                gym: {
-                  select: {
-                    name: true,
-                    address: true,
-                  },
-                },
-                reservations: {
-                  include: {
-                    review: true,
-                  },
-                },
+                gym: { select: { name: true, address: true } },
+                reservations: { include: { review: true } },
               },
             },
           },
@@ -62,11 +69,11 @@ router.get("/gym/:gymId", requireAuth, async (req: any, res: any) => {
       },
     });
 
-    const trainers = assignments.map((assignment) => {
-      const profile = assignment.trainerProfile;
+    let trainers = assignments.map((assignment) => {
+      const profile = assignment.trainerProfile as any;
       const user = profile.user;
 
-      const worksAt = profile.assignments.map((a) => ({
+      const worksAt = profile.assignments.map((a: any) => ({
         name: a.gym.name,
         address: a.gym.address,
       }));
@@ -74,8 +81,8 @@ router.get("/gym/:gymId", requireAuth, async (req: any, res: any) => {
       let totalRating = 0;
       let reviewCount = 0;
 
-      profile.assignments.forEach((a) => {
-        a.reservations.forEach((r) => {
+      profile.assignments.forEach((a: any) => {
+        a.reservations.forEach((r: any) => {
           if (r.review) {
             totalRating += r.review.rating;
             reviewCount++;
@@ -105,6 +112,35 @@ router.get("/gym/:gymId", requireAuth, async (req: any, res: any) => {
         tags: profile.tags || "",
       };
     });
+
+    if (search) {
+      trainers = trainers.filter((t) => {
+        const tagsString = Array.isArray(t.tags)
+          ? t.tags.join(" ").toLowerCase()
+          : String(t.tags).toLowerCase();
+        return (
+          tagsString.includes(search) ||
+          String(t.firstName).toLowerCase().includes(search) ||
+          String(t.lastName).toLowerCase().includes(search) ||
+          String(t.bio).toLowerCase().includes(search) ||
+          String(t.socialFacebook).toLowerCase().includes(search) ||
+          String(t.socialInstagram).toLowerCase().includes(search) ||
+          String(t.socialDiscord).toLowerCase().includes(search)
+        );
+      });
+    }
+
+    trainers.sort((a, b) => {
+      if (sortBy === "rating") {
+        return sortOrder === "desc"
+          ? b.averageRating - a.averageRating
+          : a.averageRating - b.averageRating;
+      } else if (sortBy === "reviews") {
+        return sortOrder === "desc" ? b.reviewCount - a.reviewCount : a.reviewCount - b.reviewCount;
+      }
+      return 0;
+    });
+
     res.json({ gym: currentGym, trainers });
   } catch (error) {
     console.error(error);

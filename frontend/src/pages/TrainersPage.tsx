@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
 import { trainersService } from "../api/trainersService";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import {
@@ -11,7 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../components/ui/dialog";
-import { MapPin, Star, StarHalf } from "lucide-react";
+import { MapPin, Star, StarHalf, Search, SlidersHorizontal } from "lucide-react";
 import { ReviewsList } from "../components/ReviewsList";
 
 interface Trainer {
@@ -87,30 +88,38 @@ export const TrainersPage = () => {
 
   const [selectedTrainer, setSelectedTrainer] = useState<Trainer | null>(null);
 
+  const [search, setSearch] = useState("");
+  const [sortBy, setSortBy] = useState("rating");
+  const [sortOrder, setSortOrder] = useState("desc");
+
+  const fetchTrainers = async () => {
+    if (!user?.gymId) return;
+
+    setLoading(true);
+    setError("");
+    try {
+      const data = await trainersService.getTrainersByGym(user.gymId, search, sortBy, sortOrder);
+
+      if (data.error) {
+        setError(data.error);
+      } else {
+        setTrainers(data.trainers);
+        setCurrentGym(data.gym);
+      }
+    } catch {
+      setError("Wystąpił błąd podczas ładowania trenerów.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    if (isAuthenticated && user && user.gymId) {
-      const fetchTrainers = async () => {
-        try {
-          const data = await trainersService.getTrainersByGym(user.gymId);
-
-          if (data.error) {
-            setError(data.error);
-          } else {
-            setTrainers(data.trainers);
-            setCurrentGym(data.gym);
-          }
-        } catch {
-          setError("Wystąpił błąd podczas ładowania trenerów:");
-        } finally {
-          setLoading(false);
-        }
-      };
-
+    if (isAuthenticated && user?.gymId) {
       fetchTrainers();
     } else {
       setLoading(false);
     }
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated, user?.gymId]);
 
   if (!isAuthenticated) {
     return (
@@ -137,14 +146,6 @@ export const TrainersPage = () => {
     );
   }
 
-  if (loading) {
-    return <div className="text-center mt-20 text-white">Ładowanie trenerów...</div>;
-  }
-
-  if (error) {
-    return <div className="text-center mt-20 text-red-500">{error}</div>;
-  }
-
   const getDisplayName = (trainer: Trainer) => {
     if (trainer.firstName && trainer.lastName) {
       return `${trainer.firstName} ${trainer.lastName}`;
@@ -157,7 +158,7 @@ export const TrainersPage = () => {
       <h1 className="text-4xl font-bold text-white mb-2">Nasi Trenerzy</h1>
 
       {currentGym && (
-        <div className="flex items-center text-zinc-400 mb-8 gap-2">
+        <div className="flex items-center text-zinc-400 mb-6 gap-2">
           <MapPin size={18} className="text-sky-500" />
           <p>
             <span className="text-white">{currentGym.name}</span> ({currentGym.address})
@@ -165,9 +166,69 @@ export const TrainersPage = () => {
         </div>
       )}
 
-      {trainers.length === 0 ? (
-        <p className="text-zinc-500">
-          Twoja siłownia nie ma jeszcze przypisanych żadnych trenerów.
+      <div className="flex flex-col xl:flex-row gap-4 mb-8 bg-zinc-900/50 p-4 rounded-2xl border border-zinc-800 items-center">
+        <div className="relative w-full xl:flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" size={18} />
+          <Input
+            placeholder="Szukaj po nazwisku, tagu, bio..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-10 pr-10 bg-black border-zinc-700 text-white w-full h-11 focus:border-sky-500"
+          />
+
+          {search && (
+            <button
+              onClick={() => {
+                setSearch("");
+              }}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white transition-colors cursor-pointer"
+            >
+              ✕
+            </button>
+          )}
+        </div>
+
+        <div className="flex gap-2 w-full xl:w-auto justify-end">
+          <div className="relative flex items-center bg-black border border-zinc-700 rounded-lg px-3 h-11 focus-within:border-sky-500 transition-colors">
+            <SlidersHorizontal size={16} className="text-zinc-500 mr-2 shrink-0" />
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="bg-transparent text-sm text-zinc-200 outline-none cursor-pointer appearance-none pr-4 w-[110px]"
+            >
+              <option value="rating" className="bg-zinc-900 text-white">
+                Średnia ocen
+              </option>
+              <option value="reviews" className="bg-zinc-900 text-white">
+                Liczba opinii
+              </option>
+            </select>
+          </div>
+
+          <Button
+            variant="outline"
+            onClick={() => setSortOrder((prev) => (prev === "desc" ? "asc" : "desc"))}
+            className="h-11 px-4 border-zinc-700 hover:bg-zinc-800 bg-black text-white cursor-pointer w-[120px]"
+          >
+            {sortOrder === "desc" ? "Malejąco ↓" : "Rosnąco ↑"}
+          </Button>
+
+          <Button
+            onClick={fetchTrainers}
+            className="h-11 px-8 bg-sky-600 hover:bg-sky-500 text-white font-bold cursor-pointer"
+          >
+            Szukaj
+          </Button>
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="text-center mt-20 text-sky-500">Szukam trenerów...</div>
+      ) : error ? (
+        <div className="text-center mt-20 text-red-500">{error}</div>
+      ) : trainers.length === 0 ? (
+        <p className="text-zinc-500 text-center py-12 bg-zinc-900/30 rounded-2xl border border-zinc-800 border-dashed">
+          Nie znaleziono trenera spełniającego te kryteria.
         </p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">

@@ -17,6 +17,18 @@ export const reservationsService = {
     return response.json();
   },
 
+  async getMyGroupClassEnrollments() {
+    const token = localStorage.getItem("token");
+
+    const response = await fetch(`${API_URL}/group-classes/me`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    return response.json();
+  },
+
   async getTrainerReservations() {
     const token = localStorage.getItem("token");
     const response = await fetch(`${API_URL}/trainer/me/reservations`, {

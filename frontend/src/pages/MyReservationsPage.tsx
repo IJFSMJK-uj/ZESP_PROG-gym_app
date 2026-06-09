@@ -3,11 +3,13 @@ import { reservationsService } from "../api/reservationsService";
 import { useAuth } from "../context/AuthContext";
 import { Card, CardContent, CardHeader } from "../components/ui/card";
 import { ReviewModal } from "../components/ReviewModal";
+import { groupClassesService } from "../api/groupClassesService";
 
 export const MyReservationsPage = () => {
   const { user } = useAuth();
   const [clientReservations, setClientReservations] = useState<any[]>([]);
   const [trainerReservations, setTrainerReservations] = useState<any[]>([]);
+  const [groupReservations, setGroupReservations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"upcoming" | "history">("upcoming");
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
@@ -21,6 +23,11 @@ export const MyReservationsPage = () => {
     try {
       const cData = await reservationsService.getClientReservations();
       if (cData && !cData.error) setClientReservations(cData);
+
+      const gData = await reservationsService.getMyGroupClassEnrollments();
+      if (gData && !gData.error) {
+        setGroupReservations(gData);
+      }
 
       if (user?.role === "TRAINER") {
         const tData = await reservationsService.getTrainerReservations();
@@ -93,25 +100,101 @@ export const MyReservationsPage = () => {
     }
   };
 
-  const upClient = clientReservations.filter((r) => r.status === "CONFIRMED");
-  const histClient = clientReservations.filter((r) => r.status !== "CONFIRMED");
+  // const upClient = clientReservations.filter((r) => r.status === "CONFIRMED");
+  // const histClient = clientReservations.filter((r) => r.status !== "CONFIRMED");
 
   const upTrainer = trainerReservations.filter((r) => r.status === "CONFIRMED");
   const histTrainer = trainerReservations.filter((r) => r.status !== "CONFIRMED");
+
+  const normalizedGroupReservations = groupReservations.map((reservation) => ({
+    ...reservation,
+    reservationType: "GROUP",
+  }));
+
+  const normalizedClientReservations = clientReservations.map((reservation) => ({
+    ...reservation,
+    reservationType: "PERSONAL",
+  }));
+
+  const allReservations = [...normalizedClientReservations, ...normalizedGroupReservations];
+
+  allReservations.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+  const now = new Date();
+
+  const upClient = allReservations.filter((r) => {
+    if (r.reservationType === "PERSONAL") {
+      return r.status === "CONFIRMED";
+    }
+
+    return new Date(r.date) > now;
+  });
+
+  const histClient = allReservations.filter((r) => {
+    if (r.reservationType === "PERSONAL") {
+      return r.status !== "CONFIRMED";
+    }
+
+    return new Date(r.date) <= now;
+  });
+
+  const handleGroupUnenroll = async (reservation: any) => {
+    if (!window.confirm("Czy na pewno chcesz się wypisać z tych zajęć?")) return;
+
+    const res = await groupClassesService.unenrollFromClass(
+      reservation.groupClass.gym.id,
+      reservation.groupClass.id,
+      new Date(reservation.date)
+    );
+
+    if (!res.error) {
+      loadAllData();
+    }
+  };
 
   if (loading)
     return (
       <div className="p-8 text-center text-zinc-500 italic">Synchronizacja Twoich planów...</div>
     );
 
+  const minutesToTime = (minutes: number) => {
+    const h = Math.floor(minutes / 60)
+      .toString()
+      .padStart(2, "0");
+
+    const m = (minutes % 60).toString().padStart(2, "0");
+
+    return `${h}:${m}`;
+  };
+
   const ReservationItem = ({ res, type }: { res: any; type: "as_client" | "as_trainer" }) => {
+    const isGroupClass = res.reservationType === "GROUP";
     const isTrainer = type === "as_trainer";
     const trainerProfile = res.assignment?.trainerProfile;
-    const displayName = isTrainer
-      ? res.user?.email
-      : trainerProfile?.firstName
-        ? `${trainerProfile.firstName} ${trainerProfile.lastName}`
-        : "Trener";
+    const groupClassName = res.groupClass?.name;
+    const instructorNames = isGroupClass
+      ? res.groupClass?.instructors
+          ?.map((i: any) => {
+            const p = i.assignment?.trainerProfile;
+
+            return `${p?.firstName ?? ""} ${p?.lastName ?? ""}`.trim();
+          })
+          .filter(Boolean)
+          .join(", ")
+      : "";
+    // const displayName = isTrainer
+    //   ? res.user?.email
+    //   : trainerProfile?.firstName
+    //     ? `${trainerProfile.firstName} ${trainerProfile.lastName}`
+    //     : "Trener";
+
+    const displayName = isGroupClass
+      ? groupClassName
+      : isTrainer
+        ? res.user?.email
+        : trainerProfile?.firstName
+          ? `${trainerProfile.firstName} ${trainerProfile.lastName}`
+          : "Trener";
 
     return (
       <div
@@ -125,16 +208,54 @@ export const MyReservationsPage = () => {
       >
         <div className="flex justify-between items-center">
           <div className="space-y-1">
+            {/* <p className="font-bold text-sm text-zinc-400">
+              { new Date(res.date).toLocaleDateString()} | {res.startHour}:00 - {res.endHour}:00}
+              <p className="font-bold text-sm text-zinc-400">
+                {new Date(res.date).toLocaleDateString()} |{" "}
+                {isGroupClass
+                  ? `${minutesToTime(res.groupClass.startTime)} - ${minutesToTime(
+                      res.groupClass.endTime
+                    )}`
+                  : `${res.startHour}:00 - ${res.endHour}:00`}
+              </p>
+            </p> */}
             <p className="font-bold text-sm text-zinc-400">
-              {new Date(res.date).toLocaleDateString()} | {res.startHour}:00 - {res.endHour}:00
+              {new Date(res.date).toLocaleDateString()} |{" "}
+              {isGroupClass
+                ? `${minutesToTime(res.groupClass.startTime)} - ${minutesToTime(
+                    res.groupClass.endTime
+                  )}`
+                : `${res.startHour}:00 - ${res.endHour}:00`}
             </p>
+
             <p className="text-xs text-zinc-400">
-              {isTrainer ? "Klient: " : "Trener: "}{" "}
+              {/* {isTrainer ? "Klient: " : "Trener: "}{" "} */}
+              {isGroupClass ? "Zajęcia: " : isTrainer ? "Klient: " : "Trener: "}{" "}
               <span className="text-zinc-200">{displayName}</span>
             </p>
-            <p className="text-[10px] text-sky-400 font-bold uppercase tracking-tighter">
+            {/* <p className="text-[10px] text-sky-400 font-bold uppercase tracking-tighter">
               📍 {res.assignment?.gym?.name}
-            </p>
+              {isGroupClass && res.groupClass?.room?.name && (
+                <p className="text-[10px] text-violet-400 font-bold uppercase">
+                  🏟️ {res.groupClass.room.name}
+                </p>
+              )}
+            </p> */}
+            <div className="space-y-1">
+              <p className="text-[10px] text-sky-400 font-bold uppercase tracking-tighter">
+                📍 {isGroupClass ? res.groupClass?.gym?.name : res.assignment?.gym?.name}
+              </p>
+
+              {isGroupClass && instructorNames && (
+                <p className="text-[10px] text-emerald-400 font-bold">👨‍🏫 {instructorNames}</p>
+              )}
+
+              {isGroupClass && res.groupClass?.room?.name && (
+                <p className="text-[10px] text-violet-400 font-bold uppercase">
+                  🏟️ {res.groupClass.room.name}
+                </p>
+              )}
+            </div>
           </div>
           <div className="flex flex-col items-end gap-2">
             <span
@@ -152,7 +273,8 @@ export const MyReservationsPage = () => {
                   ? "Odbył się"
                   : "Nadchodzący"}
             </span>
-            {res.status === "CONFIRMED" && (
+            {/* {res.status === "CONFIRMED" && ( */}
+            {res.status === "CONFIRMED" && !isGroupClass && (
               <button
                 onClick={() => handleCancel(res.id)}
                 className="text-[10px] text-zinc-500 hover:text-red-500 transition-colors underline cursor-pointer"
@@ -160,7 +282,16 @@ export const MyReservationsPage = () => {
                 Anuluj
               </button>
             )}{" "}
-            {res.status === "DONE" && !isTrainer && !res.review && (
+            {isGroupClass && new Date(res.date) > new Date() && (
+              <button
+                onClick={() => handleGroupUnenroll(res)}
+                className="text-[10px] text-zinc-500 hover:text-red-500 transition-colors underline cursor-pointer"
+              >
+                Wypisz się
+              </button>
+            )}
+            {/* {res.status === "DONE" && !isTrainer && !res.review && ( */}
+            {res.status === "DONE" && !isTrainer && !isGroupClass && !res.review && (
               <button
                 onClick={() => handleOpenReviewModal(res)}
                 className="text-[10px] text-emerald-400 hover:text-emerald-300 transition-colors underline cursor-pointer"

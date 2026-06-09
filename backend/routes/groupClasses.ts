@@ -550,6 +550,139 @@ router.delete(
   }
 );
 
+router.get(
+  "/gyms/:gymId/schedule/enrollment-counts",
+  requireAuth,
+  async (req: AuthRequest, res: Response) => {
+    const gymId = parseId(req.params.gymId);
+    if (!gymId) return res.status(400).json({ error: "Nieprawidłowe ID siłowni" });
+
+    const dateStr = req.query.date as string;
+    const fromDate = dateStr ? new Date(dateStr) : new Date();
+    if (isNaN(fromDate.getTime())) return res.status(400).json({ error: "Nieprawidłowa data" });
+
+    try {
+      const hasAccess = await ensureManagerOwnsGym(req.userId, gymId);
+      if (!hasAccess) return res.status(403).json({ error: "Brak uprawnień do tej siłowni" });
+
+      const classes = await prisma.groupClass.findMany({
+        where: { gymId },
+        select: { id: true, dayOfWeek: true },
+      });
+
+      const results = await Promise.all(
+        classes.map(async (cls) => {
+          const jsTarget = cls.dayOfWeek === 7 ? 0 : cls.dayOfWeek;
+          const daysUntil = (jsTarget - fromDate.getDay() + 7) % 7;
+          const nextDate = new Date(fromDate);
+          nextDate.setDate(fromDate.getDate() + daysUntil);
+          const nextDayDate = new Date(nextDate.getTime() + 24 * 60 * 60 * 1000);
+
+          const count = await prisma.groupClassEnrollment.count({
+            where: { classId: cls.id, date: { gte: nextDate, lt: nextDayDate } },
+          });
+
+          return { classId: cls.id, nextDate: nextDate.toISOString(), count };
+        })
+      );
+
+      return res.json(results);
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ error: "Nie udało się pobrać liczby uczestników" });
+    }
+  }
+);
+
+router.get(
+  "/gyms/:gymId/schedule/:classId/participants",
+  requireAuth,
+  async (req: AuthRequest, res: Response) => {
+    const gymId = parseId(req.params.gymId);
+    const classId = parseId(req.params.classId);
+
+    if (!gymId || !classId) {
+      return res.status(400).json({ error: "Nieprawidłowe dane" });
+    }
+
+    const dateStr = req.query.date as string;
+    if (!dateStr) {
+      return res.status(400).json({ error: "Podaj datę zajęć" });
+    }
+
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) {
+      return res.status(400).json({ error: "Nieprawidłowa data" });
+    }
+
+    try {
+      const hasAccess = await ensureManagerOwnsGym(req.userId, gymId);
+      if (!hasAccess) {
+        return res.status(403).json({ error: "Brak uprawnień do tej siłowni" });
+      }
+
+      const groupClass = await prisma.groupClass.findFirst({
+        where: { id: classId, gymId },
+        include: {
+          room: true,
+          instructors: {
+            include: {
+              assignment: {
+                include: {
+                  trainerProfile: { select: { firstName: true, lastName: true } },
+                },
+              },
+            },
+          },
+        },
+      });
+
+      if (!groupClass) {
+        return res.status(404).json({ error: "Nie znaleziono zajęć" });
+      }
+
+      const nextDay = new Date(date.getTime() + 24 * 60 * 60 * 1000);
+
+      const enrollments = await prisma.groupClassEnrollment.findMany({
+        where: {
+          classId,
+          date: { gte: date, lt: nextDay },
+        },
+        include: {
+          user: {
+            select: {
+              email: true,
+              memberProfile: { select: { firstName: true, lastName: true } },
+            },
+          },
+        },
+        orderBy: { createdAt: "asc" },
+      });
+
+      return res.json({
+        className: groupClass.name,
+        date: date.toISOString(),
+        startTime: groupClass.startTime,
+        endTime: groupClass.endTime,
+        room: groupClass.room,
+        capacity: groupClass.capacity,
+        instructors: groupClass.instructors.map((i) => ({
+          firstName: i.assignment.trainerProfile.firstName,
+          lastName: i.assignment.trainerProfile.lastName,
+        })),
+        participants: enrollments.map((e) => ({
+          firstName: e.user.memberProfile?.firstName ?? null,
+          lastName: e.user.memberProfile?.lastName ?? null,
+          email: e.user.email,
+        })),
+      });
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ error: "Nie udało się pobrać uczestników" });
+    }
+  }
+);
+
 router.post("/gyms/:gymId/schedule", requireAuth, async (req: AuthRequest, res: Response) => {
   const gymId = parseId(req.params.gymId);
 

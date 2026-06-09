@@ -10,6 +10,10 @@ const MANAGERS_DATA = [
   { email: "manager@gymapp.pl" },
   { email: "manager.krakow@gymapp.pl" },
   { email: "manager.wieliczka@gymapp.pl" },
+  { email: "manager.warszawa@gymapp.pl" },
+  { email: "manager.wroclaw@gymapp.pl" },
+  { email: "manager.gdansk@gymapp.pl" },
+  { email: "manager.poznan@gymapp.pl" },
 ];
 
 const GYMS_DATA = [
@@ -45,6 +49,50 @@ const GYMS_DATA = [
     description:
       "Empty Gym Wieliczka to nowoczesna przestrzeń treningowa o powierzchni 1500 m². Klub wyróżnia się otwartą koncepcją wnętrza, która zapewnia pełną swobodę ruchu i doskonały komfort ćwiczeń w każdej z 10 wyspecjalizowanych stref. Wewnątrz czeka na Ciebie przestronna, otwarta strefa wolnych ciężarów. Po treningu zapraszamy do regeneracji w saunie. Zapewniamy darmowe Wi-Fi oraz dostęp do bezpłatnego parkingu.",
     managerEmails: ["manager@gymapp.pl"],
+  },
+  {
+    name: "Gym Central Warszawa Mokotów",
+    address: "ul. Puławska 145, Warszawa",
+    lat: 52.1899,
+    lng: 21.0217,
+    email: "mokotow@gymapp.pl",
+    phoneNumber: "222 333 444",
+    description:
+      "Gym Central Warszawa Mokotów to miejski klub treningowy z dużą strefą wolnych ciężarów, salą funkcjonalną i zajęciami po pracy. Klub jest wygodny dla osób dojeżdżających z centrum oraz południowych dzielnic Warszawy.",
+    managerEmails: ["manager.warszawa@gymapp.pl"],
+  },
+  {
+    name: "Gym Central Wrocław Rynek",
+    address: "ul. Kazimierza Wielkiego 33, Wrocław",
+    lat: 51.1087,
+    lng: 17.0266,
+    email: "wroclaw@gymapp.pl",
+    phoneNumber: "333 444 555",
+    description:
+      "Gym Central Wrocław Rynek to kompaktowa siłownia w centrum miasta, nastawiona na szybkie treningi przed pracą, trening personalny oraz zajęcia mobility w małych grupach.",
+    managerEmails: ["manager.wroclaw@gymapp.pl"],
+  },
+  {
+    name: "Gym Central Gdańsk Wrzeszcz",
+    address: "al. Grunwaldzka 87, Gdańsk",
+    lat: 54.3792,
+    lng: 18.6051,
+    email: "gdansk@gymapp.pl",
+    phoneNumber: "444 555 666",
+    description:
+      "Gym Central Gdańsk Wrzeszcz to przestronny klub z mocną strefą cardio, salą rowerową i zajęciami grupowymi dla osób trenujących regularnie po zajęciach lub pracy.",
+    managerEmails: ["manager.gdansk@gymapp.pl"],
+  },
+  {
+    name: "Gym Central Poznań Malta",
+    address: "ul. Baraniaka 8, Poznań",
+    lat: 52.4033,
+    lng: 16.9739,
+    email: "poznan@gymapp.pl",
+    phoneNumber: "555 777 888",
+    description:
+      "Gym Central Poznań Malta to klub blisko terenów rekreacyjnych, łączący klasyczną siłownię, trening funkcjonalny i zajęcia wytrzymałościowe.",
+    managerEmails: ["manager.poznan@gymapp.pl"],
   },
 ];
 
@@ -83,6 +131,24 @@ const TRAINERS_DATA = [
     phoneNumber: "+48 420 420 420",
     worksAt: ["Gym Central Wadowicka"], // Tylko jedna siłownia
   },
+  {
+    email: "trener.marta@gymapp.pl",
+    firstName: "Marta",
+    lastName: "Zielińska",
+    bio: "Trening funkcjonalny, zdrowe plecy i przygotowanie motoryczne.",
+    phoneNumber: "+48 600 100 200",
+    worksAt: ["Gym Central Warszawa Mokotów", "Gym Central Poznań Malta"],
+    tags: ["funkcjonalny", "zdrowe plecy", "motoryka"],
+  },
+  {
+    email: "trener.tomasz@gymapp.pl",
+    firstName: "Tomasz",
+    lastName: "Wiśniewski",
+    bio: "Trener biegowy i instruktor zajęć wytrzymałościowych.",
+    phoneNumber: "+48 600 300 400",
+    worksAt: ["Gym Central Wrocław Rynek", "Gym Central Gdańsk Wrzeszcz"],
+    tags: ["cardio", "wytrzymałość", "bieganie"],
+  },
 ];
 
 const MEMBERS_DATA = [
@@ -109,6 +175,30 @@ const MEMBERS_DATA = [
     firstName: "Iga",
     lastName: "Świątek",
     homeGymName: "Empty Gym Wieliczka",
+  },
+  {
+    email: "klient.ewa@gymapp.pl",
+    firstName: "Ewa",
+    lastName: "Nowicka",
+    homeGymName: "Gym Central Warszawa Mokotów",
+  },
+  {
+    email: "klient.piotr@gymapp.pl",
+    firstName: "Piotr",
+    lastName: "Lewandowski",
+    homeGymName: "Gym Central Wrocław Rynek",
+  },
+  {
+    email: "klient.maria@gymapp.pl",
+    firstName: "Maria",
+    lastName: "Kaczmarek",
+    homeGymName: "Gym Central Gdańsk Wrzeszcz",
+  },
+  {
+    email: "klient.ola@gymapp.pl",
+    firstName: "Ola",
+    lastName: "Wójcik",
+    homeGymName: "Gym Central Poznań Malta",
   },
   { email: "klient.kamil@gymapp.pl", firstName: "Kamil", lastName: "Stoch" }, // Zwykły user, bez wybranej siłowni
 ];
@@ -152,7 +242,17 @@ async function seedGyms(): Promise<Record<string, number>> {
   for (const gymData of GYMS_DATA) {
     const gym = await prisma.gym.upsert({
       where: { name: gymData.name },
-      update: { address: gymData.address },
+      update: {
+        address: gymData.address,
+        lat: gymData.lat,
+        lng: gymData.lng,
+        email: gymData.email,
+        phoneNumber: gymData.phoneNumber,
+        description: gymData.description,
+        managers: {
+          set: gymData.managerEmails.map((email) => ({ email })),
+        },
+      },
       create: {
         name: gymData.name,
         address: gymData.address,
@@ -277,7 +377,22 @@ async function seedMembers(passwordHash: string, gymMap: Record<string, number>)
 
     await prisma.user.upsert({
       where: { email: memberData.email },
-      update: {},
+      update: {
+        memberProfile: {
+          upsert: {
+            update: {
+              firstName: memberData.firstName,
+              lastName: memberData.lastName,
+              homeGymId,
+            },
+            create: {
+              firstName: memberData.firstName,
+              lastName: memberData.lastName,
+              ...(homeGymId && { homeGymId }),
+            },
+          },
+        },
+      },
       create: {
         email: memberData.email,
         password: passwordHash,
@@ -309,6 +424,22 @@ const ROOMS_DATA: Record<string, { name: string; capacity: number | null }[]> = 
   "Empty Gym Wieliczka": [
     { name: "Sala główna", capacity: 30 },
     { name: "Sala jogi", capacity: 15 },
+  ],
+  "Gym Central Warszawa Mokotów": [
+    { name: "Sala funkcjonalna", capacity: 18 },
+    { name: "Studio mobility", capacity: 14 },
+  ],
+  "Gym Central Wrocław Rynek": [
+    { name: "Sala treningu personalnego", capacity: 10 },
+    { name: "Sala mobility", capacity: 16 },
+  ],
+  "Gym Central Gdańsk Wrzeszcz": [
+    { name: "Sala rowerowa", capacity: 22 },
+    { name: "Sala fitness", capacity: 24 },
+  ],
+  "Gym Central Poznań Malta": [
+    { name: "Sala wytrzymałościowa", capacity: 20 },
+    { name: "Strefa funkcjonalna", capacity: 16 },
   ],
 };
 
@@ -488,7 +619,88 @@ async function seedGroupClasses(
     },
   ];
 
-  for (const cls of [...wadClasses, ...norClasses, ...wielClasses]) {
+  // ── Pozostałe miasta testowe ──
+  const warId = gymMap["Gym Central Warszawa Mokotów"];
+  const warRooms = roomMap["Gym Central Warszawa Mokotów"] ?? {};
+  const martaWar = await getAssignment("trener.marta@gymapp.pl", "Gym Central Warszawa Mokotów");
+
+  const wroId = gymMap["Gym Central Wrocław Rynek"];
+  const wroRooms = roomMap["Gym Central Wrocław Rynek"] ?? {};
+  const tomaszWro = await getAssignment("trener.tomasz@gymapp.pl", "Gym Central Wrocław Rynek");
+
+  const gdaId = gymMap["Gym Central Gdańsk Wrzeszcz"];
+  const gdaRooms = roomMap["Gym Central Gdańsk Wrzeszcz"] ?? {};
+  const tomaszGda = await getAssignment("trener.tomasz@gymapp.pl", "Gym Central Gdańsk Wrzeszcz");
+
+  const pozId = gymMap["Gym Central Poznań Malta"];
+  const pozRooms = roomMap["Gym Central Poznań Malta"] ?? {};
+  const martaPoz = await getAssignment("trener.marta@gymapp.pl", "Gym Central Poznań Malta");
+
+  const cityClasses = [
+    {
+      gymId: warId,
+      roomId: warRooms["Sala funkcjonalna"] ?? null,
+      name: "Zdrowe plecy",
+      description: "Spokojny trening wzmacniający kręgosłup i poprawiający postawę.",
+      dayOfWeek: 1,
+      startTime: 18 * 60,
+      endTime: 19 * 60,
+      capacity: 18,
+      isActive: true,
+      instructorAssignmentIds: martaWar ? [martaWar.id] : [],
+    },
+    {
+      gymId: warId,
+      roomId: warRooms["Studio mobility"] ?? null,
+      name: "Mobility Express",
+      description: "Krótka sesja mobilności po pracy.",
+      dayOfWeek: 4,
+      startTime: 19 * 60,
+      endTime: 20 * 60,
+      capacity: 14,
+      isActive: true,
+      instructorAssignmentIds: martaWar ? [martaWar.id] : [],
+    },
+    {
+      gymId: wroId,
+      roomId: wroRooms["Sala mobility"] ?? null,
+      name: "Poranna mobilność",
+      description: "Rozruch, stabilizacja i praca nad zakresem ruchu.",
+      dayOfWeek: 2,
+      startTime: 7 * 60,
+      endTime: 8 * 60,
+      capacity: 16,
+      isActive: true,
+      instructorAssignmentIds: tomaszWro ? [tomaszWro.id] : [],
+    },
+    {
+      gymId: gdaId,
+      roomId: gdaRooms["Sala rowerowa"] ?? null,
+      name: "Indoor Cycling",
+      description: "Rowerowy trening wytrzymałościowy z interwałami.",
+      dayOfWeek: 3,
+      startTime: 18 * 60,
+      endTime: 19 * 60,
+      capacity: 22,
+      isActive: true,
+      instructorAssignmentIds: tomaszGda ? [tomaszGda.id] : [],
+    },
+    {
+      gymId: pozId,
+      roomId: pozRooms["Strefa funkcjonalna"] ?? null,
+      name: "Full Body Circuit",
+      description: "Obwodowy trening całego ciała.",
+      dayOfWeek: 5,
+      startTime: 17 * 60,
+      endTime: 18 * 60,
+      capacity: 16,
+      isActive: true,
+      instructorAssignmentIds: martaPoz ? [martaPoz.id] : [],
+    },
+  ];
+
+  for (const cls of [...wadClasses, ...norClasses, ...wielClasses, ...cityClasses]) {
+    if (!cls.gymId) continue;
     const { instructorAssignmentIds, ...classData } = cls;
     await prisma.groupClass.create({
       data: {
@@ -503,97 +715,297 @@ async function seedGroupClasses(
   }
 }
 
-async function seedReservations(gymMap: Record<string, number>) {
-  console.log("⚙️ Creating training reservations...");
+function upcomingDateForClass(dayOfWeek: number, startTime: number) {
+  const now = new Date();
+  const jsTarget = dayOfWeek === 7 ? 0 : dayOfWeek;
+  let daysUntil = (jsTarget - now.getDay() + 7) % 7;
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  if (daysUntil === 0 && startTime <= currentMinutes) daysUntil = 7;
 
-  // Get trainers and members
-  const trainers = await prisma.trainerAssignment.findMany({
-    where: {
-      gym: {
-        name: "Gym Central Wadowicka",
+  const upcomingDate = new Date(now);
+  upcomingDate.setDate(now.getDate() + daysUntil);
+  upcomingDate.setHours(0, 0, 0, 0);
+  return upcomingDate;
+}
+
+async function seedGroupClassEnrollments() {
+  console.log("⚙️ Creating group class enrollments (1-2 per member)...");
+
+  await prisma.groupClassEnrollment.deleteMany({});
+  const classes = await prisma.groupClass.findMany();
+  const members = await prisma.user.findMany({ where: { role: Role.MEMBER } });
+  const enrollmentKeys = new Set<string>();
+
+  const enrollmentsData = [
+    { memberEmail: "klient.adam@gymapp.pl", className: "Power Fitness" },
+    { memberEmail: "klient.jan@gymapp.pl", className: "CrossFit" },
+    { memberEmail: "klient.robert@gymapp.pl", className: "Spinning" },
+    { memberEmail: "klient.iga@gymapp.pl", className: "Hatha Joga" },
+    { memberEmail: "klient.ewa@gymapp.pl", className: "Zdrowe plecy" },
+    { memberEmail: "klient.ewa@gymapp.pl", className: "Mobility Express" },
+    { memberEmail: "klient.piotr@gymapp.pl", className: "Poranna mobilność" },
+    { memberEmail: "klient.maria@gymapp.pl", className: "Indoor Cycling" },
+    { memberEmail: "klient.ola@gymapp.pl", className: "Full Body Circuit" },
+  ];
+
+  for (const enrollment of enrollmentsData) {
+    const [member, groupClass] = await Promise.all([
+      prisma.user.findUnique({ where: { email: enrollment.memberEmail } }),
+      prisma.groupClass.findFirst({ where: { name: enrollment.className } }),
+    ]);
+
+    if (!member || !groupClass) continue;
+
+    const date = upcomingDateForClass(groupClass.dayOfWeek, groupClass.startTime);
+    const key = `${member.id}-${groupClass.id}-${date.toISOString()}`;
+    if (enrollmentKeys.has(key)) continue;
+    enrollmentKeys.add(key);
+
+    await prisma.groupClassEnrollment.create({
+      data: {
+        userId: member.id,
+        classId: groupClass.id,
+        date,
       },
-    },
-    include: {
-      trainerProfile: {
-        include: {
-          user: true,
+    });
+  }
+
+  const seededRandom = (seed: string) => {
+    let h = 0;
+    for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
+    return () => {
+      h = (h * 1664525 + 1013904223) >>> 0;
+      return h / 2 ** 32;
+    };
+  };
+
+  for (const member of members) {
+    const rnd = seededRandom(member.email);
+    const count = 1 + Math.floor(rnd() * 2); // 1-2 enrollments
+
+    const chosen: Set<number> = new Set();
+    for (let i = 0; i < count; i++) {
+      if (classes.length === 0) break;
+      let idx = Math.floor(rnd() * classes.length);
+      // avoid duplicates per member
+      let attempts = 0;
+      while (chosen.has(idx) && attempts < 10) {
+        idx = Math.floor(rnd() * classes.length);
+        attempts++;
+      }
+      chosen.add(idx);
+
+      const cls = classes[idx];
+      if (!cls) continue;
+
+      const date = upcomingDateForClass(cls.dayOfWeek, cls.startTime);
+      const key = `${member.id}-${cls.id}-${date.toISOString()}`;
+      if (enrollmentKeys.has(key)) continue;
+      enrollmentKeys.add(key);
+
+      await prisma.groupClassEnrollment.create({
+        data: {
+          userId: member.id,
+          classId: cls.id,
+          date,
         },
-      },
-    },
-  });
+      });
+    }
+  }
+}
 
-  const members = await prisma.memberProfile.findMany({
-    where: {
-      homeGymId: gymMap["Gym Central Wadowicka"],
-    },
-    include: {
-      user: true,
-    },
-  });
+async function seedReservations(gymMap: Record<string, number>) {
+  console.log("⚙️ Creating training reservations (3-4 per member)...");
 
-  if (trainers.length === 0 || members.length === 0) return;
-
-  // Clear old reservations
   await prisma.trainerReservation.deleteMany({});
 
-  // Create 3 reservations with DONE status
-  const now = new Date();
-  const pastDate = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000); // 2 days ago
+  // Statyczne rezerwacje
+  const getAssignment = async (trainerEmail: string, gymName: string) => {
+    const gymId = gymMap[gymName];
+    const user = await prisma.user.findUnique({
+      where: { email: trainerEmail },
+      include: { trainerProfile: { include: { assignments: true } } },
+    });
+    return user?.trainerProfile?.assignments.find((a) => a.gymId === gymId) ?? null;
+  };
 
-  const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+  const getMember = (email: string) => prisma.user.findUnique({ where: { email } });
+
+  const dateFromToday = (daysOffset: number) => {
+    const date = new Date();
+    date.setDate(date.getDate() + daysOffset);
+    date.setHours(0, 0, 0, 0);
+    return date;
+  };
 
   const reservationsToCreate = [
     {
-      userId: members[0].user.id,
-      assignmentId: trainers[0].id,
-      date: pastDate,
+      memberEmail: "klient.adam@gymapp.pl",
+      trainerEmail: "trener.jan@gymapp.pl",
+      gymName: "Gym Central Wadowicka",
+      date: dateFromToday(-2),
       startHour: 10,
       endHour: 11,
       status: "DONE" as const,
       reviewPromptSent: true,
     },
     {
-      userId: members[1]?.user.id || members[0].user.id,
-      assignmentId: trainers[0].id,
-      date: pastDate,
+      memberEmail: "klient.jan@gymapp.pl",
+      trainerEmail: "trener.jan@gymapp.pl",
+      gymName: "Gym Central Wadowicka",
+      date: dateFromToday(-2),
       startHour: 11,
       endHour: 12,
       status: "DONE" as const,
       reviewPromptSent: true,
     },
     {
-      userId: members[0].user.id,
-      assignmentId: trainers.length > 1 ? trainers[1].id : trainers[0].id,
-      date: pastDate,
+      memberEmail: "klient.adam@gymapp.pl",
+      trainerEmail: "trener.pawel@gymapp.pl",
+      gymName: "Gym Central Wadowicka",
+      date: dateFromToday(-1),
       startHour: 12,
       endHour: 13,
       status: "DONE" as const,
       reviewPromptSent: true,
     },
     {
-      userId: members[0].user.id, // klient.adam@gymapp.pl
-      assignmentId: trainers[0].id,
-      date: tomorrow,
-      startHour: now.getHours() - 2,
-      endHour: now.getHours() - 1,
+      memberEmail: "klient.robert@gymapp.pl",
+      trainerEmail: "trener.anna@gymapp.pl",
+      gymName: "Gym Central Norymberska",
+      date: dateFromToday(1),
+      startHour: 9,
+      endHour: 10,
       status: "CONFIRMED" as const,
       reminderSent: false,
     },
     {
-      userId: members[0].user.id, // klient.adam@gymapp.pl
-      assignmentId: trainers[0].id,
-      date: pastDate,
-      startHour: 20,
-      endHour: 21,
+      memberEmail: "klient.ewa@gymapp.pl",
+      trainerEmail: "trener.marta@gymapp.pl",
+      gymName: "Gym Central Warszawa Mokotów",
+      date: dateFromToday(2),
+      startHour: 15,
+      endHour: 16,
+      status: "CONFIRMED" as const,
+      reminderSent: false,
+    },
+    {
+      memberEmail: "klient.piotr@gymapp.pl",
+      trainerEmail: "trener.tomasz@gymapp.pl",
+      gymName: "Gym Central Wrocław Rynek",
+      date: dateFromToday(-3),
+      startHour: 8,
+      endHour: 9,
       status: "DONE" as const,
       reviewPromptSent: false,
+    },
+    {
+      memberEmail: "klient.maria@gymapp.pl",
+      trainerEmail: "trener.tomasz@gymapp.pl",
+      gymName: "Gym Central Gdańsk Wrzeszcz",
+      date: dateFromToday(3),
+      startHour: 14,
+      endHour: 15,
+      status: "CANCELLED" as const,
+      reminderSent: false,
+    },
+    {
+      memberEmail: "klient.ola@gymapp.pl",
+      trainerEmail: "trener.marta@gymapp.pl",
+      gymName: "Gym Central Poznań Malta",
+      date: dateFromToday(4),
+      startHour: 13,
+      endHour: 14,
+      status: "CONFIRMED" as const,
+      reminderSent: false,
     },
   ];
 
   for (const res of reservationsToCreate) {
+    const [member, assignment] = await Promise.all([
+      getMember(res.memberEmail),
+      getAssignment(res.trainerEmail, res.gymName),
+    ]);
+
+    if (!member || !assignment) continue;
+
     await prisma.trainerReservation.create({
-      data: res,
+      data: {
+        userId: member.id,
+        assignmentId: assignment.id,
+        date: res.date,
+        startHour: res.startHour,
+        endHour: res.endHour,
+        status: res.status,
+        reminderSent: res.reminderSent ?? false,
+        reviewPromptSent: res.reviewPromptSent ?? false,
+        cancelledById: res.status === "CANCELLED" ? member.id : undefined,
+      },
     });
+  }
+
+  // Pobierz wszystkie możliwe assignments (trenerzy przypisani do siłowni)
+  const assignments = await prisma.trainerAssignment.findMany({
+    include: { trainerProfile: true },
+  });
+
+  const members = await prisma.user.findMany({ where: { role: Role.MEMBER } });
+
+  const seededRandom = (seed: string) => {
+    let h = 0;
+    for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
+    return () => {
+      h = (h * 1664525 + 1013904223) >>> 0;
+      return h / 2 ** 32;
+    };
+  };
+
+  for (const member of members) {
+    const rnd = seededRandom(member.email + "-reservations");
+    const count = 3 + Math.floor(rnd() * 2); // 3-4
+
+    const used: Set<string> = new Set();
+    for (let i = 0; i < count; i++) {
+      if (assignments.length === 0) break;
+      let idx = Math.floor(rnd() * assignments.length);
+      let attempts = 0;
+      while (used.has(String(idx)) && attempts < 10) {
+        idx = Math.floor(rnd() * assignments.length);
+        attempts++;
+      }
+      used.add(String(idx));
+
+      const assignment = assignments[idx];
+      if (!assignment) continue;
+
+      // wybierz datę w zakresie -10..+10 dni (deterministycznie)
+      const offset = Math.floor(rnd() * 21) - 10;
+      const date = dateFromToday(offset);
+
+      const startHour = 8 + Math.floor(rnd() * 10); // 8..17
+      const endHour = startHour + 1;
+
+      const status: "DONE" | "CONFIRMED" | "CANCELLED" =
+        date < new Date(new Date().setHours(0, 0, 0, 0))
+          ? rnd() > 0.1
+            ? "DONE"
+            : "CANCELLED"
+          : "CONFIRMED";
+
+      await prisma.trainerReservation.create({
+        data: {
+          userId: member.id,
+          assignmentId: assignment.id,
+          date,
+          startHour,
+          endHour,
+          status,
+          reminderSent: status === "CONFIRMED" ? false : undefined,
+          reviewPromptSent: status === "DONE" ? false : undefined,
+          cancelledById: status === "CANCELLED" ? member.id : undefined,
+        },
+      });
+    }
   }
 }
 
@@ -701,6 +1113,7 @@ async function main() {
   await seedMembers(passwordHash, gymMap);
   const roomMap = await seedRooms(gymMap);
   await seedGroupClasses(gymMap, roomMap);
+  await seedGroupClassEnrollments();
   await seedReservations(gymMap);
   await seedReviews();
 

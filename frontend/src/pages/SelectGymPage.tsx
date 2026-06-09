@@ -73,6 +73,21 @@ export const SelectGymPage = () => {
   const [search, setSearch] = useState("");
   const [isMapMoving, setIsMapMoving] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [isListOpen, setIsListOpen] = useState(true);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      if (mobile) setIsListOpen(false);
+      else setIsListOpen(true);
+    };
+
+    window.addEventListener("resize", handleResize);
+    handleResize();
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const isProgrammaticMove = useRef(false);
 
@@ -151,86 +166,154 @@ export const SelectGymPage = () => {
   }
 
   return (
-    <div className="flex h-[calc(100vh-117px)] overflow-hidden">
-      {/* LISTA PO LEWEJ */}
-      <div className="w-80 flex-shrink-0 overflow-y-auto border-r border-zinc-800 bg-black">
-        <div className="p-4 border-b border-zinc-800">
-          <h2 className="text-white font-bold text-lg">Siłownie</h2>
-        </div>
-        <div className="flex flex-col gap-2 p-3">
-          <div className="p-3">
-            <input
-              type="text"
-              placeholder="Szukaj po nazwie lub lokalizacji..."
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setShowDropdown(true);
-              }}
-              // onKeyDown={(e) => {
-              //   if (e.key === "Enter") {
-              //     const foundGym = filteredGyms[0];
+    <div className="flex h-[calc(100vh-117px)] overflow-hidden relative">
+      {isMobile && (
+        <button
+          onClick={() => setIsListOpen((prev) => !prev)}
+          className="absolute top-3 left-1/2 -translate-x-1/2 z-[1000] bg-black border border-zinc-700 text-white rounded-full px-4 py-1.5 text-xs shadow-lg flex items-center gap-2"
+        >
+          {isListOpen ? "Schowaj listę" : "Pokaż siłownie"}
+        </button>
+      )}
 
-              //     if (foundGym?.lat && foundGym?.lng) {
-              //       setFlyTo([foundGym.lat, foundGym.lng]);
-              //       setSelectedGymId(foundGym.id);
-              //       setShowDropdown(false);
-              //     }
-              //   }
-              // }}
-              className="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-700 text-white text-sm outline-none focus:border-sky-500"
-            />
-            {showDropdown && normalizedSearch && filteredGyms.length > 0 && (
-              <div className="bg-zinc-900 border border-zinc-700 rounded-lg mt-2 max-h-60 overflow-y-auto">
-                {filteredGyms.map((gym) => (
-                  <div
-                    key={gym.id}
-                    onClick={() => handleGymClick(gym)}
-                    className="px-3 py-2 text-sm text-white cursor-pointer hover:bg-zinc-800"
-                  >
-                    <p>{gym.name}</p>
-                    <p className="text-xs text-zinc-400">{gym.address}</p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-          {visibleGyms.map((gym) => (
-            <div
-              key={gym.id}
-              onClick={() => handleGymClick(gym)}
-              className={`p-3 rounded-xl border cursor-pointer transition-colors ${
-                selectedGymId === gym.id
-                  ? "border-sky-500 bg-sky-500/10"
-                  : "border-zinc-800 bg-zinc-900 hover:border-zinc-600"
-              }`}
-            >
-              {/* ZDJĘCIE W LEWYM MENU */}
-              {gym.mainImage ? (
-                <img
-                  src={gym.mainImage}
-                  alt={gym.name}
-                  className="w-full h-24 object-cover rounded-md mb-2 border border-zinc-700"
-                />
-              ) : (
-                <div className="w-full h-24 bg-zinc-800 rounded-md mb-2 flex items-center justify-center border border-zinc-700">
-                  <span className="text-zinc-500 text-xs">Brak zdjęcia</span>
+      {/* LISTA*/}
+      {isMobile ? (
+        <div
+          className={`absolute top-0 left-0 right-0 z-[999] bg-black border-b border-zinc-800 transition-all duration-300 overflow-y-auto ${
+            isListOpen ? "max-h-[60vh]" : "max-h-0 overflow-hidden"
+          }`}
+        >
+          <div className="pt-10">
+            {" "}
+            {/* padding na przycisk toggle */}
+            {/* WYSZUKIWARKA */}
+            <div className="p-3">
+              <input
+                type="text"
+                placeholder="Szukaj po nazwie lub lokalizacji..."
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setShowDropdown(true);
+                }}
+                className="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-700 text-white text-sm outline-none focus:border-sky-500"
+              />
+              {showDropdown && normalizedSearch && filteredGyms.length > 0 && (
+                <div className="bg-zinc-900 border border-zinc-700 rounded-lg mt-2 max-h-40 overflow-y-auto">
+                  {filteredGyms.map((gym) => (
+                    <div
+                      key={gym.id}
+                      onClick={() => {
+                        handleGymClick(gym);
+                        setIsListOpen(false);
+                      }}
+                      className="px-3 py-2 text-sm text-white cursor-pointer hover:bg-zinc-800"
+                    >
+                      <p>{gym.name}</p>
+                      <p className="text-xs text-zinc-400">{gym.address}</p>
+                    </div>
+                  ))}
                 </div>
               )}
-
-              <p className="text-white font-medium text-sm">{gym.name}</p>
-              <p className="text-zinc-400 text-xs mt-1">{gym.address}</p>
-              <Link
-                to={`/gyms/${gym.id}`}
-                onClick={(e) => e.stopPropagation()}
-                className="text-sky-400 text-xs mt-2 inline-block hover:text-sky-300"
-              >
-                Zobacz więcej →
-              </Link>
             </div>
-          ))}
+            {/* LISTA SIŁOWNI */}
+            <div className="flex flex-col gap-2 p-3">
+              {visibleGyms.map((gym) => (
+                <div
+                  key={gym.id}
+                  onClick={() => {
+                    handleGymClick(gym);
+                    setIsListOpen(false);
+                  }}
+                  className={`p-3 rounded-xl border cursor-pointer transition-colors ${
+                    selectedGymId === gym.id
+                      ? "border-sky-500 bg-sky-500/10"
+                      : "border-zinc-800 bg-zinc-900 hover:border-zinc-600"
+                  }`}
+                >
+                  <p className="text-white font-medium text-sm">{gym.name}</p>
+                  <p className="text-zinc-400 text-xs mt-1">{gym.address}</p>
+                  <Link
+                    to={`/gyms/${gym.id}`}
+                    onClick={(e) => e.stopPropagation()}
+                    className="text-sky-400 text-xs mt-2 inline-block hover:text-sky-300"
+                  >
+                    Zobacz więcej →
+                  </Link>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="w-80 flex-shrink-0 overflow-y-auto border-r border-zinc-800 bg-black">
+          <div className="p-4 border-b border-zinc-800">
+            <h2 className="text-white font-bold text-lg">Siłownie</h2>
+          </div>
+          <div className="flex flex-col gap-2 p-3">
+            <div className="p-3">
+              <input
+                type="text"
+                placeholder="Szukaj po nazwie lub lokalizacji..."
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setShowDropdown(true);
+                }}
+                className="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-700 text-white text-sm outline-none focus:border-sky-500"
+              />
+              {showDropdown && normalizedSearch && filteredGyms.length > 0 && (
+                <div className="bg-zinc-900 border border-zinc-700 rounded-lg mt-2 max-h-60 overflow-y-auto">
+                  {filteredGyms.map((gym) => (
+                    <div
+                      key={gym.id}
+                      onClick={() => handleGymClick(gym)}
+                      className="px-3 py-2 text-sm text-white cursor-pointer hover:bg-zinc-800"
+                    >
+                      <p>{gym.name}</p>
+                      <p className="text-xs text-zinc-400">{gym.address}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            {visibleGyms.map((gym) => (
+              <div
+                key={gym.id}
+                onClick={() => handleGymClick(gym)}
+                className={`p-3 rounded-xl border cursor-pointer transition-colors ${
+                  selectedGymId === gym.id
+                    ? "border-sky-500 bg-sky-500/10"
+                    : "border-zinc-800 bg-zinc-900 hover:border-zinc-600"
+                }`}
+              >
+                {/* ZDJĘCIE W LEWYM MENU */}
+                {gym.mainImage ? (
+                  <img
+                    src={gym.mainImage}
+                    alt={gym.name}
+                    className="w-full h-24 object-cover rounded-md mb-2 border border-zinc-700"
+                  />
+                ) : (
+                  <div className="w-full h-24 bg-zinc-800 rounded-md mb-2 flex items-center justify-center border border-zinc-700">
+                    <span className="text-zinc-500 text-xs">Brak zdjęcia</span>
+                  </div>
+                )}
+
+                <p className="text-white font-medium text-sm">{gym.name}</p>
+                <p className="text-zinc-400 text-xs mt-1">{gym.address}</p>
+                <Link
+                  to={`/gyms/${gym.id}`}
+                  onClick={(e) => e.stopPropagation()}
+                  className="text-sky-400 text-xs mt-2 inline-block hover:text-sky-300"
+                >
+                  Zobacz więcej →
+                </Link>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* MAPA PO PRAWEJ */}
       <div className="flex-1 overflow-hidden">
@@ -241,18 +324,6 @@ export const SelectGymPage = () => {
           />
 
           <FlyTo coords={flyTo} />
-          {/* <BoundsWatcher
-            onBoundsChange={setBounds}
-            onMoveEnd={() => {
-              setIsMapMoving(false);
-
-              if (!isProgrammaticMove.current) {
-                setSelectedGymId(null);
-              }
-
-              isProgrammaticMove.current = false;
-            }}
-          /> */}
 
           <BoundsWatcher
             onBoundsChange={setBounds}
@@ -279,19 +350,6 @@ export const SelectGymPage = () => {
               >
                 <Popup>
                   <div className="flex flex-col gap-1 min-w-[150px] max-w-[200px]">
-                    {/* ZDJĘCIE W POP-UPIE MAPY */}
-                    {gym.mainImage ? (
-                      <img
-                        src={gym.mainImage}
-                        alt={gym.name}
-                        className="w-full h-20 object-cover rounded mb-1 border border-gray-300"
-                      />
-                    ) : (
-                      <div className="w-full h-20 bg-gray-200 rounded flex items-center justify-center mb-1 border border-gray-300">
-                        <span className="text-gray-500 text-xs">Brak zdjęcia</span>
-                      </div>
-                    )}
-
                     <strong>{gym.name}</strong>
                     <span className="text-xs text-gray-500">{gym.address}</span>
                     <button

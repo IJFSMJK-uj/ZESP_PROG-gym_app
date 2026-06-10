@@ -15,9 +15,9 @@ export const PrivacyPage = () => {
               </h2>
               <p>
                 Administratorem Twoich danych osobowych zbieranych za pośrednictwem aplikacji{" "}
-                <strong>GymApp</strong> jest [Nazwa Twojej Firmy / Twoje Imię i Nazwisko], z
-                siedzibą w [Miasto]. W sprawach związanych z danymi osobowymi możesz kontaktować się
-                pod adresem e-mail: [Twój E-mail].
+                <strong>GymApp</strong> jest zespół z przedmiotu Programowanie Zespołowe. W sprawach
+                związanych z danymi osobowymi możesz kontaktować się pod adresem e-mail:
+                kontakt@gymapp.pl.
               </p>
             </section>
 

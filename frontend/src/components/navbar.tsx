@@ -14,7 +14,7 @@ export const Navbar = () => {
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-zinc-800 bg-black/50 backdrop-blur-md">
-      <div className="container mx-auto flex h-16 items-center justify-between px-6">
+      <div className="container mx-auto flex min-h-[4rem] flex-wrap items-center justify-between gap-y-4 px-6 py-3">
         <Link
           to="/"
           className={`text-2xl font-extrabold tracking-tight transition-colors ${isAdmin ? "text-red-500 hover:text-red-400" : "text-sky-400 hover:text-sky-300"}`}
@@ -22,7 +22,7 @@ export const Navbar = () => {
           GYMAPP
         </Link>
 
-        <div className="hidden md:flex items-center gap-8">
+        <div className="flex flex-1 flex-wrap items-center justify-center gap-x-6 gap-y-2 px-4">
           {isAdmin ? (
             <>
               <Link

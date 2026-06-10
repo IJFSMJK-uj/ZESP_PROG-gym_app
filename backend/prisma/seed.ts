@@ -757,91 +757,91 @@ function upcomingDateForClass(dayOfWeek: number, startTime: number) {
   return upcomingDate;
 }
 
-// async function seedGroupClassEnrollments() {
-//   console.log("⚙️ Creating group class enrollments (1-2 per member)...");
+async function seedGroupClassEnrollments() {
+  console.log("⚙️ Creating group class enrollments (1-2 per member)...");
 
-//   await prisma.groupClassEnrollment.deleteMany({});
-//   const classes = await prisma.groupClass.findMany();
-//   const members = await prisma.user.findMany({ where: { role: Role.MEMBER } });
-//   const enrollmentKeys = new Set<string>();
+  await prisma.groupClassEnrollment.deleteMany({});
+  const classes = await prisma.groupClass.findMany();
+  const members = await prisma.user.findMany({ where: { role: Role.MEMBER } });
+  const enrollmentKeys = new Set<string>();
 
-//   const enrollmentsData = [
-//     { memberEmail: "klient.adam@gymapp.pl", className: "Power Fitness" },
-//     { memberEmail: "klient.jan@gymapp.pl", className: "CrossFit" },
-//     { memberEmail: "klient.robert@gymapp.pl", className: "Spinning" },
-//     { memberEmail: "klient.iga@gymapp.pl", className: "Hatha Joga" },
-//     { memberEmail: "klient.ewa@gymapp.pl", className: "Zdrowe plecy" },
-//     { memberEmail: "klient.ewa@gymapp.pl", className: "Mobility Express" },
-//     { memberEmail: "klient.piotr@gymapp.pl", className: "Poranna mobilność" },
-//     { memberEmail: "klient.maria@gymapp.pl", className: "Indoor Cycling" },
-//     { memberEmail: "klient.ola@gymapp.pl", className: "Full Body Circuit" },
-//   ];
+  const enrollmentsData = [
+    { memberEmail: "klient.adam@gymapp.pl", className: "Power Fitness" },
+    { memberEmail: "klient.jan@gymapp.pl", className: "CrossFit" },
+    { memberEmail: "klient.robert@gymapp.pl", className: "Spinning" },
+    { memberEmail: "klient.iga@gymapp.pl", className: "Hatha Joga" },
+    { memberEmail: "klient.ewa@gymapp.pl", className: "Zdrowe plecy" },
+    { memberEmail: "klient.ewa@gymapp.pl", className: "Mobility Express" },
+    { memberEmail: "klient.piotr@gymapp.pl", className: "Poranna mobilność" },
+    { memberEmail: "klient.maria@gymapp.pl", className: "Indoor Cycling" },
+    { memberEmail: "klient.ola@gymapp.pl", className: "Full Body Circuit" },
+  ];
 
-//   for (const enrollment of enrollmentsData) {
-//     const [member, groupClass] = await Promise.all([
-//       prisma.user.findUnique({ where: { email: enrollment.memberEmail } }),
-//       prisma.groupClass.findFirst({ where: { name: enrollment.className } }),
-//     ]);
+  for (const enrollment of enrollmentsData) {
+    const [member, groupClass] = await Promise.all([
+      prisma.user.findUnique({ where: { email: enrollment.memberEmail } }),
+      prisma.groupClass.findFirst({ where: { name: enrollment.className } }),
+    ]);
 
-//     if (!member || !groupClass) continue;
+    if (!member || !groupClass) continue;
 
-//     const date = upcomingDateForClass(groupClass.dayOfWeek, groupClass.startTime);
-//     const key = `${member.id}-${groupClass.id}-${date.toISOString()}`;
-//     if (enrollmentKeys.has(key)) continue;
-//     enrollmentKeys.add(key);
+    const date = upcomingDateForClass(groupClass.dayOfWeek, groupClass.startTime);
+    const key = `${member.id}-${groupClass.id}-${date.toISOString()}`;
+    if (enrollmentKeys.has(key)) continue;
+    enrollmentKeys.add(key);
 
-//     await prisma.groupClassEnrollment.create({
-//       data: {
-//         userId: member.id,
-//         classId: groupClass.id,
-//         date,
-//       },
-//     });
-//   }
+    await prisma.groupClassEnrollment.create({
+      data: {
+        userId: member.id,
+        classId: groupClass.id,
+        date,
+      },
+    });
+  }
 
-//   const seededRandom = (seed: string) => {
-//     let h = 0;
-//     for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
-//     return () => {
-//       h = (h * 1664525 + 1013904223) >>> 0;
-//       return h / 2 ** 32;
-//     };
-//   };
+  const seededRandom = (seed: string) => {
+    let h = 0;
+    for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
+    return () => {
+      h = (h * 1664525 + 1013904223) >>> 0;
+      return h / 2 ** 32;
+    };
+  };
 
-//   for (const member of members) {
-//     const rnd = seededRandom(member.email);
-//     const count = 1 + Math.floor(rnd() * 2); // 1-2 enrollments
+  for (const member of members) {
+    const rnd = seededRandom(member.email);
+    const count = 1 + Math.floor(rnd() * 2); // 1-2 enrollments
 
-//     const chosen: Set<number> = new Set();
-//     for (let i = 0; i < count; i++) {
-//       if (classes.length === 0) break;
-//       let idx = Math.floor(rnd() * classes.length);
-//       // avoid duplicates per member
-//       let attempts = 0;
-//       while (chosen.has(idx) && attempts < 10) {
-//         idx = Math.floor(rnd() * classes.length);
-//         attempts++;
-//       }
-//       chosen.add(idx);
+    const chosen: Set<number> = new Set();
+    for (let i = 0; i < count; i++) {
+      if (classes.length === 0) break;
+      let idx = Math.floor(rnd() * classes.length);
+      // avoid duplicates per member
+      let attempts = 0;
+      while (chosen.has(idx) && attempts < 10) {
+        idx = Math.floor(rnd() * classes.length);
+        attempts++;
+      }
+      chosen.add(idx);
 
-//       const cls = classes[idx];
-//       if (!cls) continue;
+      const cls = classes[idx];
+      if (!cls) continue;
 
-//       const date = upcomingDateForClass(cls.dayOfWeek, cls.startTime);
-//       const key = `${member.id}-${cls.id}-${date.toISOString()}`;
-//       if (enrollmentKeys.has(key)) continue;
-//       enrollmentKeys.add(key);
+      const date = upcomingDateForClass(cls.dayOfWeek, cls.startTime);
+      const key = `${member.id}-${cls.id}-${date.toISOString()}`;
+      if (enrollmentKeys.has(key)) continue;
+      enrollmentKeys.add(key);
 
-//       await prisma.groupClassEnrollment.create({
-//         data: {
-//           userId: member.id,
-//           classId: cls.id,
-//           date,
-//         },
-//       });
-//     }
-//   }
-// }
+      await prisma.groupClassEnrollment.create({
+        data: {
+          userId: member.id,
+          classId: cls.id,
+          date,
+        },
+      });
+    }
+  }
+}
 
 async function seedReservations(gymMap: Record<string, number>) {
   console.log("⚙️ Creating training reservations (3-4 per member)...");

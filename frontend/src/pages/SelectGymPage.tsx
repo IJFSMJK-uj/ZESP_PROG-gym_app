@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 import { gymsService } from "../api/gymsService";
 import { useAuth } from "../context/AuthContext";
 import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from "react-leaflet";
-import L, { LatLngBounds } from "leaflet";
+import L, { LatLngBounds, LatLng } from "leaflet";
 import iconUrl from "leaflet/dist/images/marker-icon.png";
 import iconShadow from "leaflet/dist/images/marker-shadow.png";
 import "leaflet/dist/leaflet.css";
@@ -16,6 +16,8 @@ L.Marker.prototype.options.icon = L.icon({
   iconAnchor: [12, 41],
   popupAnchor: [0, -41],
 });
+
+const DEFAULT_BOUNDS = new LatLngBounds(new LatLng(49.95, 19.75), new LatLng(50.18, 20.14));
 
 // komponent przesuwający mapę do siłowni
 const FlyTo = ({ coords }: { coords: [number, number] | null }) => {
@@ -69,7 +71,7 @@ export const SelectGymPage = () => {
   const [error, setError] = useState("");
   const [flyTo, setFlyTo] = useState<[number, number] | null>(null);
   const [selectedGymId, setSelectedGymId] = useState<number | null>(null);
-  const [bounds, setBounds] = useState<LatLngBounds | null>(null);
+  const [bounds, setBounds] = useState<LatLngBounds>(DEFAULT_BOUNDS);
   const [search, setSearch] = useState("");
   const [isMapMoving, setIsMapMoving] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -128,9 +130,10 @@ export const SelectGymPage = () => {
   });
 
   const visibleGyms = !isSearching
-    ? gyms.filter((gym) =>
-        bounds && gym.lat && gym.lng ? bounds.contains([gym.lat, gym.lng]) : true
-      )
+    ? gyms.filter((gym) => {
+        if (!gym.lat || !gym.lng) return false;
+        return bounds.contains([gym.lat, gym.lng]);
+      })
     : [];
 
   if (!isAuthenticated) {

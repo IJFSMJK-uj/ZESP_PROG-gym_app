@@ -3,7 +3,7 @@ import { useAuth } from "../context/AuthContext";
 import { Button } from "../components/ui/button";
 
 export const HomePage = () => {
-  const { isAuthenticated } = useAuth();
+  const { user, isAuthenticated } = useAuth();
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[80vh] text-center px-4">
@@ -39,7 +39,7 @@ export const HomePage = () => {
               size="lg"
               className="rounded-full bg-zinc-100 hover:bg-white text-black px-8 py-6 text-lg transition-all"
             >
-              <Link to="/dashboard">Przejdź do panelu</Link>
+              <Link to={user?.gymId ? `/gyms/${user.gymId}` : "/gyms"}>Przejdź do panelu</Link>
             </Button>
           )}
 

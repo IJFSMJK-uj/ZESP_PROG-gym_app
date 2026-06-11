@@ -2,6 +2,7 @@ import express, { Request, Response } from "express";
 import { Role } from "@prisma/client";
 import prisma from "../lib/prisma";
 import { requireAuth } from "./auth";
+import { error } from "console";
 
 const router = express.Router();
 
@@ -449,6 +450,14 @@ router.post(
     const gymId = parseId(req.params.gymId);
     const classId = parseId(req.params.classId);
     if (!gymId || !classId) return res.status(400).json({ error: "Nieprawidłowe dane" });
+
+    const memberProfile = await prisma.memberProfile.findUnique({ where: { userId: req.userId } });
+
+    if (!memberProfile || memberProfile.homeGymId !== gymId) {
+      return res
+        .status(403)
+        .json({ error: "Możesz zapisywać się tylko na zajęcia w swojej siłowni" });
+    }
 
     const { date } = req.body;
     if (!date) return res.status(400).json({ error: "Podaj datę zajęć" });

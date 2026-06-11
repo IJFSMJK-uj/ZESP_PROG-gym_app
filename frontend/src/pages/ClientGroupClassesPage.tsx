@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getUpcomingDate, groupClassesService } from "../api/groupClassesService";
 import { Button } from "../components/ui/button";
+import { useAuth } from "@/context/AuthContext";
 
 const minutesToTime = (minutes: number) => {
   const h = Math.floor(minutes / 60)
@@ -42,6 +43,9 @@ export const ClientGroupClassesPage = () => {
   const [error, setError] = useState("");
   const [actionLoading, setActionLoading] = useState<number | null>(null);
   const [actionMessage, setActionMessage] = useState("");
+  const { user } = useAuth();
+
+  const isMyGym = user?.gymId === Number(gymId);
 
   const load = async () => {
     const data = await groupClassesService.getGymClasses(Number(gymId));
@@ -211,7 +215,11 @@ export const ClientGroupClassesPage = () => {
                       </div>
 
                       <div className="shrink-0 ml-4 w-24 flex justify-end">
-                        {cls.isEnrolled ? (
+                        {!isMyGym ? (
+                          <span className="text-xs text-zinc-600 text-center">
+                            Nie twoja siłownia
+                          </span>
+                        ) : cls.isEnrolled ? (
                           <button
                             onClick={() => handleUnenroll(cls)}
                             disabled={isLoading}

@@ -35,7 +35,7 @@ function App() {
         <div className="min-h-screen bg-black text-zinc-50 flex flex-col font-sans selection:bg-sky-500/30">
           <Navbar />
 
-          <main className="flex-grow flex flex-col overflow-hidden">
+          <main className="flex-grow flex flex-col overflow-hidden mb-[46px]">
             <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/auth" element={<AuthPage />} />

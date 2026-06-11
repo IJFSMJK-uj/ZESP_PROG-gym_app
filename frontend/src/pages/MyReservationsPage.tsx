@@ -4,9 +4,12 @@ import { useAuth } from "../context/AuthContext";
 import { Card, CardContent, CardHeader } from "../components/ui/card";
 import { ReviewModal } from "../components/ReviewModal";
 import { groupClassesService } from "../api/groupClassesService";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 export const MyReservationsPage = () => {
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const [clientReservations, setClientReservations] = useState<any[]>([]);
   const [trainerReservations, setTrainerReservations] = useState<any[]>([]);
   const [groupReservations, setGroupReservations] = useState<any[]>([]);
@@ -151,6 +154,19 @@ export const MyReservationsPage = () => {
       loadAllData();
     }
   };
+
+  if (!isAuthenticated) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] p-4">
+        <p className="text-lg text-white mb-4">
+          Musisz się zalogować, aby zobaczyć swoje rezerwacje.
+        </p>
+        <Button variant="outline" onClick={() => navigate("/auth")} className="cursor-pointer">
+          Przejdź do logowania
+        </Button>
+      </div>
+    );
+  }
 
   if (loading)
     return (

@@ -1142,7 +1142,7 @@ async function main() {
   await seedMembers(passwordHash, gymMap);
   const roomMap = await seedRooms(gymMap);
   await seedGroupClasses(gymMap, roomMap);
-  await seedGroupClassEnrollments();
+  // await seedGroupClassEnrollments();
   await seedReservations(gymMap);
   await seedReviews();
 

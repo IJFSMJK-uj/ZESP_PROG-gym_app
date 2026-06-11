@@ -8,6 +8,8 @@ import { Input } from "../components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001/api";
+
 export const AuthPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -63,7 +65,7 @@ export const AuthPage = () => {
     setError("");
     setResendSuccess("");
     try {
-      const res = await fetch("http://localhost:3001/api/auth/resend-verification", {
+      const res = await fetch(`${API_URL}/auth/resend-verification`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),

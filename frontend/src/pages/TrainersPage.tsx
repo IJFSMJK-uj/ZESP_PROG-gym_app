@@ -15,6 +15,8 @@ import {
 import { MapPin, Star, StarHalf, Search, SlidersHorizontal } from "lucide-react";
 import { ReviewsList } from "../components/ReviewsList";
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001/api";
+
 interface Trainer {
   assignmentId: number;
   trainerProfileId: number;
@@ -242,7 +244,7 @@ export const TrainersPage = () => {
                   <div className="w-18 h-18 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-sky-400 font-bold text-xl uppercase overflow-hidden shrink-0">
                     {trainer.profilePictureUrl ? (
                       <img
-                        src={`http://localhost:3001${trainer.profilePictureUrl}`}
+                        src={`${trainer.profilePictureUrl}`}
                         alt={getDisplayName(trainer)}
                         className="w-full h-full object-cover"
                         onError={(e) => {
@@ -305,7 +307,7 @@ export const TrainersPage = () => {
                     <div className="w-30 h-30 rounded-full bg-zinc-900 border-2 border-sky-500 flex items-center justify-center text-sky-400 font-bold text-4xl uppercase shadow-[0_0_20px_rgba(14,165,233,0.3)] overflow-hidden">
                       {selectedTrainer.profilePictureUrl ? (
                         <img
-                          src={`http://localhost:3001${selectedTrainer.profilePictureUrl}`}
+                          src={`${selectedTrainer.profilePictureUrl}`}
                           alt="Profile"
                           className="w-full h-full object-cover"
                         />

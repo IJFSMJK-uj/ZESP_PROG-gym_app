@@ -7,6 +7,8 @@ import { Input } from "../components/ui/input";
 import { Trash2, ImagePlus } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001/api";
+
 export const ProfilePage = () => {
   const { logout, isAuthenticated } = useAuth();
   const [email, setEmail] = useState("");
@@ -164,7 +166,7 @@ export const ProfilePage = () => {
     setError("");
     setSuccess("");
     try {
-      const res = await fetch("http://localhost:3001/api/auth/profile/image", {
+      const res = await fetch(`${API_URL}/auth/profile/image`, {
         method: "POST",
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         body: formData,
@@ -187,7 +189,7 @@ export const ProfilePage = () => {
     setError("");
     setSuccess("");
     try {
-      const res = await fetch("http://localhost:3001/api/auth/profile/image", {
+      const res = await fetch(`${API_URL}/auth/profile/image`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });

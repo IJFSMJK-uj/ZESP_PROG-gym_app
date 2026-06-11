@@ -1,4 +1,5 @@
-const API = "http://localhost:3001/api/admin";
+const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3001/api";
+const API = `${BASE_URL}/admin`;
 
 const h = (token: string | null) => ({
   "Content-Type": "application/json",

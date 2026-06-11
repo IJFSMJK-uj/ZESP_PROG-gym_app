@@ -1,4 +1,5 @@
-const API_URL = "http://localhost:3001/api/trainer-availability";
+const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3001/api";
+const API_URL = `${BASE_URL}/trainer-availability`;
 
 export const availabilityService = {
   async getMyAvailability() {

@@ -11,6 +11,8 @@ import { useParams } from "react-router-dom";
 import { MapContainer, TileLayer, Marker, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001/api";
+
 const HOURS = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, "0") + ":00");
 
 const timeToMinutes = (timeString: string) => {
@@ -177,7 +179,7 @@ export const GymAdminPage = () => {
   // Ładowanie szablonów ze słownika
   const loadStandardEquipment = async () => {
     try {
-      const res = await fetch("http://localhost:3001/api/gyms/equipment/standard", {
+      const res = await fetch(`${API_URL}/gyms/equipment/standard`, {
         headers: { Authorization: `Bearer ${getToken()}` },
       });
       const data = await res.json();
@@ -322,7 +324,7 @@ export const GymAdminPage = () => {
     formData.append("image", file);
 
     try {
-      const res = await fetch(`http://localhost:3001/api/gyms/${gymId}/main-image`, {
+      const res = await fetch(`${API_URL}/gyms/${gymId}/main-image`, {
         method: "POST",
         headers: { Authorization: `Bearer ${getToken()}` },
         body: formData,
@@ -345,7 +347,7 @@ export const GymAdminPage = () => {
     setSuccess("");
 
     try {
-      const res = await fetch(`http://localhost:3001/api/gyms/${gymId}/main-image`, {
+      const res = await fetch(`${API_URL}/gyms/${gymId}/main-image`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${getToken()}` },
       });
@@ -370,7 +372,7 @@ export const GymAdminPage = () => {
     Array.from(files).forEach((file) => formData.append("gallery", file));
 
     try {
-      const res = await fetch(`http://localhost:3001/api/gyms/${gymId}/gallery`, {
+      const res = await fetch(`${API_URL}/gyms/${gymId}/gallery`, {
         method: "POST",
         headers: { Authorization: `Bearer ${getToken()}` },
         body: formData,
@@ -393,7 +395,7 @@ export const GymAdminPage = () => {
     setSuccess("");
 
     try {
-      const res = await fetch(`http://localhost:3001/api/gyms/${gymId}/gallery`, {
+      const res = await fetch(`${API_URL}/gyms/${gymId}/gallery`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
@@ -442,7 +444,7 @@ export const GymAdminPage = () => {
     }
 
     try {
-      const res = await fetch(`http://localhost:3001/api/gyms/${gymId}/equipment`, {
+      const res = await fetch(`${API_URL}/gyms/${gymId}/equipment`, {
         method: "POST",
         headers: { Authorization: `Bearer ${getToken()}` },
         body: formData,
@@ -474,7 +476,7 @@ export const GymAdminPage = () => {
     setSuccess("");
 
     try {
-      const res = await fetch(`http://localhost:3001/api/gyms/${gymId}/equipment/${equipmentId}`, {
+      const res = await fetch(`${API_URL}/gyms/${gymId}/equipment/${equipmentId}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${getToken()}` },
       });

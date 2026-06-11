@@ -1,6 +1,8 @@
 import { useEffect, useState, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001/api";
+
 type Status = "loading" | "success" | "expired" | "invalid";
 
 export const VerifyEmailPage = () => {
@@ -20,7 +22,7 @@ export const VerifyEmailPage = () => {
       return;
     }
 
-    fetch(`http://localhost:3001/api/auth/verify-email?token=${token}`)
+    fetch(`${API_URL}/auth/verify-email?token=${token}`)
       .then(async (res) => {
         const data = await res.json();
         if (res.ok && data.success) {

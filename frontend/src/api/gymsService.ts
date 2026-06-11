@@ -1,4 +1,5 @@
-const API_URL = "http://localhost:3001/api/gyms";
+const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3001/api";
+const API_URL = `${BASE_URL}/gyms`;
 
 export interface GymRoom {
   id: number;

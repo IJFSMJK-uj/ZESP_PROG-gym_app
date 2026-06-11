@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001/api";
+
 export interface User {
   id: number;
   email: string;
@@ -50,7 +52,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser(JSON.parse(savedUser));
 
         // Odśwież dane usera z backendu (np. po zmianie roli przez admina)
-        fetch("http://localhost:3001/api/auth/me", {
+        fetch(`${API_URL}/auth/me`, {
           headers: { Authorization: `Bearer ${savedToken}` },
         })
           .then((r) => (r.ok ? r.json() : null))

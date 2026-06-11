@@ -4,6 +4,8 @@ import { useAuth } from "../context/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001/api";
+
 interface Slot {
   startHour: number;
   endHour: number;
@@ -75,7 +77,7 @@ export default function TrainerSchedulePage() {
       const token = localStorage.getItem("token");
 
       const res = await fetch(
-        `http://localhost:3001/api/trainer-schedule/${assignmentId}?weekStart=${weekStart.toISOString()}`,
+        `${API_URL}/trainer-schedule/${assignmentId}?weekStart=${weekStart.toISOString()}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -356,22 +358,19 @@ export default function TrainerSchedulePage() {
                                   return;
                                 }
                                 setBooking(bookingKey);
-                                const res = await fetch(
-                                  "http://localhost:3001/api/trainer-schedule",
-                                  {
-                                    method: "POST",
-                                    headers: {
-                                      "Content-Type": "application/json",
-                                      Authorization: `Bearer ${token}`,
-                                    },
-                                    body: JSON.stringify({
-                                      assignmentId: Number(assignmentId),
-                                      date: date.toISOString(),
-                                      startHour: slot.startHour,
-                                      endHour: slot.endHour,
-                                    }),
-                                  }
-                                );
+                                const res = await fetch(`${API_URL}/trainer-schedule`, {
+                                  method: "POST",
+                                  headers: {
+                                    "Content-Type": "application/json",
+                                    Authorization: `Bearer ${token}`,
+                                  },
+                                  body: JSON.stringify({
+                                    assignmentId: Number(assignmentId),
+                                    date: date.toISOString(),
+                                    startHour: slot.startHour,
+                                    endHour: slot.endHour,
+                                  }),
+                                });
 
                                 const data = await res.json();
 
